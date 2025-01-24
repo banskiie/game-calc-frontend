@@ -3,8 +3,8 @@
 import { useRouter, useParams } from "next/navigation";
 import { gql, useQuery } from "@apollo/client";
 import { Loader } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ShuttleForm from "../form";
+import { Card, CardContent } from "@/components/ui/card";
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -115,66 +115,100 @@ const Page = () => {
           {session._id || "No session ID"}
         </span>
       </div>
-      <div>
-        <span className="block text-muted-foreground font-bold">List of Games</span>
+      <div className="grid grid-cols-1 gap-4">
         {session.games.length > 0 ? (
           session.games.map((game: any, index: number) => (
-            <Card key={game._id} className="mb-4">
-              <CardHeader>
-                <CardTitle>Game {index + 1}</CardTitle>
-              </CardHeader>
+            <Card key={game._id} className="p-4">
               <CardContent>
-                <div>
-                  <span className="block text-muted-foreground">Court Name:</span>
-                  <span className="block font-semibold">
-                    {game.court?.name || "No court assigned"}
-                  </span>
+                <div className="flex flex-col items-center">
+                  <span className="text-xl font-bold mb-4">Game {index + 1}</span>
                 </div>
-                <div>
-                  <span className="block text-muted-foreground">
-                    Shuttles Used:
-                  </span>
-                  {game.shuttlesUsed.length > 0 ? (
-                    game.shuttlesUsed.map((shuttleUsed: any, idx: number) => (
-                      <div key={idx} className="ml-4">
-                        <span>
-                          Name: {shuttleUsed.shuttle?.name || "Unknown"}
-                        </span>
-                        <span> - Quantity: {shuttleUsed.quantity || 0}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <span>No shuttles used</span>
-                  )}
-                </div>
-                {/* Players */}
-                {["A1", "A2", "B1", "B2"].map((playerKey) => (
-                  <div className="ml-4" key={playerKey}>
-                    <span className="block text-muted-foreground">
-                      {playerKey} Player:
-                    </span>
+
+                <div className="grid grid-rows-3 grid-cols-3 gap-2">
+                  {/* Top Row */}
+                  <div className="text-left">
+                    <span className="block text-muted-foreground">Start:</span>
                     <span className="block font-semibold">
-                      {game[playerKey]?.name || "No Name available"}
+                      {game.start || "No start time"}
                     </span>
                   </div>
-                ))}
+                  <div className="text-center">
+                    <span className="block text-muted-foreground">Court:</span>
+                    <span className="block font-semibold">
+                      {game.court?.name || "No court assigned"}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-muted-foreground">End:</span>
+                    <span className="block font-semibold">
+                      {game.end || "No end time"}
+                    </span>
+                  </div>
 
-                <div>
-                  <span className="block text-muted-foreground">Status:</span>
-                  <span className="block font-semibold">
-                    {game.status || "No status available"}
-                  </span>
-                </div>
+                  {/* Middle Row */}
+                  {/* <div className="text-left">
+                    <span className="block font-semibold">
+                      {game.A1?.name || "No Name available"}
+                    </span>
+                    <span className="block font-semibold">
+                      {game.A2?.name || "No Name available"}
+                    </span>
+                  </div>
+                  <div className="text-center flex items-center justify-center font-semibold text-lg">
+                    v.s.
+                  </div>
+                  <div className="text-right">
+                    <span className="block font-semibold">
+                      {game.B1?.name || "No Name available"}
+                    </span>
+                    <span className="block font-semibold">
+                      {game.B2?.name || "No Name available"}
+                    </span>
+                  </div> */}
+                    {["A1", "A2"].map((player) => (
+                    <div className="text-left" key={player}>
+                      <span className="block font-semibold">
+                        {game[player]?.name || "No Name available"}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="text-center flex items-center justify-center font-semibold text-lg">
+                    v.s.
+                  </div>
+                  {["B1", "B2"].map((player) => (
+                    <div className="text-right" key={player}>
+                      <span className="block font-semibold">
+                        {game[player]?.name || "No Name available"}
+                      </span>
+                    </div>
+                  ))}
 
-                <div>
-                  <span className="block text-muted-foreground">Winner:</span>
-                  <span className="block font-semibold">
-                    {game.winner === "a" ? (
-                      <span className="text-green-600 underline">Team A</span>
+                  {/* Bottom Row */}
+                  <div className="text-left">
+                    <span className="block text-muted-foreground">Shuttles Used:</span>
+                    {game.shuttlesUsed.length > 0 ? (
+                      game.shuttlesUsed.map((shuttleUsed: any, idx: number) => (
+                        <div key={idx}>
+                          <span>
+                            {shuttleUsed.shuttle?.name || "Unknown"}
+                          </span>
+                          <span> - Quantity: {shuttleUsed.quantity || 0}</span>
+                        </div>
+                      ))
                     ) : (
-                      <span className="text-green-600 underline">Team B</span>
+                      <span>No shuttles used</span>
                     )}
-                  </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-muted-foreground">Winner:</span>
+                    <span className="block font-semibold">
+                      {game.winner === "a" ? (
+                        <span className="text-green-600 underline">Team A</span>
+                      ) : (
+                        <span className="text-green-600 underline">Team B</span>
+                      )}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
