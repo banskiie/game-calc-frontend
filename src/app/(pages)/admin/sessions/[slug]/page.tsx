@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { gql, useQuery } from "@apollo/client";
-import { Loader } from "lucide-react";
+import { Loader, Loader2 } from "lucide-react";
 import ShuttleForm from "../form";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -100,7 +100,12 @@ const Page = () => {
   const session = data?.fetchSession;
   const router = useRouter();
 
-  if (loading) return <Loader />;
+  if (loading)
+    return (
+      <div className="flex-1 h-fit flex items-center justify-center">
+        <Loader2 className="animate-spin" size={200} />
+      </div>
+    )
   if (error) return <div>Error: {error.message}</div>;
   if (!session) return <div>No session data available</div>;
 
