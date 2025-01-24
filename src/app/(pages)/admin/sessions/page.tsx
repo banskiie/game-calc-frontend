@@ -10,6 +10,7 @@ import {
 import { gql, useLazyQuery, useMutation } from "@apollo/client"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
 const FETCH_SESSIONS = gql`
@@ -115,12 +116,13 @@ const page = () => {
   const [limit, setLimit] = useState<number>(5)
   const [fetchMore, { data, refetch, loading }] = useLazyQuery(FETCH_SESSIONS, {
     onCompleted: (data) => console.log(data),
-    variables: { limit },
+    variables: { limit }, onError: (error) => console.log(error)
   })
   const [startSession] = useMutation(START_SESSION, {
     onCompleted: () => refetch(),
   })
   const sessions = data?.fetchSessions
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -144,7 +146,9 @@ const page = () => {
         </Button>
       </div>
       {sessions?.map((session: any) => (
-        <Card key={session._id} className="mx-2">
+        <Card key={session._id}
+          onClick={() => router.push("/admin/sessions/" + session._id)}
+        className="mx-2">
           <CardHeader>
             <CardTitle>
               {format(new Date(session.start), "MMMM d, yyyy")}
