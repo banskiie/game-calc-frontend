@@ -1,21 +1,20 @@
 "use client"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { gql, useMutation, useQuery } from "@apollo/client"
+import { gql, useLazyQuery, useMutation } from "@apollo/client"
 import { format } from "date-fns"
-import { CircleStop, Eye, NotepadText } from "lucide-react"
-import { useRouter } from "next/navigation"
-import React from "react"
+import { Loader2 } from "lucide-react"
+import React, { useEffect, useState } from "react"
 
 const FETCH_SESSIONS = gql`
-  query FetchSessions {
-    fetchSessions {
+  query FetchSessions($limit: Int!) {
+    fetchSessions(limit: $limit) {
       _id
       start
       end
@@ -113,64 +112,70 @@ const END_SESSION = gql`
 `
 
 const page = () => {
-  const { data, refetch, loading } = useQuery(FETCH_SESSIONS, {
+  const [limit, setLimit] = useState<number>(5)
+  const [fetchMore, { data, refetch, loading }] = useLazyQuery(FETCH_SESSIONS, {
     onCompleted: (data) => console.log(data),
+    variables: { limit },
   })
-  const [startSession, { loading: startLoading }] = useMutation(START_SESSION)
-  const [endSession, { loading: endLoading }] = useMutation(END_SESSION)
+  const [startSession] = useMutation(START_SESSION, {
+    onCompleted: () => refetch(),
+  })
   const sessions = data?.fetchSessions
-  const router = useRouter()
 
-  if (startLoading || endLoading || loading) return <div>Loading...</div>
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchMore({ variables: { limit } })
+    }
+    fetchData()
+  }, [limit, fetchMore])
+
+  if (loading)
+    return (
+      <div className="flex-1 h-fit flex items-center justify-center">
+        <Loader2 className="animate-spin" size={200} />
+      </div>
+    )
 
   return (
-    <div className="h-fit w-full flex flex-col gap-4 p-3">
-      <Button
-        size="lg"
-        onClick={() => {
-          startSession()
-          refetch()
-        }}
-      >
-        Add Session
-      </Button>
+    <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
+      <div className="sticky top-0 w-full bg-slate-200 p-2">
+        <Button className="w-full " onClick={async () => await startSession()}>
+          Add Session
+        </Button>
+      </div>
       {sessions?.map((session: any) => (
-        <Card key={session._id}>
+        <Card key={session._id} className="mx-2">
           <CardHeader>
-            <CardTitle>Session</CardTitle>
-            <CardDescription>
-              <span>
-                <span className="font-bold">Start: </span>
-                {format(new Date(session.start), "h:mm a MMMM d, yyyy")}
+            <CardTitle>
+              {format(new Date(session.start), "MMMM d, yyyy")}
+            </CardTitle>
+            <CardDescription className="flex flex-col gap-1">
+              <span className="block">
+                <span className="font-bold">Duration: </span>
+                {format(new Date(session.start), "h:mm a")} to{" "}
+                {session.end ? format(new Date(session.end), "h:mm a") : "TBD"}
               </span>
+              <Badge
+                className={`${
+                  session?.end ? "bg-green-900/80" : "bg-blue-600/80"
+                } w-fit`}
+              >
+                {session?.end ? "Finished" : "Ongoing"}
+              </Badge>
             </CardDescription>
           </CardHeader>
-          <CardFooter className="flex gap-2 justify-end">
-            <Button size="icon" className="bg-green-800 hover:bg-green-800/90">
-              <Eye />
-            </Button>
-            <Button
-              size="icon"
-              className="bg-blue-800 hover:bg-blue-800/90"
-              onClick={() => router.push(`/admin/sessions/${session._id}`)}
-            >
-              <NotepadText />
-            </Button>
-            {!session?.end && (
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={() => {
-                  endSession({ variables: { id: session._id } })
-                  refetch()
-                }}
-              >
-                <CircleStop />
-              </Button>
-            )}
-          </CardFooter>
         </Card>
       ))}
+      <Button
+        variant="link"
+        onClick={() => {
+          setLimit(limit + 5)
+          fetchMore({ variables: { limit } })
+        }}
+        className="font-bold"
+      >
+        LOAD MORE?
+      </Button>
     </div>
   )
 }
