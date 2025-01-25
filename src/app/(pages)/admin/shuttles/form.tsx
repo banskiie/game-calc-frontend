@@ -164,7 +164,7 @@ const ShuttleForm = ({
               control={form.control}
               name="price"
               render={({ field }) => (
-                <FormItem className="my-1">
+                <FormItem className="my-1````````````````````````````````````````````">
                   <FormLabel>
                     Price
                     <span className="text-destructive font-extrabold">*</span>
