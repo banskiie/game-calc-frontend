@@ -1,8 +1,14 @@
-"use client"
-import { gql, useQuery } from "@apollo/client"
-import Loader from "@/components/custom/Loader"
-import { useParams } from "next/navigation"
-import ShuttleForm from "../form"
+"use client";
+import { gql, useQuery } from "@apollo/client";
+import { useParams } from "next/navigation";
+import ShuttleForm from "../form";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 const FETCH_SHUTTLE = gql`
   query FetchShuttle($id: ID!) {
@@ -15,38 +21,37 @@ const FETCH_SHUTTLE = gql`
       updatedAt
     }
   }
-`
+`;
 
 const Page = () => {
-  const { slug } = useParams()
+  const { slug } = useParams();
   const { data, loading } = useQuery(FETCH_SHUTTLE, {
     ssr: false,
     skip: !slug,
     variables: { id: slug },
-  })
-  const shuttle = data?.fetchShuttle
+  });
+  const shuttle = data?.fetchShuttle;
 
-  if (loading) return <Loader />
+  if (loading) return <Loader2 />;
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
       <div>
         <ShuttleForm id={slug as string} />
       </div>
-      <div>
-        <span className="block text-muted-foreground">Shuttle Name</span>
-        <span className="block font-semibold text-muted-foreground">
-          {shuttle?.name}
-        </span>
-      </div>
-      <div>
-        <span className="block text-muted-foreground">Shuttle Price</span>
-        <span className="block font-semibold text-muted-foreground">
-          {shuttle?.price.toFixed(2)}
-        </span>
-      </div>
+      <Card className="mx-2">
+        <CardHeader>
+          <CardTitle>{shuttle?.name}</CardTitle>
+          <CardDescription className="flex flex-col gap-1">
+            <span>
+              <span className="font-semibold">Shuttle Price: </span>
+              <span>{shuttle?.price.toFixed(2)}</span>
+            </span>
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

@@ -10,6 +10,9 @@ import { gql, useLazyQuery } from "@apollo/client"
 import { Loader2 } from "lucide-react"
 // import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
+import ShuttleForm from "../shuttles/form"
+import UserForm from "./form"
+import { useRouter } from "next/navigation"
 
 const FETCH_USERS = gql`
   query FetchUsers {
@@ -32,6 +35,7 @@ const page = () => {
     onCompleted: (data) => console.log(data),
   })
   const users = data?.fetchUsers
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,17 +54,12 @@ const page = () => {
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
       <div className="sticky top-0 w-full bg-slate-200 p-2">
-        <Button
-          className="w-full "
-          onClick={() => {
-            refetch()
-          }}
-        >
-          Add User
-        </Button>
+      <UserForm refetch={refetch} />
       </div>
       {users?.map((user: any) => (
-        <Card key={user._id} className="mx-2">
+        <Card key={user._id} className="mx-2"
+        onClick={() => router.push("/admin/users/" + user._id)}
+        >
           <CardHeader>
             <CardTitle>{user.name}</CardTitle>
             <CardDescription className="flex flex-col gap-1">

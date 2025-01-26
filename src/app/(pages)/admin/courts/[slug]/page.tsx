@@ -1,8 +1,14 @@
-"use client"
-import { gql, useQuery } from "@apollo/client"
-import Loader from "@/components/custom/Loader"
-import { useParams } from "next/navigation"
-import CourtForm from "../form"
+"use client";
+import { gql, useQuery } from "@apollo/client";
+import { useParams } from "next/navigation";
+import CourtForm from "../form";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 const FETCH_COURT = gql`
   query FetchCourt($id: ID!) {
@@ -15,38 +21,37 @@ const FETCH_COURT = gql`
       updatedAt
     }
   }
-`
+`;
 
 const Page = () => {
-  const { slug } = useParams()
+  const { slug } = useParams();
   const { data, loading } = useQuery(FETCH_COURT, {
     ssr: false,
     skip: !slug,
     variables: { id: slug },
-  })
-  const court = data?.fetchCourt
+  });
+  const court = data?.fetchCourt;
 
-  if (loading) return <Loader />
+  if (loading) return <Loader2 />;
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
       <div>
         <CourtForm id={slug as string} />
       </div>
-      <div>
-        <span className="block text-muted-foreground">Court Name</span>
-        <span className="block font-semibold text-muted-foreground">
-          {court?.name}
-        </span>
-      </div>
-      <div>
-        <span className="block text-muted-foreground">Court Price</span>
-        <span className="block font-semibold text-muted-foreground">
-          {court?.price.toFixed(2)}
-        </span>
-      </div>
+      <Card className="mx-2">
+        <CardHeader>
+          <CardTitle>{court?.name}</CardTitle>
+          <CardDescription className="flex flex-col gap-1">
+            <span>
+              <span className="font-semibold">Court Price: </span>
+              <span>{court?.price.toFixed(2)}</span>
+            </span>
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
