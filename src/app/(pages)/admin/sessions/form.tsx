@@ -75,7 +75,7 @@ const FETCH_SESSION = gql`
       }
     }
   }
-`;
+`
 const CREATE_GAME = gql`
   mutation CreateGame($input: GameInput!) {
     createGame(input: $input) {
@@ -133,7 +133,7 @@ const CREATE_GAME = gql`
       }
     }
   }
-`;
+`
 
 const FETCH_USERS = gql`
   query FetchUsers {
@@ -142,7 +142,7 @@ const FETCH_USERS = gql`
       name
     }
   }
-`;
+`
 
 const FETCH_COURTS = gql`
   query FetchCourts {
@@ -155,7 +155,7 @@ const FETCH_COURTS = gql`
       updatedAt
     }
   }
-`;
+`
 
 const FETCH_SHUTTLES = gql`
   query FetchShuttles {
@@ -168,7 +168,7 @@ const FETCH_SHUTTLES = gql`
       updatedAt
     }
   }
-`;
+`
 
 const GameSchema = z.object({
   players: z.array(z.string().nonempty("Player is required.")),
@@ -178,38 +178,38 @@ const GameSchema = z.object({
   // end: z.string().optional(),
   // start: z.string().optional(),
   // winner: z.string().optional(),
-});
+})
 
 const SessionForm = ({
   id,
   refetch,
 }: {
-  id?: string;
-  refetch?: () => void;
+  id?: string
+  refetch?: () => void
 }) => {
-  const [open, setOpen] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
+  const [open, setOpen] = useState<boolean>(false)
+  const [isPending, startTransition] = useTransition()
   const { data, loading } = useQuery(FETCH_SESSION, {
     variables: { id },
     skip: !id,
     fetchPolicy: "network-only",
-  });
-  const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS);
-  const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS);
+  })
+  const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
+  const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)
   const {
     data: shuttleData,
     loading: shuttlesLoading,
     refetch: refetchShuttles,
-  } = useQuery(FETCH_SHUTTLES);
+  } = useQuery(FETCH_SHUTTLES)
   const [createGame] = useMutation(CREATE_GAME, {
     update(cache, { data: { createGame } }) {
-      if (!createGame) return;
+      if (!createGame) return
 
       // Basahon ang existing nga data alang sa FETCH_SESSION gikan sa cache
       const existingSession: any = cache.readQuery({
         query: FETCH_SESSION,
         variables: { id },
-      });
+      })
       if (existingSession?.fetchSession) {
         cache.writeQuery({
           query: FETCH_SESSION,
@@ -220,10 +220,10 @@ const SessionForm = ({
               games: [...existingSession.fetchSession.games, createGame],
             },
           },
-        });
+        })
       }
     },
-  });
+  })
 
   const form = useForm<z.infer<typeof GameSchema>>({
     resolver: zodResolver(GameSchema),
@@ -236,21 +236,21 @@ const SessionForm = ({
       // start: "",
       // winner: "",
     },
-  });
+  })
 
-  const [shuttles, setShuttles] = useState<string[]>(["0"]);
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [shuttles, setShuttles] = useState<string[]>(["0"])
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
   const handleAddShuttle = () => {
-    setShuttles([...shuttles, "0"]);
-    refetchShuttles();
-  };
+    setShuttles([...shuttles, "0"])
+    refetchShuttles()
+  }
   const handleRemoveShuttle = (index: number) => {
-    const newShuttles = [...shuttles];
-    newShuttles.splice(index, 1);
-    setShuttles(newShuttles);
-    refetchShuttles();
-  };
+    const newShuttles = [...shuttles]
+    newShuttles.splice(index, 1)
+    setShuttles(newShuttles)
+    refetchShuttles()
+  }
 
   // useEffect(() => {
   //   if (data) {
@@ -260,7 +260,7 @@ const SessionForm = ({
 
   const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
     startTransition(async () => {
-      const { players, court, shuttle } = data;
+      const { players, court, shuttle } = data
       try {
         const gameInput = {
           start: new Date(),
@@ -277,42 +277,42 @@ const SessionForm = ({
           end: null,
           winner: null,
           status: "ongoing",
-        };
+        }
 
-        console.log("Game Input:", gameInput, "test", form.getValues());
+        console.log("Game Input:", gameInput, "test", form.getValues())
 
         try {
           const response = await createGame({
             variables: { input: gameInput },
-          });
+          })
 
           if (response?.data?.createGame) {
-            const createdGame = response.data.createGame;
-            console.log("Game Created:", createdGame);
+            const createdGame = response.data.createGame
+            console.log("Game Created:", createdGame)
 
             if (refetch) {
-              refetch();
+              refetch()
             }
-            closeForm();
+            closeForm()
           } else {
-            console.error("Invalid response from createGame:", response);
+            console.error("Invalid response from createGame:", response)
           }
         } catch (error) {
-          console.error("Error creating game:", error);
+          console.error("Error creating game:", error)
         }
       } catch (error) {
-        console.error("Error creating game:", error);
+        console.error("Error creating game:", error)
       }
-    });
-  };
+    })
+  }
 
   const closeForm = () => {
-    setOpen(false);
-    form.clearErrors();
-    if (refetch) refetch();
-  };
+    setOpen(false)
+    form.clearErrors()
+    if (refetch) refetch()
+  }
 
-  if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />;
+  if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -434,12 +434,12 @@ const SessionForm = ({
                                 type="button"
                                 onClick={() => {
                                   if (parseInt(shuttles[index] || "0") > 0) {
-                                    const updatedShuttles = [...shuttles];
+                                    const updatedShuttles = [...shuttles]
                                     updatedShuttles[index] = (
                                       parseInt(updatedShuttles[index] || "0") -
                                       1
-                                    ).toString();
-                                    setShuttles(updatedShuttles);
+                                    ).toString()
+                                    setShuttles(updatedShuttles)
                                   }
                                 }}
                                 className="p-1 text-xs text-gray-600 hover:bg-gray-400 rounded-l-md"
@@ -455,11 +455,11 @@ const SessionForm = ({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const updatedShuttles = [...shuttles];
+                                  const updatedShuttles = [...shuttles]
                                   updatedShuttles[index] = (
                                     parseInt(updatedShuttles[index] || "0") + 1
-                                  ).toString();
-                                  setShuttles(updatedShuttles);
+                                  ).toString()
+                                  setShuttles(updatedShuttles)
                                 }}
                                 className="p-1 text-xs text-gray-600 hover:bg-gray-400 rounded-r-md"
                               >
@@ -505,7 +505,7 @@ const SessionForm = ({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
-};
+  )
+}
 
-export default SessionForm;
+export default SessionForm
