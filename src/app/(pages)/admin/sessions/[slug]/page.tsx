@@ -90,6 +90,16 @@ const FETCH_SESSION = gql`
     }
   }
 `;
+
+const UPDATE_GAME = gql`
+mutation UpdateGame($id: ID!, $end: DateTime!) {
+    updateGame(input: {_id: $id, end: $end}) {
+        end
+        _id
+    }
+}
+`
+
 const END_SESSION = gql`
   mutation EndSession($id: ID!) {
     endSession(_id: $id) {
@@ -106,6 +116,7 @@ const Page = () => {
     variables: { id: slug },
   });
   const [endSession, { loading: endLoading }] = useMutation(END_SESSION);
+  const [updateGame] = useMutation(UPDATE_GAME);
   const router = useRouter();
   const session = data?.fetchSession;
 
@@ -117,12 +128,25 @@ const Page = () => {
     );
   if (error) return <div>Error: {error.message}</div>;
   if (!session) return <div>No session data available</div>;
-
+  
   // Align session start and end with Game 1
   const game1 = session.games[0];
   const sessionStart = game1?.start || session.start;
   const sessionEnd = game1?.end || session.end;
-
+  const handleEndGame = (gameId: any) => {
+    const currentTime = new Date().toISOString(); 
+    updateGame({
+      variables: { id: gameId, end: currentTime },
+    })
+      .then(() => {
+        refetch(); 
+        console.log("Game ended at:", currentTime);
+      })
+      .catch((error) => {
+        console.error("Error ending game:", error);
+      });
+  };
+  
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
       <div>
@@ -161,13 +185,6 @@ const Page = () => {
         </CardContent>
       </Card>
       <div className="flex flex-row justify-center gap-4 mt-4">
-        {/* Edit Game Button */}
-        <button
-          onClick={() => router.push(`/edit-game/${session._id}`)}
-          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
-        >
-          Edit Game
-        </button>
         {/* View Summary Button */}
         <button
           onClick={() => router.push(`/admin/view-summary/${session._id}`)}
@@ -251,7 +268,7 @@ const Page = () => {
                       </CardContent>
                     </Card>
                   </div>
-
+                 
                   <div className="text-left flex flex-col items-center justify-center sm:flex-row sm:justify-start mt-[-50px]">
                     <div className="flex flex-col items-center">
                       <span className="block font-bold sm:mr-2 mb-2">
@@ -395,8 +412,19 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
+                <div className="flex flex-col items-center mt-4">
+                    {!game.end && (
+                      <button
+                        onClick={() => handleEndGame(game._id)}
+                        className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700"
+                      >
+                        End Game
+                      </button>
+                    )}
+                  </div>
               </CardContent>
             </Card>
+            
           ))
         ) : (
           <Card className="w-full max-w-md text-center p-6 mt-5 mx-auto">
@@ -414,7 +442,9 @@ const Page = () => {
             </CardContent>
           </Card>
         )}
+        
       </div>
+      
     </div>
   );
 };
