@@ -1,14 +1,14 @@
-"use client";
-import { gql, useQuery } from "@apollo/client";
-import { useParams } from "next/navigation";
-import ShuttleForm from "../form";
+"use client"
+import { gql, useQuery } from "@apollo/client"
+import { useParams } from "next/navigation"
+import ShuttleForm from "../form"
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+} from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
 const FETCH_SHUTTLE = gql`
   query FetchShuttle($id: ID!) {
@@ -21,18 +21,18 @@ const FETCH_SHUTTLE = gql`
       updatedAt
     }
   }
-`;
+`
 
 const Page = () => {
-  const { slug } = useParams();
+  const { slug } = useParams()
   const { data, loading } = useQuery(FETCH_SHUTTLE, {
     ssr: false,
     skip: !slug,
     variables: { id: slug },
-  });
-  const shuttle = data?.fetchShuttle;
+  })
+  const shuttle = data?.fetchShuttle
 
-  if (loading) return <Loader2 />;
+  if (loading) return <Loader2 />
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
@@ -51,7 +51,7 @@ const Page = () => {
         </CardHeader>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Page;
+export default Page

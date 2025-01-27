@@ -39,7 +39,6 @@ const Page = () => {
     ssr: false,
     skip: !slug,
     variables: { id: slug },
-    onCompleted: (data) => console.log(data),
   })
 
   if (loading) return <Loader2 />
