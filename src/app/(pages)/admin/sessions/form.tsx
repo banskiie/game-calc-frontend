@@ -18,16 +18,15 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 import { gql, useMutation, useQuery } from "@apollo/client"
-import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import React, { useEffect, useState, useTransition } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
-import Loader from "@/components/custom/Loader"
 import ButtonLoader from "@/components/custom/ButtonLoader"
-import { Loader2, Minus, Plus, X } from "lucide-react"
+import { ClockIcon, Loader2, Minus, Plus, X } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { TimePickerInput } from "@/components/custom/time-picker/TimePicker"
+import { Label } from "@/components/ui/label"
+import TimePicker from "@/components/ui/timepicker"
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -278,8 +277,8 @@ const GameSchema = z.object({
   court: z.string().nonempty("Court is required."),
   shuttles: z.array(ShuttleUsedSchema).default([]).optional(),
   session: z.string().nonempty("Session is required."),
-  start: z.date().nullable(),
-  end: z.date().nullable(),
+  start: z.string().nullable(),
+  end: z.string().nullable(),
 })
 
 const GameForm = ({
@@ -353,17 +352,25 @@ const GameForm = ({
                   shuttle: "",
                 },
               ],
+              start: game.start ? new Date(game.start).toISOString() : null,
+              end: game.end ? new Date(game.end).toISOString() : null, 
+
       })
     }
   }, [data, form, sessionId])
 
   const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
     startTransition(async () => {
-      const { players, court, shuttles } = data
+      const { players, court, shuttles, start, end } = data
+        // Convert start and end times to Date objects
+    const currentDate = new Date().toISOString().split('T')[0];
+    const startDate = start ? new Date(`${currentDate}T${start}:00`) : null;
+    const endDate = end ? new Date(`${currentDate}T${end}:00`) : null;
 
       try {
         const gameInput = {
-          start: new Date(),
+          start: startDate,
+          end: endDate,
           session: sessionId,
           A1: players[0],
           A2: players[1] || null,
@@ -372,7 +379,6 @@ const GameForm = ({
           court,
           shuttlesUsed:
             shuttles?.length === 1 && !shuttles[0].shuttle ? [] : shuttles,
-          end: null,
           winner: null,
         }
 
@@ -417,7 +423,7 @@ const GameForm = ({
         className="w-screen max-h-[calc(100vh-100px)] flex flex-col overflow-auto"
       >
         <SheetHeader>
-          <SheetTitle>{id ? "Add Game" : "Update Game"}</SheetTitle>
+          <SheetTitle>{id ? "Update Game" : "Add Game"}</SheetTitle>
           <SheetDescription>
             Please fill up the necessary information below.
           </SheetDescription>
@@ -460,6 +466,53 @@ const GameForm = ({
                 />
               )
             )}
+
+            {/* Time Picker */}
+            <div className="flex space-x-4 justify-between"> {/* Flexbox for horizontal layout with space between fields */}
+            <FormField
+  control={form.control}
+  name="start"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Start Time</FormLabel>
+      <FormControl>
+        <div className="flex items-center space-x-2">
+          <TimePicker
+            id="start"
+            value={field.value || ""}
+            onChange={(newTime) => field.onChange(newTime)}
+            ariaLabel="Start Time"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+<FormField
+  control={form.control}
+  name="end"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>End Time</FormLabel>
+      <FormControl>
+        <div className="flex items-center space-x-2">
+          <TimePicker
+          id="end"
+            value={field.value || ""}
+            onChange={(newTime) => field.onChange(newTime)}
+            ariaLabel="End Time"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+</div>
+            {/* Time Picker */}
+
+
             <FormField
               control={form.control}
               name="court"
