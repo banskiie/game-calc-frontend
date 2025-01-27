@@ -468,50 +468,49 @@ const GameForm = ({
             )}
 
             {/* Time Picker */}
-            <div className="flex space-x-4 justify-between"> {/* Flexbox for horizontal layout with space between fields */}
+            <div className="flex space-x-4 justify-between"> 
             <FormField
-  control={form.control}
-  name="start"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Start Time</FormLabel>
-      <FormControl>
-        <div className="flex items-center space-x-2">
-          <TimePicker
-            id="start"
-            value={field.value || ""}
-            onChange={(newTime) => field.onChange(newTime)}
-            ariaLabel="Start Time"
-          />
-        </div>
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-<FormField
-  control={form.control}
-  name="end"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>End Time</FormLabel>
-      <FormControl>
-        <div className="flex items-center space-x-2">
-          <TimePicker
-          id="end"
-            value={field.value || ""}
-            onChange={(newTime) => field.onChange(newTime)}
-            ariaLabel="End Time"
-          />
-        </div>
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-</div>
+                control={form.control}
+                name="start"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <TimePicker
+                          id="start"
+                          value={field.value || ""}
+                          onChange={(newTime) => field.onChange(newTime)}
+                          ariaLabel="Start Time"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="end"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <TimePicker
+                        id="end"
+                          value={field.value || ""}
+                          onChange={(newTime) => field.onChange(newTime)}
+                          ariaLabel="End Time"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
             {/* Time Picker */}
-
 
             <FormField
               control={form.control}
