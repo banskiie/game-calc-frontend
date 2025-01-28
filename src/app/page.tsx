@@ -83,7 +83,7 @@ const Home = () => {
                 </FormItem>
               )}
             />
-            <Button className="w-full" disabled={isPending}>
+            <Button className="w-full mt-5" disabled={isPending}>
               {isPending ? <ButtonLoader /> : "Sign In"}
             </Button>
           </form>
