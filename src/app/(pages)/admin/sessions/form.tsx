@@ -280,28 +280,43 @@ const GameForm = ({
     })
 
     const formatTime = (date: string | null) => {
-      if (!date) return null;  
-      const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-      const time = new Date(date).toLocaleTimeString('en-US', options);
-      return time || null;
+      if (!date) return null;
+      try {
+        const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+        const time = new Date(date).toLocaleTimeString('en-US', options);
+        return time || null;
+      } catch (error) {
+        console.error('Invalid time format:', date);
+        return null;
+      }
     }
     
     const parseTime = (timeStr: string | null) => {
-      if (!timeStr) return null;  
-      const [time, period] = timeStr.split(' ');
+      if (!timeStr) return null;
+    
+      const [time, period] = timeStr.split(' '); 
+      if (!time || !period) return null;
+    
       const [hours, minutes] = time.split(':');
-      
-      if (!hours || !minutes || !period) return null; 
+      if (!hours || !minutes) return null;
     
       const hours24 = period === 'AM'
-        ? (hours === '12' ? '00' : hours)
-        : (hours === '12' ? '12' : String(Number(hours) + 12));
+        ? hours === '12' ? '00' : hours
+        : hours === '12' ? '12' : String(Number(hours) + 12);
     
       if (isNaN(Number(hours24)) || isNaN(Number(minutes))) return null;
     
       const currentDate = new Date().toISOString().split('T')[0]; 
-      return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
-    }
+      const dateString = `${currentDate}T${hours24}:${minutes}:00`;
+    
+      const parsedDate = new Date(dateString);
+      if (isNaN(parsedDate.getTime())) {
+        console.error('Invalid date string:', dateString);
+        return null;
+      }
+    
+      return parsedDate.toISOString();
+    };
     
     useEffect(() => {
         if (data) {
@@ -479,7 +494,7 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>Start Time</FormLabel>
                                         <FormControl>
-                                            <div className="flex items-center space-x-2">
+                                            {/* <div className="flex items-center space-x-2">
                                                 <TimePicker
                                                     id="start"
                                                     value={field.value || ''}
@@ -488,7 +503,11 @@ const GameForm = ({
                                                     }
                                                     ariaLabel="Start Time"
                                                 />
-                                            </div>
+                                            </div> */}
+                                            <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
+                                              onChange={(e) => field.onChange(e.target.value)}
+                                              value={field.value || ''}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -501,16 +520,10 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>End Time</FormLabel>
                                         <FormControl>
-                                            <div className="flex items-center space-x-2">
-                                                <TimePicker
-                                                    id="end"
-                                                    value={field.value || ''}
-                                                    onChange={(newTime) =>
-                                                        field.onChange(newTime)
-                                                    }
-                                                    ariaLabel="End Time"
-                                                />
-                                            </div>
+                                        <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
+                                              onChange={(e) => field.onChange(e.target.value)}
+                                              value={field.value || ''}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

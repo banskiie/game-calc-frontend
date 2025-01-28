@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface TimePickerProps {
   value: string;
@@ -8,52 +8,36 @@ interface TimePickerProps {
 }
 
 const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, id, ariaLabel }) => {
-  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')); 
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
-  const periods = ['AM', 'PM']; 
+  const periods = ['AM', 'PM'];
 
-  const handleChange = (field: 'hours' | 'minutes' | 'period', newValue: string) => {
-    const [currentHours, currentMinutes, currentPeriod] = value.split(/[: ]/);
-    if (field === 'hours') {
-      onChange(`${newValue}:${currentMinutes} ${currentPeriod}`);
-    } else if (field === 'minutes') {
-      onChange(`${currentHours}:${newValue} ${currentPeriod}`);
-    } else if (field === 'period') {
-      onChange(`${currentHours}:${currentMinutes} ${newValue}`);
+  const handleChange = (field: 'time' | 'period', newValue: string) => {
+    const [currentHours, currentMinutes] = value.split(':');
+    let formattedTime = `${currentHours}:${currentMinutes} ${newValue}`;
+
+    if (field === 'time') {
+      const [newHours, newMinutes] = newValue.split(':');
+      formattedTime = `${newHours}:${newMinutes} ${currentPeriod}`;
     }
+
+    onChange(formattedTime);
   };
 
-  const [currentHours, currentMinutes, currentPeriod = 'PM'] = value.split(/[: ]/);
+  const [currentHours, currentMinutes, currentPeriod = "PM"] = value.split(/[: ]/);
 
   return (
     <div className="flex items-center space-x-1">
-      <select
-        id={`${id}-hours`}
-        value={currentHours}
-        onChange={(e) => handleChange('hours', e.target.value)}
-        aria-label={`${ariaLabel} - Hours`}
-        className="w-16 p-2 border rounded-md text-center"
-      >
-        {hours.map((hour) => (
-          <option key={hour} value={hour}>
-            {hour}
-          </option>
-        ))}
-      </select>
-      <span>:</span>
-      <select
-        id={`${id}-minutes`}
-        value={currentMinutes}
-        onChange={(e) => handleChange('minutes', e.target.value)}
-        aria-label={`${ariaLabel} - Minutes`}
-        className="w-16 p-2 border rounded-md text-center"
-      >
-        {minutes.map((minute) => (
-          <option key={minute} value={minute}>
-            {minute}
-          </option>
-        ))}
-      </select>
+      {/* Time input field */}
+      <input
+        type="time"
+        id={`${id}-time`}
+        value={`${currentHours}:${currentMinutes}`}
+        onChange={(e) => handleChange('time', e.target.value)}
+        aria-label={ariaLabel}
+        className="w-32 p-2 border rounded-md text-center"
+      />
+      {/* Period input (AM/PM) */}
       <select
         id={`${id}-period`}
         value={currentPeriod}
