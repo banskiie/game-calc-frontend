@@ -278,17 +278,17 @@ const GameForm = ({
     name: "shuttles",
   })
 
-    const formatTime = (date: string | null) => {
-      if (!date) return null;
-      try {
-        const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-        const time = new Date(date).toLocaleTimeString('en-US', options);
-        return time || null;
-      } catch (error) {
-        console.error('Invalid time format:', date);
-        return null;
-      }
-    }
+    // const formatTime = (date: string | null) => {
+    //   if (!date) return null;
+    //   try {
+    //     const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+    //     const time = new Date(date).toLocaleTimeString('en-US', options);
+    //     return time || null;
+    //   } catch (error) {
+    //     console.error('Invalid time format:', date);
+    //     return null;
+    //   }
+    // }
     
     const parseTime = (timeStr: string | null) => {
       if (!timeStr) return null;
@@ -346,6 +346,8 @@ const GameForm = ({
             })
         }
     }, [data, form, sessionId])
+
+
   const formatTime = (date: string | null) => {
     if (!date) return null
     const options: Intl.DateTimeFormatOptions = {
@@ -589,7 +591,6 @@ const GameForm = ({
                             />
                         </div>
                         {/* Time Picker */}
-            {/* Time Picker */}
             <div className="flex flex-col md:flex-ro justify-between">
               <FormField
                 control={form.control}
@@ -598,14 +599,10 @@ const GameForm = ({
                   <FormItem>
                     <FormLabel>Start Time</FormLabel>
                     <FormControl>
-                      <div className="flex items-center space-x-2">
-                        <TimePicker
-                          id="start"
-                          value={field.value || ""}
-                          onChange={(newTime) => field.onChange(newTime)}
-                          ariaLabel="Start Time"
-                        />
-                      </div>
+                    <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
+                                              onChange={(e) => field.onChange(e.target.value)}
+                                              value={field.value || ''}
+                                            />F
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -618,14 +615,10 @@ const GameForm = ({
                   <FormItem>
                     <FormLabel>End Time</FormLabel>
                     <FormControl>
-                      <div className="flex items-center space-x-2">
-                        <TimePicker
-                          id="end"
-                          value={field.value || ""}
-                          onChange={(newTime) => field.onChange(newTime)}
-                          ariaLabel="End Time"
-                        />
-                      </div>
+                    <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
+                                              onChange={(e) => field.onChange(e.target.value)}
+                                              value={field.value || ''}
+                                            />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
