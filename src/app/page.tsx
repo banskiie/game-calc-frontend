@@ -33,6 +33,7 @@ const Home = () => {
   })
 
   const onSubmit = (values: z.infer<typeof AuthSchema>) => {
+    console.log(values)
     startTransition(async () => {
       router.push("/admin/sessions")
     })

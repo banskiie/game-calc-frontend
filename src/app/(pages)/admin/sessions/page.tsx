@@ -104,13 +104,13 @@ const START_SESSION = gql`
   }
 `
 
-const END_SESSION = gql`
-  mutation EndSession($id: ID!) {
-    endSession(_id: $id) {
-      _id
-    }
-  }
-`
+// const END_SESSION = gql`
+//   mutation EndSession($id: ID!) {
+//     endSession(_id: $id) {
+//       _id
+//     }
+//   }
+// `
 
 const page = () => {
   const [limit, setLimit] = useState<number>(5)
