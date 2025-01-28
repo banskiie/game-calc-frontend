@@ -80,7 +80,7 @@ const ShuttleForm = ({
   const { data, loading } = useQuery(FETCH_SHUTTLE, {
     variables: { id },
     skip: !id,
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "network-only",
   })
   const [submit] = useMutation(id ? UPDATE_SHUTTLE : CREATE_SHUTTLE)
   const form = useForm<z.infer<typeof ShuttleSchema>>({

@@ -279,6 +279,30 @@ const GameForm = ({
         name: 'shuttles',
     })
 
+    const formatTime = (date: string | null) => {
+      if (!date) return null;  
+      const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+      const time = new Date(date).toLocaleTimeString('en-US', options);
+      return time || null;
+    }
+    
+    const parseTime = (timeStr: string | null) => {
+      if (!timeStr) return null;  
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':');
+      
+      if (!hours || !minutes || !period) return null; 
+    
+      const hours24 = period === 'AM'
+        ? (hours === '12' ? '00' : hours)
+        : (hours === '12' ? '12' : String(Number(hours) + 12));
+    
+      if (isNaN(Number(hours24)) || isNaN(Number(minutes))) return null;
+    
+      const currentDate = new Date().toISOString().split('T')[0]; 
+      return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
+    }
+    
     useEffect(() => {
         if (data) {
             const game = data.fetchGame
@@ -303,16 +327,8 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                start: game.start
-                    ? new Date(game.start).toLocaleString('en-US', {
-                          timeZone: 'Asia/Manila',
-                      })
-                    : null,
-                end: game.end
-                    ? new Date(game.end).toLocaleString('en-US', {
-                          timeZone: 'Asia/Manila',
-                      })
-                    : null,
+                        start: game.start ? formatTime(game.start) : null,
+                        end: game.end ? formatTime(game.end) : null,
             })
         }
     }, [data, form, sessionId])
@@ -329,7 +345,7 @@ const GameForm = ({
               const hours24 = period === 'AM'
                 ? hours === '12' ? '00' : hours
                 : hours === '12' ? '12' : String(Number(hours) + 12);
-              return new Date(`${currentDate}T${hours24}:${minutes}:00`);
+              return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
             }
 
             const startDate = parseTime(start)

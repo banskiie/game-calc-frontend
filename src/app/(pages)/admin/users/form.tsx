@@ -91,7 +91,7 @@ const UserForm = ({
   const { data, loading } = useQuery(FETCH_USER, {
     variables: { id },
     skip: !id,
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "network-only",
   })
   const [submit] = useMutation(id ? UPDATE_USER : CREATE_USER)
   const form = useForm<z.infer<typeof UserSchema>>({
