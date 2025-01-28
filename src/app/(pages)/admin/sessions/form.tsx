@@ -23,60 +23,11 @@ import React, { useEffect, useState, useTransition } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import ButtonLoader from '@/components/custom/ButtonLoader'
-import { ClockIcon, Loader2, Minus, Plus, X } from 'lucide-react'
+import {  Loader2, Minus, Plus, X } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { Label } from '@/components/ui/label'
 import TimePicker from '@/components/custom/timepicker'
 
-const FETCH_SESSION = gql`
-    query FetchSession($id: ID!) {
-        fetchSession(_id: $id) {
-            _id
-            start
-            end
-            createdAt
-            updatedAt
-            games {
-                _id
-                start
-                end
-                winner
-                status
-                active
-                A1 {
-                    _id
-                    name
-                }
-                A2 {
-                    _id
-                    name
-                }
-                B1 {
-                    _id
-                    name
-                }
-                B2 {
-                    _id
-                    name
-                }
-                court {
-                    _id
-                    name
-                    price
-                    active
-                }
-                shuttlesUsed {
-                    quantity
-                    shuttle {
-                        _id
-                        name
-                        price
-                    }
-                }
-            }
-        }
-    }
-`
+
 const FETCH_GAME = gql`
     query FetchGame($id: ID!) {
         fetchGame(_id: $id) {
@@ -292,7 +243,7 @@ const GameForm = ({
 }) => {
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
-    const { data, loading } = useQuery(FETCH_GAME, {
+    const { data } = useQuery(FETCH_GAME, {
         variables: { id },
         skip: !id,
         fetchPolicy: 'network-only',
@@ -369,13 +320,20 @@ const GameForm = ({
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
         startTransition(async () => {
             const { players, court, shuttles, start, end } = data
-            // Convert start and end times to Date objects
             const currentDate = new Date().toISOString().split('T')[0]
-            const startDate = start
-                ? new Date(`${currentDate}T${start}:00`)
-                : null
-            const endDate = end ? new Date(`${currentDate}T${end}:00`) : null
 
+            const parseTime = (timeStr: string | null) => {
+              if (!timeStr) return null;
+              const [time, period] = timeStr.split(' '); 
+              const [hours, minutes] = time.split(':'); 
+              const hours24 = period === 'AM'
+                ? hours === '12' ? '00' : hours
+                : hours === '12' ? '12' : String(Number(hours) + 12);
+              return new Date(`${currentDate}T${hours24}:${minutes}:00`);
+            }
+
+            const startDate = parseTime(start)
+            const endDate = parseTime(end)
             try {
                 const gameInput = {
                     start: startDate,
