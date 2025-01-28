@@ -10,7 +10,7 @@ interface TimePickerProps {
 const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, id, ariaLabel }) => {
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')); 
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
-  const periods = ['AM', 'PM']; // AM/PM periods
+  const periods = ['AM', 'PM']; 
 
   const handleChange = (field: 'hours' | 'minutes' | 'period', newValue: string) => {
     const [currentHours, currentMinutes, currentPeriod] = value.split(/[: ]/);
@@ -23,7 +23,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, id, ariaLabel 
     }
   };
 
-  const [currentHours, currentMinutes, currentPeriod] = value.split(/[: ]/);
+  const [currentHours, currentMinutes, currentPeriod = 'PM'] = value.split(/[: ]/);
 
   return (
     <div className="flex items-center space-x-1">

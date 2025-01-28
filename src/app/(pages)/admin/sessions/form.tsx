@@ -278,63 +278,74 @@ const GameForm = ({
     name: "shuttles",
   })
 
-  useEffect(() => {
-    if (data) {
-      const game = data.fetchGame
-      form.reset({
-        session: sessionId,
-        court: game.court._id,
-        players: [
-          game.A1._id,
-          game.A2?._id ?? "",
-          game.B1._id,
-          game.B2?._id ?? "",
-        ],
-        shuttles:
-          !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
-            ? game.shuttlesUsed.map((shuttle: any) => ({
-                quantity: shuttle.quantity,
-                shuttle: shuttle.shuttle._id,
-              }))
-            : [
-                {
-                  quantity: 0,
-                  shuttle: "",
-                },
-              ],
-        start: game.start
-          ? new Date(game.start).toLocaleString("en-US", {
-              timeZone: "Asia/Manila",
-            })
-          : null,
-        end: game.end
-          ? new Date(game.end).toLocaleString("en-US", {
-              timeZone: "Asia/Manila",
-            })
-          : null,
-      })
+    const formatTime = (date: string | null) => {
+      if (!date) return null;  
+      const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+      const time = new Date(date).toLocaleTimeString('en-US', options);
+      return time || null;
     }
-  }, [data, form, sessionId])
+    
+    const parseTime = (timeStr: string | null) => {
+      if (!timeStr) return null;  
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':');
+      
+      if (!hours || !minutes || !period) return null; 
+    
+      const hours24 = period === 'AM'
+        ? (hours === '12' ? '00' : hours)
+        : (hours === '12' ? '12' : String(Number(hours) + 12));
+    
+      if (isNaN(Number(hours24)) || isNaN(Number(minutes))) return null;
+    
+      const currentDate = new Date().toISOString().split('T')[0]; 
+      return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
+    }
+    
+    useEffect(() => {
+        if (data) {
+            const game = data.fetchGame
+            form.reset({
+                session: sessionId,
+                court: game.court._id,
+                players: [
+                    game.A1._id,
+                    game.A2?._id ?? '',
+                    game.B1._id,
+                    game.B2?._id ?? '',
+                ],
+                shuttles:
+                    !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
+                        ? game.shuttlesUsed.map((shuttle: any) => ({
+                              quantity: shuttle.quantity,
+                              shuttle: shuttle.shuttle._id,
+                          }))
+                        : [
+                              {
+                                  quantity: 0,
+                                  shuttle: '',
+                              },
+                          ],
+                        start: game.start ? formatTime(game.start) : null,
+                        end: game.end ? formatTime(game.end) : null,
+            })
+        }
+    }, [data, form, sessionId])
 
   const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
     startTransition(async () => {
       const { players, court, shuttles, start, end } = data
       const currentDate = new Date().toISOString().split("T")[0]
 
-      const parseTime = (timeStr: string | null) => {
-        if (!timeStr) return null
-        const [time, period] = timeStr.split(" ")
-        const [hours, minutes] = time.split(":")
-        const hours24 =
-          period === "AM"
-            ? hours === "12"
-              ? "00"
-              : hours
-            : hours === "12"
-            ? "12"
-            : String(Number(hours) + 12)
-        return new Date(`${currentDate}T${hours24}:${minutes}:00`)
-      }
+            const parseTime = (timeStr: string | null) => {
+              if (!timeStr) return null;
+              const [time, period] = timeStr.split(' '); 
+              const [hours, minutes] = time.split(':'); 
+              const hours24 = period === 'AM'
+                ? hours === '12' ? '00' : hours
+                : hours === '12' ? '12' : String(Number(hours) + 12);
+              return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
+            }
 
       const startDate = parseTime(start)
       const endDate = parseTime(end)

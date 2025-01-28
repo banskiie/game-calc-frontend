@@ -74,7 +74,7 @@ const CourtForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
   const { data, loading } = useQuery(FETCH_COURT, {
     variables: { id },
     skip: !id,
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "network-only",
   })
   const [submit] = useMutation(id ? UPDATE_COURT : CREATE_COURT)
   const form = useForm<z.infer<typeof CourtSchema>>({
