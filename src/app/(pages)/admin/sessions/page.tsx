@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { gql, useLazyQuery, useMutation } from "@apollo/client"
-import { format } from "date-fns"
+import { differenceInMinutes, format } from "date-fns"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
@@ -116,7 +116,8 @@ const page = () => {
   const [limit, setLimit] = useState<number>(5)
   const [fetchMore, { data, refetch, loading }] = useLazyQuery(FETCH_SESSIONS, {
     onCompleted: (data) => console.log(data),
-    variables: { limit }, onError: (error) => console.log(error)
+    variables: { limit },
+    onError: (error) => console.log(error),
   })
   const [startSession] = useMutation(START_SESSION, {
     onCompleted: () => refetch(),
@@ -146,18 +147,41 @@ const page = () => {
         </Button>
       </div>
       {sessions?.map((session: any) => (
-        <Card key={session._id}
+        <Card
+          key={session._id}
           onClick={() => router.push("/admin/sessions/" + session._id)}
-        className="mx-2">
+          className="mx-2"
+        >
           <CardHeader>
             <CardTitle>
               {format(new Date(session.start), "MMMM d, yyyy")}
             </CardTitle>
             <CardDescription className="flex flex-col gap-1">
               <span className="block">
-                <span className="font-bold">Duration: </span>
-                {format(new Date(session.start), "h:mm a")} to{" "}
-                {session.end ? format(new Date(session.end), "h:mm a") : "TBD"}
+                {session.games.length > 0 && (
+                  <>
+                    <span className="block font-bold text-muted-foreground">
+                      {session.games.length}{" "}
+                      {session.games.length > 1 ? "games" : "game"} (
+                      {differenceInMinutes(
+                        new Date(session.games[session.games.length - 1].end),
+                        new Date(session.games[0].start)
+                      )}{" "}
+                      mins total)
+                    </span>
+                    <span className="block text-muted-foreground">
+                      {format(new Date(session.games[0].start), "h:mm a")} to{" "}
+                      {session.games[session.games.length - 1].end
+                        ? format(
+                            new Date(
+                              session.games[session.games.length - 1].end
+                            ),
+                            "h:mm a"
+                          )
+                        : "TBA"}{" "}
+                    </span>
+                  </>
+                )}
               </span>
               <Badge
                 className={`${

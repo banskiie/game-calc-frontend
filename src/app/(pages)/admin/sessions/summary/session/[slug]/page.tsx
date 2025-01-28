@@ -1,9 +1,6 @@
 "use client"
-
 import { gql, useQuery } from "@apollo/client"
 import { useParams } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import { Card, CardDescription } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Loader from "@/components/custom/Loader"
 
