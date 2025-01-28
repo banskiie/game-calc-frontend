@@ -352,9 +352,8 @@ const GameForm = ({
                   shuttle: "",
                 },
               ],
-              start: game.start ? new Date(game.start).toISOString() : null,
-              end: game.end ? new Date(game.end).toISOString() : null, 
-
+        start: game.start ? new Date(game.start).toISOString() : null,
+        end: game.end ? new Date(game.end).toISOString() : null,
       })
     }
   }, [data, form, sessionId])
@@ -362,10 +361,9 @@ const GameForm = ({
   const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
     startTransition(async () => {
       const { players, court, shuttles, start, end } = data
-        // Convert start and end times to Date objects
-    const currentDate = new Date().toISOString().split('T')[0];
-    const startDate = start ? new Date(`${currentDate}T${start}:00`) : null;
-    const endDate = end ? new Date(`${currentDate}T${end}:00`) : null;
+      const currentDate = new Date().toISOString().split("T")[0]
+      const startDate = start ? new Date(`${currentDate}T${start}:00`) : null
+      const endDate = end ? new Date(`${currentDate}T${end}:00`) : null
 
       try {
         const gameInput = {
@@ -468,8 +466,8 @@ const GameForm = ({
             )}
 
             {/* Time Picker */}
-            <div className="flex space-x-4 justify-between"> 
-            <FormField
+            <div className="flex space-x-4 justify-between">
+              <FormField
                 control={form.control}
                 name="start"
                 render={({ field }) => (
@@ -498,7 +496,7 @@ const GameForm = ({
                     <FormControl>
                       <div className="flex items-center space-x-2">
                         <TimePicker
-                        id="end"
+                          id="end"
                           value={field.value || ""}
                           onChange={(newTime) => field.onChange(newTime)}
                           ariaLabel="End Time"
@@ -509,7 +507,7 @@ const GameForm = ({
                   </FormItem>
                 )}
               />
-              </div>
+            </div>
             {/* Time Picker */}
 
             <FormField
