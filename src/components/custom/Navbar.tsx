@@ -38,7 +38,7 @@ const TabNavigation = () => {
           variant="ghost"
           key={index}
           className={`transition rounded-none ease-linear text-primary hover:text-primary hover:bg-primary/10 active:bg-primary/10 active:text-primary pt-4 ${
-            currentPath == item.url
+            currentPath.startsWith(item.url)
               ? "bg-primary text-white hover:bg-primary hover:text-white hover:no-underline"
               : undefined
           }`}
