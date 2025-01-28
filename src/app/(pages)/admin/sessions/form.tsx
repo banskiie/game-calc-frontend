@@ -1,322 +1,329 @@
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
-import { gql, useMutation, useQuery } from "@apollo/client"
-import { zodResolver } from "@hookform/resolvers/zod"
-import React, { useEffect, useState, useTransition } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
-import { z } from "zod"
-import ButtonLoader from "@/components/custom/ButtonLoader"
-import { Loader2, Minus, Plus, X } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
-import TimePicker from "@/components/custom/timepicker"
+    Sheet,
+    SheetTrigger,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+    SheetFooter,
+    SheetClose,
+} from '@/components/ui/sheet'
+import { gql, useMutation, useQuery } from '@apollo/client'
+import { zodResolver } from '@hookform/resolvers/zod'
+import React, { useEffect, useState, useTransition } from 'react'
+import { useFieldArray, useForm } from 'react-hook-form'
+import { z } from 'zod'
+import ButtonLoader from '@/components/custom/ButtonLoader'
+import { Loader2, Minus, Plus, X } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
+import { format, toZonedTime } from 'date-fns-tz'
+import { parse } from 'date-fns'
+
+const FETCH_SESSION = gql`
+    query FetchSession($id: ID!) {
+        fetchSession(_id: $id) {
+            _id
+            games {
+                _id
+                end
+            }
+        }
+    }
+`
 
 const FETCH_GAME = gql`
-  query FetchGame($id: ID!) {
-    fetchGame(_id: $id) {
-      _id
-      start
-      end
-      winner
-      status
-      active
-      A1 {
-        _id
-        name
-        contact
-        password
-        username
-        role
-        active
-        createdAt
-        updatedAt
-      }
-      A2 {
-        _id
-        name
-        contact
-        password
-        username
-        role
-        active
-        createdAt
-        updatedAt
-      }
-      B1 {
-        _id
-        name
-        contact
-        password
-        username
-        role
-        active
-        createdAt
-        updatedAt
-      }
-      B2 {
-        _id
-        name
-        contact
-        password
-        username
-        role
-        active
-        createdAt
-        updatedAt
-      }
-      court {
-        _id
-        name
-        price
-        active
-        createdAt
-        updatedAt
-      }
-      shuttlesUsed {
-        quantity
-        shuttle {
-          _id
-          name
-          price
-          active
-          createdAt
-          updatedAt
+    query FetchGame($id: ID!) {
+        fetchGame(_id: $id) {
+            _id
+            start
+            end
+            winner
+            status
+            active
+            A1 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            A2 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            B1 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            B2 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            court {
+                _id
+                name
+                price
+                active
+                createdAt
+                updatedAt
+            }
+            shuttlesUsed {
+                quantity
+                shuttle {
+                    _id
+                    name
+                    price
+                    active
+                    createdAt
+                    updatedAt
+                }
+            }
         }
-      }
     }
-  }
 `
 const CREATE_GAME = gql`
-  mutation CreateGame(
-    $start: DateTime
-    $session: ID!
-    $end: DateTime
-    $A1: ID!
-    $A2: ID
-    $B1: ID!
-    $B2: ID
-    $court: ID!
-    $shuttlesUsed: [ShuttlesUsedInput]
-    $winner: Winner
-    $status: Status!
-  ) {
-    createGame(
-      input: {
-        start: $start
-        session: $session
-        end: $end
-        A1: $A1
-        A2: $A2
-        B1: $B1
-        B2: $B2
-        court: $court
-        shuttlesUsed: $shuttlesUsed
-        winner: $winner
-        status: $status
-      }
+    mutation CreateGame(
+        $start: DateTime
+        $session: ID!
+        $end: DateTime
+        $A1: ID!
+        $A2: ID
+        $B1: ID!
+        $B2: ID
+        $court: ID!
+        $shuttlesUsed: [ShuttlesUsedInput]
+        $winner: Winner
+        $status: Status!
     ) {
-      _id
-      start
-      end
-      winner
-      status
-      active
+        createGame(
+            input: {
+                start: $start
+                session: $session
+                end: $end
+                A1: $A1
+                A2: $A2
+                B1: $B1
+                B2: $B2
+                court: $court
+                shuttlesUsed: $shuttlesUsed
+                winner: $winner
+                status: $status
+            }
+        ) {
+            _id
+            start
+            end
+            winner
+            status
+            active
+        }
     }
-  }
 `
 
 const UPDATE_GAME = gql`
-  mutation UpdateGame(
-    $id: ID!
-    $start: DateTime
-    $session: ID
-    $end: DateTime
-    $A1: ID
-    $A2: ID
-    $B1: ID
-    $B2: ID
-    $court: ID
-    $shuttlesUsed: [ShuttlesUsedInput]
-    $winner: Winner
-    $status: Status
-  ) {
-    updateGame(
-      input: {
-        _id: $id
-        start: $start
-        session: $session
-        end: $end
-        A1: $A1
-        A2: $A2
-        B1: $B1
-        B2: $B2
-        court: $court
-        shuttlesUsed: $shuttlesUsed
-        winner: $winner
-        status: $status
-      }
+    mutation UpdateGame(
+        $id: ID!
+        $start: DateTime
+        $session: ID
+        $end: DateTime
+        $A1: ID
+        $A2: ID
+        $B1: ID
+        $B2: ID
+        $court: ID
+        $shuttlesUsed: [ShuttlesUsedInput]
+        $winner: Winner
+        $status: Status
     ) {
-      _id
-      start
-      end
-      winner
-      status
-      active
+        updateGame(
+            input: {
+                _id: $id
+                start: $start
+                session: $session
+                end: $end
+                A1: $A1
+                A2: $A2
+                B1: $B1
+                B2: $B2
+                court: $court
+                shuttlesUsed: $shuttlesUsed
+                winner: $winner
+                status: $status
+            }
+        ) {
+            _id
+            start
+            end
+            winner
+            status
+            active
+        }
     }
-  }
 `
 
 const FETCH_USERS = gql`
-  query FetchUsers {
-    fetchUsers {
-      _id
-      name
+    query FetchUsers {
+        fetchUsers {
+            _id
+            name
+        }
     }
-  }
 `
 
 const FETCH_COURTS = gql`
-  query FetchCourts {
-    fetchCourts {
-      _id
-      name
-      price
-      active
-      createdAt
-      updatedAt
+    query FetchCourts {
+        fetchCourts {
+            _id
+            name
+            price
+            active
+            createdAt
+            updatedAt
+        }
     }
-  }
 `
 
 const FETCH_SHUTTLES = gql`
-  query FetchShuttles {
-    fetchShuttles {
-      _id
-      name
-      price
-      active
-      createdAt
-      updatedAt
+    query FetchShuttles {
+        fetchShuttles {
+            _id
+            name
+            price
+            active
+            createdAt
+            updatedAt
+        }
     }
-  }
 `
 
 const ShuttleUsedSchema = z.object({
-  quantity: z.number().int(),
-  shuttle: z.string(),
+    quantity: z.number().int(),
+    shuttle: z.string(),
 })
 
 const GameSchema = z.object({
-  players: z.array(z.string().nonempty("Player is required.")),
-  court: z.string().nonempty("Court is required."),
-  shuttles: z.array(ShuttleUsedSchema).default([]).optional(),
-  session: z.string().nonempty("Session is required."),
-  start: z.string().nullable(),
-  end: z.string().nullable(),
+    players: z.array(z.string().nonempty('Player is required.')),
+    court: z.string().nonempty('Court is required.'),
+    shuttles: z.array(ShuttleUsedSchema).default([]).optional(),
+    session: z.string().nonempty('Session is required.'),
+    start: z.string().nullable(),
+    end: z.string().nullable(),
 })
 
 const GameForm = ({
-  sessionId,
-  id,
-  refetch,
+    sessionId,
+    id,
+    refetch,
 }: {
-  sessionId: string
-  id?: string
-  refetch?: () => void
+    sessionId: string
+    id?: string
+    refetch?: () => void
 }) => {
-  const [open, setOpen] = useState<boolean>(false)
-  const [isPending, startTransition] = useTransition()
-  const { data } = useQuery(FETCH_GAME, {
-    variables: { id },
-    skip: !id,
-    fetchPolicy: "network-only",
-  })
-  const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
-  const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)
-  const { data: shuttleData, loading: shuttlesLoading } =
-    useQuery(FETCH_SHUTTLES)
-  const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME)
-
-  const form = useForm<z.infer<typeof GameSchema>>({
-    resolver: zodResolver(GameSchema),
-    values: {
-      players: ["", "", "", ""],
-      court: "",
-      shuttles: [
-        {
-          quantity: 0,
-          shuttle: "",
+    const [open, setOpen] = useState<boolean>(false)
+    const [isPending, startTransition] = useTransition()
+    const { data } = useQuery(FETCH_GAME, {
+        variables: { id },
+        skip: !id,
+        fetchPolicy: 'network-only',
+    })
+    const { data: sessionData } = useQuery(FETCH_SESSION, {
+        variables: { id: sessionId },
+        skip: !sessionId,
+        fetchPolicy: 'network-only',
+    })
+    const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
+    const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)
+    const { data: shuttleData, loading: shuttlesLoading } =
+        useQuery(FETCH_SHUTTLES)
+    const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME)
+    const form = useForm<z.infer<typeof GameSchema>>({
+        resolver: zodResolver(GameSchema),
+        values: {
+            players: ['', '', '', ''],
+            court: '',
+            shuttles: [
+                {
+                    quantity: 0,
+                    shuttle: '',
+                },
+            ],
+            session: sessionId || '',
+            start: null,
+            end: null,
         },
-      ],
-      session: sessionId || "",
-      start: null,
-      end: null,
-    },
-  })
-  const {
-    fields: shuttles,
-    append: addShuttle,
-    remove: removeShuttle,
-  } = useFieldArray<any>({
-    control: form.control,
-    name: "shuttles",
-  })
+    })
+    const {
+        fields: shuttles,
+        append: addShuttle,
+        remove: removeShuttle,
+    } = useFieldArray<any>({
+        control: form.control,
+        name: 'shuttles',
+    })
 
-    // const formatTime = (date: string | null) => {
-    //   if (!date) return null;
-    //   try {
-    //     const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-    //     const time = new Date(date).toLocaleTimeString('en-US', options);
-    //     return time || null;
-    //   } catch (error) {
-    //     console.error('Invalid time format:', date);
-    //     return null;
-    //   }
-    // }
-    
-    const parseTime = (timeStr: string | null) => {
-      if (!timeStr) return null;
-    
-      const [time, period] = timeStr.split(' '); 
-      if (!time || !period) return null;
-    
-      const [hours, minutes] = time.split(':');
-      if (!hours || !minutes) return null;
-    
-      const hours24 = period === 'AM'
-        ? hours === '12' ? '00' : hours
-        : hours === '12' ? '12' : String(Number(hours) + 12);
-    
-      if (isNaN(Number(hours24)) || isNaN(Number(minutes))) return null;
-    
-      const currentDate = new Date().toISOString().split('T')[0]; 
-      const dateString = `${currentDate}T${hours24}:${minutes}:00`;
-    
-      const parsedDate = new Date(dateString);
-      if (isNaN(parsedDate.getTime())) {
-        console.error('Invalid date string:', dateString);
-        return null;
-      }
-    
-      return parsedDate.toISOString();
-    };
-    
+    useEffect(() => {
+        if (
+            !id &&
+            sessionData &&
+            sessionData.fetchSession &&
+            sessionData.fetchSession.games.length > 0
+        ) {
+            const latestGameEnd =
+                sessionData.fetchSession.games[
+                    sessionData.fetchSession.games.length - 1
+                ].end
+
+            form.setValue(
+                'start',
+                format(
+                    toZonedTime(
+                        new Date(
+                            new Date(latestGameEnd).setMinutes(
+                                new Date(latestGameEnd).getMinutes() + 1
+                            )
+                        ),
+                        'Asia/Manila'
+                    ),
+                    'HH:mm'
+                )
+            )
+        }
+    }, [sessionData, id, form])
+
     useEffect(() => {
         if (data) {
             const game = data.fetchGame
@@ -341,212 +348,160 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                        start: game.start ? formatTime(game.start) : null,
-                        end: game.end ? formatTime(game.end) : null,
+                start: game.start
+                    ? format(toZonedTime(game.start, 'Asia/Manila'), 'HH:mm')
+                    : null,
+                end: game.end
+                    ? format(toZonedTime(game.end, 'Asia/Manila'), 'HH:mm')
+                    : null,
             })
         }
     }, [data, form, sessionId])
 
-
-  const formatTime = (date: string | null) => {
-    if (!date) return null
-    const options: Intl.DateTimeFormatOptions = {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }
-    const time = new Date(date).toLocaleTimeString("en-US", options)
-    return time || null
-  }
-
-  // const parseTime = (timeStr: string | null) => {
-  //   if (!timeStr) return null;
-  //   const [time, period] = timeStr.split(' ');
-  //   const [hours, minutes] = time.split(':');
-
-  //   if (!hours || !minutes || !period) return null;
-
-  //   const hours24 = period === 'AM'
-  //     ? (hours === '12' ? '00' : hours)
-  //     : (hours === '12' ? '12' : String(Number(hours) + 12));
-
-  //   if (isNaN(Number(hours24)) || isNaN(Number(minutes))) return null;
-
-  //   const currentDate = new Date().toISOString().split('T')[0];
-  //   return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString();
-  // }
-
-  useEffect(() => {
-    if (data) {
-      const game = data.fetchGame
-      form.reset({
-        session: sessionId,
-        court: game.court._id,
-        players: [
-          game.A1._id,
-          game.A2?._id ?? "",
-          game.B1._id,
-          game.B2?._id ?? "",
-        ],
-        shuttles:
-          !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
-            ? game.shuttlesUsed.map((shuttle: any) => ({
-                quantity: shuttle.quantity,
-                shuttle: shuttle.shuttle._id,
-              }))
-            : [
+    useEffect(() => {
+        if (
+            courtData &&
+            shuttleData &&
+            courtData.fetchCourts.length >= 1 &&
+            shuttleData.fetchShuttles.length >= 2
+        ) {
+            form.setValue('court', courtData.fetchCourts[1]._id)
+            form.setValue('shuttles', [
                 {
-                  quantity: 0,
-                  shuttle: "",
+                    shuttle: shuttleData.fetchShuttles[0]._id,
+                    quantity: 1,
                 },
-              ],
-        start: game.start ? formatTime(game.start) : null,
-        end: game.end ? formatTime(game.end) : null,
-      })
-    }
-  }, [data, form, sessionId])
-
-  useEffect(() => {
-    if (
-      courtData &&
-      shuttleData &&
-      courtData.fetchCourts.length >= 1 &&
-      shuttleData.fetchShuttles.length >= 2
-    ) {
-      form.setValue("court", courtData.fetchCourts[1]._id)
-      form.setValue("shuttles", [
-        {
-          shuttle: shuttleData.fetchShuttles[0]._id,
-          quantity: 1,
-        },
-      ])
-    }
-  }, [courtData, shuttleData, form])
-
-  const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
-    startTransition(async () => {
-      const { players, court, shuttles, start, end } = data
-      const currentDate = new Date().toISOString().split("T")[0]
-
-      const parseTime = (timeStr: string | null) => {
-        if (!timeStr) return null
-        const [time, period] = timeStr.split(" ")
-        const [hours, minutes] = time.split(":")
-        const hours24 =
-          period === "AM"
-            ? hours === "12"
-              ? "00"
-              : hours
-            : hours === "12"
-            ? "12"
-            : String(Number(hours) + 12)
-        return new Date(`${currentDate}T${hours24}:${minutes}:00`).toISOString()
-      }
-
-      const startDate = parseTime(start)
-      const endDate = parseTime(end)
-      try {
-        const gameInput = {
-          start: startDate,
-          end: endDate,
-          session: sessionId,
-          A1: players[0],
-          A2: players[1] || null,
-          B1: players[2],
-          B2: players[3] || null,
-          court,
-          shuttlesUsed:
-            shuttles?.length === 1 && !shuttles[0].shuttle ? [] : shuttles,
-          winner: null,
+            ])
         }
+    }, [courtData, shuttleData, form])
 
-        try {
-          const response = await submitForm({
-            variables: id
-              ? { id, ...gameInput }
-              : { ...gameInput, status: "ongoing" },
-          })
+    const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
+        startTransition(async () => {
+            const { players, court, shuttles, start, end } = data
 
-          if (response.data?.createGame || response.data?.updateGame) {
-            closeForm()
-          }
-        } catch (error) {
-          console.error("Error creating game:", error)
-        }
-      } catch (error) {
-        console.error("Error creating game:", error)
-      }
-    })
-  }
+            try {
+                const gameInput = {
+                    start: start
+                        ? parse(start as string, 'HH:mm', new Date())
+                        : null,
+                    end: end ? parse(end as string, 'HH:mm', new Date()) : null,
+                    session: sessionId,
+                    A1: players[0],
+                    A2: players[1] || null,
+                    B1: players[2],
+                    B2: players[3] || null,
+                    court,
+                    shuttlesUsed:
+                        shuttles?.length === 1 && !shuttles[0].shuttle
+                            ? []
+                            : shuttles,
+                    winner: null,
+                }
 
-  const closeForm = () => {
-    setOpen(false)
-    form.clearErrors()
-    form.reset()
-    if (refetch) refetch()
-  }
+                try {
+                    const response = await submitForm({
+                        variables: id
+                            ? { id, ...gameInput }
+                            : { ...gameInput, status: 'ongoing' },
+                    })
 
-  if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
+                    if (
+                        response.data?.createGame ||
+                        response.data?.updateGame
+                    ) {
+                        closeForm()
+                    }
+                } catch (error) {
+                    console.error('Error creating game:', error)
+                }
+            } catch (error) {
+                console.error('Error creating game:', error)
+            }
+        })
+    }
 
-  return (
-    <Sheet open={open} onOpenChange={setOpen} modal>
-      <SheetTrigger asChild>
-        <Button className={id ? undefined : "w-full"}>
-          {id ? "Update Game" : "Add Game"}
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="bottom"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        className="w-screen max-h-[calc(100vh-100px)] flex flex-col overflow-auto"
-      >
-        <SheetHeader>
-          <SheetTitle>{id ? "Update Game" : "Add Game"}</SheetTitle>
-          <SheetDescription>
-            Please fill up the necessary information below.
-          </SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form
-            className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            {["Player A1", "Player A2", "Player B1", "Player B2"].map(
-              (label, index) => (
-                <FormField
-                  key={label}
-                  control={form.control}
-                  name={`players.${index}`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{label}</FormLabel>
-                      <FormControl>
-                        <select
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          className="text-sm w-full border border-gray-300 rounded p-2"
-                          disabled={isPending}
-                        >
-                          <option value="">Select Player</option>
-                          {userData?.fetchUsers.map((user: any) => (
-                            <option key={user._id} value={user._id}>
-                              {user.name}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                      {(label === "Player A2" || label === "Player B2") && (
-                        <Separator className="!my-4" />
-                      )}
-                    </FormItem>
-                  )}
-                />
-              )
-            )}
+    const closeForm = () => {
+        setOpen(false)
+        form.clearErrors()
+        form.reset()
+        if (refetch) refetch()
+    }
 
+    if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
+
+    return (
+        <Sheet open={open} onOpenChange={setOpen} modal>
+            <SheetTrigger asChild>
+                <Button className={id ? undefined : 'w-full'}>
+                    {id ? 'Update Game' : 'Add Game'}
+                </Button>
+            </SheetTrigger>
+            <SheetContent
+                side="bottom"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="w-screen max-h-[calc(100vh-100px)] flex flex-col overflow-auto"
+            >
+                <SheetHeader>
+                    <SheetTitle>{id ? 'Update Game' : 'Add Game'}</SheetTitle>
+                    <SheetDescription>
+                        Please fill up the necessary information below.
+                    </SheetDescription>
+                </SheetHeader>
+                <Form {...form}>
+                    <form
+                        className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
+                        onSubmit={form.handleSubmit(handleSubmit)}
+                    >
+                        {[
+                            'Player A1',
+                            'Player A2',
+                            'Player B1',
+                            'Player B2',
+                        ].map((label, index) => (
+                            <FormField
+                                key={label}
+                                control={form.control}
+                                name={`players.${index}`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{label}</FormLabel>
+                                        <FormControl>
+                                            <select
+                                                {...field}
+                                                onChange={(e) =>
+                                                    field.onChange(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="text-sm w-full border border-gray-300 rounded p-2"
+                                                disabled={isPending}
+                                            >
+                                                <option value="">
+                                                    Select Player
+                                                </option>
+                                                {userData?.fetchUsers.map(
+                                                    (user: any) => (
+                                                        <option
+                                                            key={user._id}
+                                                            value={user._id}
+                                                        >
+                                                            {user.name}
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
+                                        </FormControl>
+                                        <FormMessage />
+                                        {(label === 'Player A2' ||
+                                            label === 'Player B2') && (
+                                            <Separator className="!my-4" />
+                                        )}
+                                    </FormItem>
+                                )}
+                            />
+                        ))}
                         {/* Time Picker */}
-                        <div className="flex space-x-4 justify-between">
+                        <div className="grid grid-cols-2 gap-2">
                             <FormField
                                 control={form.control}
                                 name="start"
@@ -554,19 +509,12 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>Start Time</FormLabel>
                                         <FormControl>
-                                            {/* <div className="flex items-center space-x-2">
-                                                <TimePicker
-                                                    id="start"
-                                                    value={field.value || ''}
-                                                    onChange={(newTime) =>
-                                                        field.onChange(newTime)
-                                                    }
-                                                    ariaLabel="Start Time"
-                                                />
-                                            </div> */}
-                                            <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
-                                              onChange={(e) => field.onChange(e.target.value)}
-                                              value={field.value || ''}
+                                            <input
+                                                type="time"
+                                                {...field}
+                                                className="text-sm w-full border border-gray-300 rounded p-2"
+                                                onChange={field.onChange}
+                                                value={field.value || ''}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -580,9 +528,16 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>End Time</FormLabel>
                                         <FormControl>
-                                        <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
-                                              onChange={(e) => field.onChange(e.target.value)}
-                                              value={field.value || ''}
+                                            <input
+                                                type="time"
+                                                {...field}
+                                                className="text-sm w-full border border-gray-300 rounded p-2"
+                                                onChange={(e) =>
+                                                    field.onChange(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                value={field.value || ''}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -590,196 +545,210 @@ const GameForm = ({
                                 )}
                             />
                         </div>
-                        {/* Time Picker */}
-            <div className="flex flex-col md:flex-ro justify-between">
-              <FormField
-                control={form.control}
-                name="start"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Time</FormLabel>
-                    <FormControl>
-                    <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
-                                              onChange={(e) => field.onChange(e.target.value)}
-                                              value={field.value || ''}
-                                            />F
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="end"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl>
-                    <input type='time' {...field} className="text-sm w-full border border-gray-300 rounded p-2"
-                                              onChange={(e) => field.onChange(e.target.value)}
-                                              value={field.value || ''}
-                                            />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            {/* Time Picker */}
+                        <FormField
+                            control={form.control}
+                            name="court"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Court</FormLabel>
+                                    <FormControl>
+                                        <select
+                                            {...field}
+                                            className="text-sm w-full border border-gray-300 rounded p-2"
+                                            disabled={isPending}
+                                        >
+                                            <option value="">
+                                                Select Court
+                                            </option>
+                                            {courtData?.fetchCourts.map(
+                                                (court: any) => (
+                                                    <option
+                                                        key={court._id}
+                                                        value={court._id}
+                                                    >
+                                                        {court.name} -{' '}
+                                                        {court.price.toFixed(2)}
+                                                    </option>
+                                                )
+                                            )}
+                                        </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-            <FormField
-              control={form.control}
-              name="court"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Court</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="text-sm w-full border border-gray-300 rounded p-2"
-                      disabled={isPending}
-                    >
-                      <option value="">Select Court</option>
-                      {courtData?.fetchCourts.map((court: any) => (
-                        <option key={court._id} value={court._id}>
-                          {court.name} - {court.price.toFixed(2)}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        {shuttles.map((_, index) => {
+                            const isFirst = index === 0
+                            return (
+                                <div
+                                    className="grid grid-cols-12 gap-x-2 items-end"
+                                    key={index}
+                                >
+                                    <FormField
+                                        control={form.control}
+                                        name={`shuttles.${index}.shuttle`}
+                                        render={({ field }) => (
+                                            <FormItem className="col-span-8">
+                                                <FormLabel>Shuttle</FormLabel>
+                                                <FormControl>
+                                                    <select
+                                                        {...field}
+                                                        className="text-sm w-full border border-gray-300 rounded p-2"
+                                                        disabled={isPending}
+                                                    >
+                                                        <option value="">
+                                                            Select Shuttle
+                                                        </option>
+                                                        {shuttleData?.fetchShuttles.map(
+                                                            (shuttle: any) => (
+                                                                <option
+                                                                    key={
+                                                                        shuttle._id
+                                                                    }
+                                                                    value={
+                                                                        shuttle._id
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        shuttle.name
+                                                                    }{' '}
+                                                                    -{' '}
+                                                                    {shuttle.price.toFixed(
+                                                                        2
+                                                                    )}
+                                                                </option>
+                                                            )
+                                                        )}
+                                                    </select>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`shuttles.${index}.quantity`}
+                                        render={({ field }) => (
+                                            <FormItem className="col-span-3">
+                                                <FormLabel>Quantity</FormLabel>
+                                                <FormControl>
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            size="icon"
+                                                            type="button"
+                                                            className="w-20"
+                                                            onClick={() => {
+                                                                if (
+                                                                    field.value <=
+                                                                    0
+                                                                )
+                                                                    return
+                                                                field.onChange(
+                                                                    +field.value -
+                                                                        1
+                                                                )
+                                                            }}
+                                                        >
+                                                            <Minus size={16} />
+                                                        </Button>
+                                                        <input
+                                                            {...field}
+                                                            className="text-sm w-full border border-gray-300 rounded p-2"
+                                                            disabled={isPending}
+                                                            type="number"
+                                                            min={0}
+                                                            step={1}
+                                                            readOnly
+                                                            onChange={(e) =>
+                                                                field.onChange(
+                                                                    e.target
+                                                                        .value ===
+                                                                        ''
+                                                                        ? ''
+                                                                        : +e
+                                                                              .target
+                                                                              .value
+                                                                )
+                                                            }
+                                                        />
+                                                        <Button
+                                                            size="icon"
+                                                            type="button"
+                                                            className="w-20"
+                                                            onClick={() => {
+                                                                field.onChange(
+                                                                    +field.value +
+                                                                        1
+                                                                )
+                                                            }}
+                                                        >
+                                                            <Plus size={16} />
+                                                        </Button>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        type="button"
+                                        onClick={() => {
+                                            if (isFirst) {
+                                                form.setValue(
+                                                    `shuttles.${index}.quantity`,
+                                                    0
+                                                )
+                                                form.setValue(
+                                                    `shuttles.${index}.shuttle`,
+                                                    ''
+                                                )
+                                            } else {
+                                                removeShuttle(index)
+                                            }
+                                        }}
+                                        size="icon"
+                                        className="flex items-center justify-center w-full"
+                                    >
+                                        <X className="text-destructive" />
+                                    </Button>
+                                </div>
+                            )
+                        })}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full border-green-800 text-green-800 mt-4"
+                            onClick={() =>
+                                addShuttle({
+                                    quantity: 0,
+                                    shuttle: '',
+                                })
+                            }
+                        >
+                            Add Shuttle
+                        </Button>
 
-            {shuttles.map((_, index) => {
-              const isFirst = index === 0
-              return (
-                <div
-                  className="grid grid-cols-12 gap-x-2 items-end"
-                  key={index}
-                >
-                  <FormField
-                    control={form.control}
-                    name={`shuttles.${index}.shuttle`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-8">
-                        <FormLabel>Shuttle</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="text-sm w-full border border-gray-300 rounded p-2"
+                        <Button
+                            type="submit"
+                            className="mt-6 w-full"
                             disabled={isPending}
-                          >
-                            <option value="">Select Shuttle</option>
-                            {shuttleData?.fetchShuttles.map((shuttle: any) => (
-                              <option key={shuttle._id} value={shuttle._id}>
-                                {shuttle.name} - {shuttle.price.toFixed(2)}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`shuttles.${index}.quantity`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <div className="flex gap-2">
-                            <Button
-                              size="icon"
-                              type="button"
-                              className="w-20"
-                              onClick={() => {
-                                if (field.value <= 0) return
-                                field.onChange(+field.value - 1)
-                              }}
-                            >
-                              <Minus size={16} />
-                            </Button>
-                            <input
-                              {...field}
-                              className="text-sm w-full border border-gray-300 rounded p-2"
-                              disabled={isPending}
-                              type="number"
-                              min={0}
-                              step={1}
-                              readOnly
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === "" ? "" : +e.target.value
-                                )
-                              }
-                            />
-                            <Button
-                              size="icon"
-                              type="button"
-                              className="w-20"
-                              onClick={() => {
-                                field.onChange(+field.value + 1)
-                              }}
-                            >
-                              <Plus size={16} />
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => {
-                      if (isFirst) {
-                        form.setValue(`shuttles.${index}.quantity`, 0)
-                        form.setValue(`shuttles.${index}.shuttle`, "")
-                      } else {
-                        removeShuttle(index)
-                      }
-                    }}
-                    size="icon"
-                    className="flex items-center justify-center w-full"
-                  >
-                    <X className="text-destructive" />
-                  </Button>
-                </div>
-              )
-            })}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-green-800 text-green-800 mt-4"
-              onClick={() =>
-                addShuttle({
-                  quantity: 0,
-                  shuttle: "",
-                })
-              }
-            >
-              Add Shuttle
-            </Button>
-
-            <Button type="submit" className="mt-6 w-full" disabled={isPending}>
-              {isPending ? <ButtonLoader /> : "Save Game"}
-            </Button>
-          </form>
-        </Form>
-        <SheetFooter>
-          <SheetClose asChild>
-            <Button onClick={() => closeForm()} variant="ghost">
-              Close
-            </Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  )
+                        >
+                            {isPending ? <ButtonLoader /> : 'Save Game'}
+                        </Button>
+                    </form>
+                </Form>
+                <SheetFooter>
+                    <SheetClose asChild>
+                        <Button onClick={() => closeForm()} variant="ghost">
+                            Close
+                        </Button>
+                    </SheetClose>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+    )
 }
 
 export default GameForm
