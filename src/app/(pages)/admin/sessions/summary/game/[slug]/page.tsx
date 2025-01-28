@@ -82,9 +82,19 @@ const Page = () => {
       <div>
         <span className="block">Players</span>
         <span className="block font-semibold">
-          {[...new Set(summary.players.map((player: any) => player.name))].join(
-            ", "
-          )}
+          {[
+            ...new Map(
+              summary.players.map((player: any) => {
+                const count = summary.players.filter(
+                  (p: any) => p.name === player.name
+                ).length
+                return [
+                  player.name,
+                  count > 1 ? `${player.name} (${count})` : player.name,
+                ]
+              })
+            ).values(),
+          ].join(", ")}
         </span>
       </div>
       <div>
