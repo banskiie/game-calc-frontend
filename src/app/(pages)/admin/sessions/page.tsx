@@ -7,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { gql, useLazyQuery, useMutation } from "@apollo/client"
 import { differenceInMinutes, format } from "date-fns"
 import { Loader2 } from "lucide-react"
@@ -91,15 +93,58 @@ const FETCH_SESSIONS = gql`
             updatedAt
           }
         }
-      }
+      },
+    court {
+            _id
+            name
+            price
+            active
+            createdAt
+            updatedAt
+        }
+      shuttle {
+            _id
+            name
+            price
+            active
+            createdAt
+            updatedAt
+        }
     }
   }
 `
 
 const START_SESSION = gql`
-  mutation StartSession {
-    startSession {
+  mutation StartSession($courtId: ID!, $shuttleId: ID!) {
+    startSession(courtId: $courtId, shuttleId: $shuttleId) {
       _id
+      start
+      court {
+        _id
+        name
+      }
+      shuttle {
+        _id
+        name
+      }
+    }
+  }
+`
+const FETCH_COURTS = gql`
+  query FetchCourts {
+    fetchCourts {
+      _id
+      name
+    }
+  }
+`
+
+// Fetch shuttles
+const FETCH_SHUTTLES = gql`
+  query FetchShuttles {
+    fetchShuttles {
+      _id
+      name
     }
   }
 `
@@ -119,11 +164,42 @@ const page = () => {
     variables: { limit },
     onError: (error) => console.log(error),
   })
-  const [startSession] = useMutation(START_SESSION, {
-    onCompleted: () => refetch(),
+  const [fetchCourts, { data: courtsData }] = useLazyQuery(FETCH_COURTS)
+  const [fetchShuttles, { data: shuttlesData }] = useLazyQuery(FETCH_SHUTTLES)
+  const [startSession, {loading: startLoading}] = useMutation(START_SESSION, {
+    onCompleted: () => {
+      refetch()
+      setOpen(false)
+      setSelectCourt(null)
+      setSelectedShuttle(null)
+    },
+    onError: (error) => console.log(error),
   })
-  const sessions = data?.fetchSessions
   const router = useRouter()
+  const sessions = data?.fetchSessions
+
+  const [open, setOpen] = useState(false)
+  const [selectedCourt, setSelectCourt] = useState<string | null>(null)
+  const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null)
+
+  const handleOpenModal = async () => {
+    setOpen(true)
+    await fetchCourts()
+    await fetchShuttles()
+  }
+
+  const handleCreateSession = async () => {
+    if (!selectedCourt || !selectedShuttle) {
+      return alert("Please select a court and a shuttle.")
+    }
+
+    await startSession({
+      variables: {
+        courtId: selectedCourt,
+        shuttleId: selectedShuttle,
+      },
+    })
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -142,10 +218,49 @@ const page = () => {
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
       <div className="sticky top-0 w-full bg-slate-200 p-2">
-        <Button className="w-full " onClick={async () => await startSession()}>
+        <Button className="w-full " onClick={handleOpenModal}>
           Add Session
         </Button>
       </div>
+
+     <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create a New Session</DialogTitle>
+          </DialogHeader>
+
+          <Select onValueChange={(value) => setSelectCourt(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a court" />
+            </SelectTrigger>
+            <SelectContent>
+              {courtsData?.fetchCourts.map((court: any) => (
+                <SelectItem key={court._id} value={court._id}>
+                  {court.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={(value) => setSelectedShuttle(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a shuttle" />
+            </SelectTrigger>
+            <SelectContent>
+              {shuttlesData?.fetchShuttles.map((shuttle: any) => (
+                <SelectItem key={shuttle._id} value={shuttle._id}>
+                  {shuttle.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button className="w-full" onClick={handleCreateSession} disabled={startLoading}>
+            {startLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Create Session"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+      
       {sessions?.map((session: any) => (
         <Card
           key={session._id}
@@ -169,20 +284,16 @@ const page = () => {
                       )}{" "}
                       mins total)
                     </span>
-                    <span className="block text-muted-foreground">
-                      {format(new Date(session.games[0].start), "h:mm a")} to{" "}
-                      {session.games[session.games.length - 1].end
-                        ? format(
-                            new Date(
-                              session.games[session.games.length - 1].end
-                            ),
-                            "h:mm a"
-                          )
-                        : "TBA"}{" "}
-                    </span>
                   </>
                 )}
               </span>
+              <span> 
+                {format(new Date(session.start), "h:mm a")} to{" "}
+                {session.end ? format(new Date(session.end), "h:mm a") : "TBA"}
+              </span>
+
+                  <span className="font-bold"> Court: {session.court?.name || "Unknown"} </span>
+                  <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
               <Badge
                 className={`${
                   session?.end ? "bg-green-900/80" : "bg-blue-600/80"

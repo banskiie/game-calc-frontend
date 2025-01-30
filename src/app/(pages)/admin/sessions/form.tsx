@@ -36,6 +36,15 @@ const FETCH_SESSION = gql`
                 _id
                 end
             }
+            court {
+            _id
+            name
+        }
+            shuttle {
+            _id
+            name
+        }
+
         }
     }
 `
@@ -264,6 +273,9 @@ const GameForm = ({
         variables: { id: sessionId },
         skip: !sessionId,
         fetchPolicy: 'network-only',
+        onCompleted: (data) => {
+            console.log(data, 'sessionData')
+        }
     })
     const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
     const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)
@@ -361,19 +373,20 @@ const GameForm = ({
     useEffect(() => {
         if (
             courtData &&
+            sessionData &&
             shuttleData &&
             courtData.fetchCourts.length >= 1 &&
             shuttleData.fetchShuttles.length >= 2
         ) {
-            form.setValue('court', courtData.fetchCourts[1]._id)
+            form.setValue('court', sessionData.fetchSession.court._id)
             form.setValue('shuttles', [
                 {
-                    shuttle: shuttleData.fetchShuttles[0]._id,
+                    shuttle: sessionData.fetchSession.shuttle._id,
                     quantity: 1,
                 },
             ])
         }
-    }, [courtData, shuttleData, form])
+    }, [courtData, shuttleData, sessionData, form])
 
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
         startTransition(async () => {
