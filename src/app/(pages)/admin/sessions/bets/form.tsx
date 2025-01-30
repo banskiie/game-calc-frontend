@@ -437,14 +437,14 @@ export const BetSchema = z.object({
         .refine((val) => typeof val === 'boolean', 'Paid must be a boolean.'),
 })
 
-const BetsForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
+const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetch?: () => void }) => {
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
     const { data: userData, loading: userLoading } = useQuery(FETCH_USERS)
     const { data: gameData, loading: gameLoading } = useQuery(FETCH_GAMES)
     const { data, loading } = useQuery(FETCH_BET, {
-        variables: { id },
-        skip: !id,
+        variables: { id: gameId },
+        skip: !gameId,
         fetchPolicy: 'network-only',
     })
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
