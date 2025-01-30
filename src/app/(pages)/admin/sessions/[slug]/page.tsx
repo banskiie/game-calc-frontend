@@ -358,12 +358,21 @@ const Page = () => {
                   >
                     End Game
                   </Button>
+                  
                 )}
+                
                 <GameForm
                   id={game._id}
                   refetch={refetchGames}
                   sessionId={slug as string}
                 />
+                 <Button
+                    onClick={() =>
+                      router.push("/admin/sessions/bets/" + game._id)
+                    }
+                  >
+                    Add Bet
+                  </Button>
               </CardFooter>
             </Card>
           ))

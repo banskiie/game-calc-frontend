@@ -2,7 +2,7 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Calendar, CircleUser, LandPlot, PackageOpen } from "lucide-react"
+import { Bitcoin, Calendar, CircleUser, LandPlot, PackageOpen } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 const items = [
@@ -26,6 +26,11 @@ const items = [
     url: "/admin/users",
     icon: CircleUser,
   },
+  {
+    title: "bets",
+    url: "/admin/bets",
+    icon: Bitcoin,
+  }
 ]
 
 const TabNavigation = () => {

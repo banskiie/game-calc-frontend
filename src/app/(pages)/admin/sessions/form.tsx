@@ -298,6 +298,7 @@ const GameForm = ({
             end: null,
         },
     })
+
     const {
         fields: shuttles,
         append: addShuttle,
