@@ -1,5 +1,6 @@
 import ButtonLoader from '@/components/custom/ButtonLoader'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Form,
     FormControl,
@@ -169,8 +170,8 @@ const FETCH_BET = gql`
 `
 const CREATE_BET = gql`
     mutation CreateBet(
-        $bettorForA: ID!
-        $bettorForB: ID!
+        $bettorForA: [ID!]!
+        $bettorForB: [ID!]!
         $game: ID!
         $betType: String!
         $betAmount: Float!
@@ -289,8 +290,8 @@ const CREATE_BET = gql`
 const UPDATE_BET = gql`
     mutation UpdateBet(
         $id: ID!
-        $bettorForA: ID
-        $bettorForB: ID
+        $bettorForA: [ID]
+        $bettorForB: [ID]
         $game: ID
         $betType: String
         $betAmount: Float
@@ -427,8 +428,8 @@ export const GameSchema = z.object({
 })
 
 export const BetSchema = z.object({
-    bettorForA: z.string().nonempty('BettorForA is required.'),
-    bettorForB: z.string().nonempty('BettorForB is required.'),
+    bettorForA: z.array(z.string()).nonempty('BettorForA is required.'),
+    bettorForB: z.array(z.string()).nonempty('BettorForB is required.'),
     game: z.string().nonempty('Game is required.'),
     betType: z.string().nonempty('BetType is required.'),
     betAmount: z.number().nonnegative('BetAmount must be a positive number.'),
@@ -437,23 +438,31 @@ export const BetSchema = z.object({
         .refine((val) => typeof val === 'boolean', 'Paid must be a boolean.'),
 })
 
-const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetch?: () => void }) => {
+const BetsForm = ({
+    gameId,
+    id,
+    refetch,
+}: {
+    gameId: string
+    id?: string
+    refetch?: () => void
+}) => {
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
     const { data: userData, loading: userLoading } = useQuery(FETCH_USERS)
     const { data: gameData, loading: gameLoading } = useQuery(FETCH_GAMES)
     const { data, loading } = useQuery(FETCH_BET, {
-        variables: { id: gameId },
-        skip: !gameId,
+        variables: { id },
+        skip: !id,
         fetchPolicy: 'network-only',
     })
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
     const form = useForm<z.infer<typeof BetSchema>>({
         resolver: zodResolver(BetSchema),
         defaultValues: {
-            bettorForA: '',
-            bettorForB: '',
-            game: '',
+            bettorForA: [],
+            bettorForB: [],
+            game: gameId,
             betType: '',
             betAmount: 0.0,
             paid: false,
@@ -469,13 +478,13 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
             form.reset({
                 bettorForA: data.fetchBet?.bettorForA?._id || '',
                 bettorForB: data.fetchBet?.bettorForB?._id || '',
-                game: selectedGame?._id || '',
+                game: selectedGame?._id || gameId,
                 betType: data.fetchBet?.betType || '',
                 betAmount: data.fetchBet?.betAmount || 0.0,
                 paid: data.fetchBet?.paid || false,
             })
         }
-    }, [data, gameData, form])
+    }, [data?.fetchBet, gameData, form])
 
     const onSubmit = (values: z.infer<typeof BetSchema>) => {
         startTransition(async () => {
@@ -531,27 +540,61 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
                                 name="bettorForA"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Bettor A</FormLabel>
+                                        <FormLabel className="font-bold">
+                                            Bettor For Team A
+                                        </FormLabel>
                                         <FormControl>
-                                            <select
-                                                {...field}
-                                                className="text-sm w-full border border-gray-300 rounded p-2"
-                                            >
-                                                <option value="">
-                                                    {' '}
-                                                    Select Bettor A{' '}
-                                                </option>
+                                            <div className="space-y-2">
                                                 {userData?.fetchUsers.map(
                                                     (user: any) => (
-                                                        <option
+                                                        <div
                                                             key={user._id}
-                                                            value={user._id}
+                                                            className="flex items-center space-x-2"
                                                         >
-                                                            {user.name}
-                                                        </option>
+                                                            <Checkbox
+                                                                id={`bettorForA-${user._id}`}
+                                                                checked={field.value.includes(
+                                                                    user._id
+                                                                )}
+                                                                onCheckedChange={(
+                                                                    checked
+                                                                ) => {
+                                                                    const newValue =
+                                                                        field.value ||
+                                                                        []
+                                                                    if (
+                                                                        checked
+                                                                    ) {
+                                                                        field.onChange(
+                                                                            [
+                                                                                ...newValue,
+                                                                                user._id,
+                                                                            ]
+                                                                        )
+                                                                    } else {
+                                                                        field.onChange(
+                                                                            newValue.filter(
+                                                                                (
+                                                                                    id: string
+                                                                                ) =>
+                                                                                    id !==
+                                                                                    user._id
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <label
+                                                                htmlFor={`bettorForA-${user._id}`}
+                                                                className="text-sm"
+                                                            >
+                                                                {user.name}
+                                                            </label>
+                                                        </div>
                                                     )
                                                 )}
-                                            </select>
+                                            </div>
+                                            {/* Multiple Selector */}
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -561,7 +604,9 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
                                 name="bettorForB"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Bettor B</FormLabel>
+                                        <FormLabel className="font-bold">
+                                            Bettor For Team B
+                                        </FormLabel>
                                         <FormControl>
                                             <select
                                                 {...field}
@@ -585,7 +630,7 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
                                     </FormItem>
                                 )}
                             />
-                            <FormField
+                            {/* <FormField
                                 control={form.control}
                                 name="game"
                                 render={({ field }) => (
@@ -615,14 +660,16 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
                                         </select>
                                     </FormItem>
                                 )}
-                            />
+                            /> */}
 
                             <FormField
                                 control={form.control}
                                 name="betType"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Bet Type</FormLabel>
+                                        <FormLabel className="font-bold">
+                                            Bet Type
+                                        </FormLabel>
                                         <FormControl>
                                             <input
                                                 {...field}
@@ -634,57 +681,79 @@ const BetsForm = ({ gameId, id, refetch }: { gameId: string, id?: string; refetc
                                 )}
                             />
 
-                        <FormField
-                            control={form.control}
-                            name="betAmount"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Bet Amount</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            className="text-sm"
-                                            placeholder="Bet Amount"
-                                            step={0.01}
-                                            type="number"
-                                            onBlur={(e) => {
-                                                const value = parseFloat(e.target.value);
-                                                field.onChange(isNaN(value) ? 0 : value); // Ensure it's always a number
-                                            }}
-                                            onChange={(e) => {
-                                                const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                                field.onChange(value);
-                                            }}
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                           { id && (
-                                  <FormField
-                                  control={form.control}
-                                  name="paid"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel>Paid</FormLabel>
-                                          <FormControl>
-                                              <select
-                                                  {...field}
-                                                  value={String(field.value)}
-                                                  className="text-sm w-full border border-gray-300 rounded p-2"
-                                                  onChange={(e) => field.onChange(e.target.value === "true")}
-                                              >
-                                                  <option value="">Select Paid</option>
-                                                  <option value="true">True</option>
-                                                  <option value="false">False</option>
-                                              </select>
-                                          </FormControl>
-                                      </FormItem>
-                                  )}
-                              />
+                            <FormField
+                                control={form.control}
+                                name="betAmount"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-bold">
+                                            Bet Amount
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                disabled={isPending}
+                                                className="text-sm"
+                                                placeholder="Bet Amount"
+                                                step={0.01}
+                                                type="number"
+                                                onBlur={(e) => {
+                                                    const value = parseFloat(
+                                                        e.target.value
+                                                    )
+                                                    field.onChange(
+                                                        isNaN(value) ? 0 : value
+                                                    )
+                                                }}
+                                                onChange={(e) => {
+                                                    const value =
+                                                        e.target.value === ''
+                                                            ? ''
+                                                            : parseFloat(
+                                                                  e.target.value
+                                                              )
+                                                    field.onChange(value)
+                                                }}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
                                 )}
+                            />
+
+                            {id && (
+                                <FormField
+                                    control={form.control}
+                                    name="paid"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Paid</FormLabel>
+                                            <FormControl>
+                                                <select
+                                                    {...field}
+                                                    value={String(field.value)}
+                                                    className="text-sm w-full border border-gray-300 rounded p-2"
+                                                    onChange={(e) =>
+                                                        field.onChange(
+                                                            e.target.value ===
+                                                                'true'
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="">
+                                                        Select Paid
+                                                    </option>
+                                                    <option value="true">
+                                                        True
+                                                    </option>
+                                                    <option value="false">
+                                                        False
+                                                    </option>
+                                                </select>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                             <Button
                                 type="submit"
                                 className="mt-6 w-full"

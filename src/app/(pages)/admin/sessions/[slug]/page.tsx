@@ -101,6 +101,110 @@ const FETCH_SESSION = gql`
     }
   }
 `
+const FETCH_BET = gql`
+query FetchBet($id: ID!) {
+    fetchBet(_id: $id) {
+        _id
+        betType
+        betAmount
+        paid
+        active
+        bettorForA {
+            _id
+            name
+            contact
+            password
+            username
+            role
+            active
+            createdAt
+            updatedAt
+        }
+        bettorForB {
+            _id
+            name
+            contact
+            password
+            username
+            role
+            active
+            createdAt
+            updatedAt
+        }
+        game {
+            _id
+            start
+            end
+            winner
+            status
+            active
+            A1 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            A2 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            B1 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            B2 {
+                _id
+                name
+                contact
+                password
+                username
+                role
+                active
+                createdAt
+                updatedAt
+            }
+            court {
+                _id
+                name
+                price
+                active
+                createdAt
+                updatedAt
+            }
+            shuttlesUsed {
+                quantity
+                shuttle {
+                    _id
+                    name
+                    price
+                    active
+                    createdAt
+                    updatedAt
+                }
+            }
+        }
+    }
+}
+`
 
 const END_GAME = gql`
   mutation EndGame($id: ID!, $end: DateTime!, $status: Status) {
@@ -203,6 +307,9 @@ const Page = () => {
     skip: !slug,
     variables: { id: slug },
   })
+  const { data: betData, refetch: refetchBet } = useQuery(FETCH_BET, {
+    variables: { bet_id: slug },
+  })
   const { data: gameData, refetch: refetchGames } = useQuery(
     FETCH_GAMES_BY_SESSION,
     {
@@ -257,9 +364,9 @@ const Page = () => {
         </button>
         {!session.end && (
           <button
-            onClick={() => {
-              endSession({ variables: { id: session._id } })
-              refetch()
+            onClick={ async () => {
+            await endSession({ variables: { id: session._id } })
+              await refetch()
               console.log("Ending session...")
             }}
             className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700"
@@ -346,13 +453,14 @@ const Page = () => {
                 ) : (
                   <Button
                     variant="destructive"
-                    onClick={() =>
+                    onClick={() => 
                       endGame({
                         variables: {
                           id: game._id,
                           end: new Date(),
                           status: "completed",
                         },
+                      
                       })
                     }
                   >
@@ -366,13 +474,22 @@ const Page = () => {
                   refetch={refetchGames}
                   sessionId={slug as string}
                 />
-                 <Button
+               
+                  {/* <Button
                     onClick={() =>
-                      router.push("/admin/sessions/bets/" + game._id)
+                      router.push("/admin/sessions/games/bets/" + game._id)
                     }
                   >
-                    Add Bet
-                  </Button>
+                    View Bet
+                  </Button> */}
+                  <Button
+                onClick={() =>
+                  router.push(`/admin/sessions/games/bets/${game._id}`)
+                }
+              >
+                View Bet
+              </Button>
+                
               </CardFooter>
             </Card>
           ))

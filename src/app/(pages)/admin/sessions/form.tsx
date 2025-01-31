@@ -37,7 +37,7 @@ const FETCH_SESSION = gql`
                 end
             }
             court {
-            _id
+            _id 
             name
         }
             shuttle {
@@ -340,6 +340,19 @@ const GameForm = ({
     useEffect(() => {
         if (data) {
             const game = data.fetchGame
+
+            const ensurePM = (time: Date | null) => {
+                if (!time) return null
+
+                const zonedTime = toZonedTime(time, 'Asia/Manila')
+                const hours = zonedTime.getHours()
+
+                if(hours < 12) {
+                    zonedTime.setHours(hours + 12)
+                }
+
+                return format(zonedTime, 'HH:mm')
+            }
             form.reset({
                 session: sessionId,
                 court: game.court._id,
@@ -361,12 +374,14 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                start: game.start
-                    ? format(toZonedTime(game.start, 'Asia/Manila'), 'HH:mm')
-                    : null,
-                end: game.end
-                    ? format(toZonedTime(game.end, 'Asia/Manila'), 'HH:mm')
-                    : null,
+                // start: game.start
+                //     ? format(toZonedTime(game.start, 'Asia/Manila'), 'HH:mm')
+                //     : null,
+                // end: game.end
+                //     ? format(toZonedTime(game.end, 'Asia/Manila'), 'HH:mm')
+                //     : null,
+                    start: ensurePM(game.start) || '12:00',
+                    end: ensurePM(game.end) || '13:00',
             })
         }
     }, [data, form, sessionId])
