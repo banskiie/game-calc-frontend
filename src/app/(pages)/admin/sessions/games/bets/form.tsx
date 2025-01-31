@@ -1,4 +1,5 @@
 import ButtonLoader from '@/components/custom/ButtonLoader'
+import MultipleSelector from '@/components/custom/MutliSelector'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/sheet'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { visit } from 'graphql'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -172,6 +174,8 @@ const CREATE_BET = gql`
     mutation CreateBet(
         $bettorForA: [ID!]!
         $bettorForB: [ID!]!
+        $visitorBettorForA: [String]
+        $visitorBettorForB: [String]
         $game: ID!
         $betType: String!
         $betAmount: Float!
@@ -180,12 +184,16 @@ const CREATE_BET = gql`
             input: {
                 bettorForB: $bettorForB
                 bettorForA: $bettorForA
+                visitorBettorForA: $visitorBettorForA
+                visitorBettorForB: $visitorBettorForB
                 game: $game
                 betType: $betType
                 betAmount: $betAmount
             }
         ) {
             _id
+            visitorBettorForA
+            visitorBettorForB
             betType
             betAmount
             paid
@@ -292,6 +300,8 @@ const UPDATE_BET = gql`
         $id: ID!
         $bettorForA: [ID]
         $bettorForB: [ID]
+        $visitorBettorForA: [String]
+        $visitorBettorForB: [String]
         $game: ID
         $betType: String
         $betAmount: Float
@@ -302,6 +312,8 @@ const UPDATE_BET = gql`
                 _id: $id
                 bettorForA: $bettorForA
                 bettorForB: $bettorForB
+                visitorBettorForA: $visitorBettorForA
+                visitorBettorForB: $visitorBettorForB
                 game: $game
                 betType: $betType
                 betAmount: $betAmount
@@ -309,6 +321,8 @@ const UPDATE_BET = gql`
             }
         ) {
             _id
+            visitorBettorForA
+            visitorBettorForB
             betType
             betAmount
             paid
@@ -430,6 +444,8 @@ export const GameSchema = z.object({
 export const BetSchema = z.object({
     bettorForA: z.array(z.string()).nonempty('BettorForA is required.'),
     bettorForB: z.array(z.string()).nonempty('BettorForB is required.'),
+    visitorBettorForA: z.array(z.string()).nonempty('VisitorBettorForA is required.'),
+    visitorBettorForB: z.array(z.string()).nonempty('VisitorBettorForB is required.'),
     game: z.string().nonempty('Game is required.'),
     betType: z.string().nonempty('BetType is required.'),
     betAmount: z.number().nonnegative('BetAmount must be a positive number.'),
@@ -462,13 +478,44 @@ const BetsForm = ({
         defaultValues: {
             bettorForA: [],
             bettorForB: [],
+            visitorBettorForA: [],
+            visitorBettorForB: [],
             game: gameId,
             betType: '',
             betAmount: 0.0,
             paid: false,
         },
     })
+    const [visitorBettorForAInputs, setVisitorBettorForAInputs] = useState<string[]>([])
+    const [visitorBettorForBInputs, setVisitorBettorForBInputs] = useState<string[]>([])
+    
+    const addVisitorBettorForA = () => {
+        setVisitorBettorForAInputs([...visitorBettorForAInputs, ''])
+    }
+    const addVisitorBettorForB = () => {
+        setVisitorBettorForBInputs([...visitorBettorForBInputs, ''])
+    }
+    
+    const handleVisitorBettorForAChange = (index: number, value: string) => {
+        // const updated = [...visitorBettorForAInputs]
+        // updated[index] = value
+        // setVisitorBettorForAInputs(updated)
+        const newInputs = [...visitorBettorForAInputs]
+        newInputs[index] = value
+        setVisitorBettorForAInputs(newInputs)
+        form.setValue('visitorBettorForA', newInputs.filter(input => input.trim() !== '') as [string, ...string[]])
+    }
 
+    const handleVisitorBettorForBChange = (index: number, value: string) => {
+        // const updated = [...visitorBettorForBInputs]
+        // updated[index] = value
+        // setVisitorBettorForBInputs(updated)
+        const newInputs = [...visitorBettorForBInputs]
+        newInputs[index] = value
+        setVisitorBettorForBInputs(newInputs)
+        form.setValue('visitorBettorForB', newInputs.filter(input => input.trim() !== '') as [string, ...string[]])
+    }
+    
     useEffect(() => {
         if (data?.fetchBet) {
             const selectedGame = gameData?.fetchGames?.find(
@@ -476,8 +523,14 @@ const BetsForm = ({
             )
 
             form.reset({
-                bettorForA: data.fetchBet?.bettorForA?._id || '',
-                bettorForB: data.fetchBet?.bettorForB?._id || '',
+                bettorForA:
+                    data.fetchBet?.bettorForA?.map(
+                        (bettor: any) => bettor._id
+                    ) || [],
+                bettorForB:
+                    data.fetchBet?.bettorForB?.map(
+                        (bettor: any) => bettor._id
+                    ) || [],
                 game: selectedGame?._id || gameId,
                 betType: data.fetchBet?.betType || '',
                 betAmount: data.fetchBet?.betAmount || 0.0,
@@ -491,6 +544,8 @@ const BetsForm = ({
             try {
                 const formattedValues = {
                     ...values,
+                    // visitorBettorForA: visitorBettorForAInputs,
+                    // visitorBettorForB: visitorBettorForBInputs,
                     betAmount: Number(values.betAmount),
                     paid: Boolean(values.paid),
                     id: id || undefined,
@@ -510,6 +565,12 @@ const BetsForm = ({
         form.reset()
         if (refetch) refetch()
     }
+
+    const userOptions =
+        userData?.fetchUsers.map((user: any) => ({
+            value: user._id,
+            label: user.name,
+        })) || []
 
     if (loading) return <Loader2 />
 
@@ -535,102 +596,121 @@ const BetsForm = ({
                             className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
-                            <FormField
+                            <Button type="button" onClick={addVisitorBettorForA}>
+                                Add Visitor Bettor For Team A
+                            </Button>
+                            {visitorBettorForAInputs.map((input, index) => (
+                                <FormField
                                 control={form.control}
                                 name="bettorForA"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-bold">
-                                            Bettor For Team A
-                                        </FormLabel>
                                         <FormControl>
-                                            <div className="space-y-2">
-                                                {userData?.fetchUsers.map(
-                                                    (user: any) => (
-                                                        <div
-                                                            key={user._id}
-                                                            className="flex items-center space-x-2"
-                                                        >
-                                                            <Checkbox
-                                                                id={`bettorForA-${user._id}`}
-                                                                checked={field.value.includes(
-                                                                    user._id
-                                                                )}
-                                                                onCheckedChange={(
-                                                                    checked
-                                                                ) => {
-                                                                    const newValue =
-                                                                        field.value ||
-                                                                        []
-                                                                    if (
-                                                                        checked
-                                                                    ) {
-                                                                        field.onChange(
-                                                                            [
-                                                                                ...newValue,
-                                                                                user._id,
-                                                                            ]
-                                                                        )
-                                                                    } else {
-                                                                        field.onChange(
-                                                                            newValue.filter(
-                                                                                (
-                                                                                    id: string
-                                                                                ) =>
-                                                                                    id !==
-                                                                                    user._id
-                                                                            )
-                                                                        )
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <label
-                                                                htmlFor={`bettorForA-${user._id}`}
-                                                                className="text-sm"
-                                                            >
-                                                                {user.name}
-                                                            </label>
-                                                        </div>
-                                                    )
-                                                )}
-                                            </div>
-                                            {/* Multiple Selector */}
+                                            <FormItem>
+                                                <FormLabel className="font-bold">
+                                                    Bettor For Team A
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <MultipleSelector
+                                                        value={field.value.map(
+                                                            (id: string) => ({
+                                                                value: id,
+                                                                label:
+                                                                    userData?.fetchUsers.find(
+                                                                        (
+                                                                            user: any
+                                                                        ) =>
+                                                                            user._id ===
+                                                                            id
+                                                                    )?.name ||
+                                                                    id,
+                                                            })
+                                                        )}
+                                                        onChange={(options) => {
+                                                            field.onChange(
+                                                                options.map(
+                                                                    (option) =>
+                                                                        option.value
+                                                                )
+                                                            )
+                                                        }}
+                                                        defaultOptions={
+                                                            userOptions
+                                                        }
+                                                        placeholder="Select or type to add bettors for Team A"
+                                                        creatable 
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
                                         </FormControl>
                                     </FormItem>
                                 )}
-                            />
+                                />
+                            ))}
+                          
+                            {/* <Button onClick={addVisitorBettorForA} type='button'>Add Visitor Bettor A</Button>
+                            {visitorBettorForAInputs.map((inputValue, index) => (
+                                <Input
+                                    key={index}
+                                    value={inputValue}
+                                    onChange={(e) => handleVisitorBettorForAChange(index, e.target.value)}
+                                    placeholder="Enter Visitor Bettor for A"
+                                    className="mt-2"
+                                />
+                            ))} */}
+                        <Button type="button" onClick={addVisitorBettorForB} >
+                                Add Visitor Bettor For Team B
+                            </Button>
+                        {visitorBettorForBInputs.map((input, index ) => (
                             <FormField
-                                control={form.control}
-                                name="bettorForB"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="font-bold">
-                                            Bettor For Team B
-                                        </FormLabel>
-                                        <FormControl>
-                                            <select
-                                                {...field}
-                                                className="text-sm w-full border border-gray-300 rounded p-2"
-                                            >
-                                                <option value="">
-                                                    Select Bettor B
-                                                </option>
-                                                {userData?.fetchUsers.map(
-                                                    (user: any) => (
-                                                        <option
-                                                            key={user._id}
-                                                            value={user._id}
-                                                        >
-                                                            {user.name}
-                                                        </option>
+                            control={form.control}
+                            name="bettorForB"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-bold">
+                                        Bettor For Team B
+                                    </FormLabel>
+                                    <FormControl>
+                                        <MultipleSelector
+                                            value={field.value.map(
+                                                (id: string) => ({
+                                                    value: id,
+                                                    label:
+                                                        userData?.fetchUsers.find(
+                                                            (user: any) =>
+                                                                user._id ===
+                                                                id
+                                                        )?.name || id,
+                                                })
+                                            )}
+                                            onChange={(options) => {
+                                                field.onChange(
+                                                    options.map(
+                                                        (option) =>
+                                                            option.value
                                                     )
-                                                )}
-                                            </select>
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                            {/* <FormField
+                                                )
+                                            }}
+                                            defaultOptions={userOptions}
+                                            placeholder="Select bettors for Team B"
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+/>
+                        ))}
+                          
+                            {/* <Button onClick={addVisitorBettorForB} type='button'>Add Visitor Bettor B</Button>
+                                {visitorBettorForBInputs.map((inputValue, index) => (
+                                    <Input
+                                        key={index}
+                                        value={inputValue}
+                                        onChange={(e) => handleVisitorBettorForBChange(index, e.target.value)}
+                                        placeholder="Enter Visitor Bettor for B"
+                                        className="mt-2"
+                                    />
+                                ))} */}
+                                {/* <FormField
                                 control={form.control}
                                 name="game"
                                 render={({ field }) => (

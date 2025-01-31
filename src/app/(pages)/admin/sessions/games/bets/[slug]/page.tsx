@@ -213,24 +213,30 @@ const Page = () => {
                 <Card key={bet._id} className="shadow-sm">
                   <CardHeader>
                     <CardTitle>{bet.betType}</CardTitle>
-                    <CardDescription>
+                    <CardDescription className="font-bold">
                       Bet Amount: {bet.betAmount.toFixed(2)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col gap-2">
-                      <p>
-                        <span className="font-semibold">Bettor For A:</span>{" "}
-                        {bet.bettorForA.name}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Bettor For B:</span>{" "}
-                        {bet.bettorForB.name}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Status:</span>{" "}
-                        {bet.paid ? <span className="text-green-400">Paid</span> : <span className="text-red-400">Unpaid</span>}
-                      </p>
+                    <p>
+                      <span className="font-normal italic">Bettor For A:</span>{" "}
+                      {bet.bettorForA?.map((bettor: any, index: number) => (
+                        <span key={bettor._id}>
+                          <span className="font-bold underline">{bettor.name} </span>
+                          {index !== bet.bettorForA.length - 1 && ' & ' }
+                          </span>
+                      ))}
+                    </p>
+                    <p>
+                      <span className="font-normal italic">Bettor For B:</span>{" "}
+                      {bet.bettorForB?.map((bettor: any, index: number) => (
+                        <span key={bettor._id} className="font-medium">
+                           <span className="font-bold underline">{bettor.name} </span>
+                          {index !== bet.bettorForB.length - 1 && ' & '}
+                        </span>
+                      ))}
+                    </p>
                     </div>
                   </CardContent>
                     <CardFooter className="flex justify-start text-sm">
