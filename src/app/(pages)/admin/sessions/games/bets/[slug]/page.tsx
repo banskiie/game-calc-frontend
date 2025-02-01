@@ -71,6 +71,15 @@ const FETCH_BETS_BY_GAME = gql`
     }
   }
 `
+const FETCH_SESSION = gql`
+  query FetchSession($id: ID!) {
+    fetchSession(_id: $id) {
+      _id
+      end
+    }
+  }
+`
+
 const UPDATE_BET = gql`
   mutation UpdateBet($id: ID!, $bettorForA: ID, $bettorForB: ID, $betType: String, $betAmount: Float, $paid: Boolean) {
     updateBet(_id: $id, bettorForA: $bettorForA, bettorForB: $bettorForB, betType: $betType, betAmount: $betAmount, paid: $paid) {
@@ -175,7 +184,6 @@ const UPDATE_BET = gql`
     }
 }
 `
-
 const Page = () => {
   const { slug } = useParams(); 
   const { data: gameData, loading: gameLoading, error: gameError } = useQuery(FETCH_GAME, {
@@ -187,16 +195,30 @@ const Page = () => {
     variables: { game: slug },
   });
 
+  const { data: sessionData, loading: sessionLoading, error: sessionError } = useQuery(FETCH_SESSION, {
+    variables: { id: gameData?.fetchGame?.session?._id },
+    skip: !gameData?.fetchGame?.session?._id,
+  });
+
   useEffect(() => console.log(betsData), [betsData]);
 
-  if (gameLoading || betsLoading) return <Loader2 className="animate-spin" />;
+  if (gameLoading || betsLoading || sessionLoading)
+    return (
+      <div className="flex-1 h-fit flex items-center justify-center">
+        <Loader2 className="animate-spin" size={200} />
+      </div>
+    )
   if (gameError) return <div>Error: {gameError.message}</div>;
   if (betsError) return <div>Error: {betsError.message}</div>;
 
   const game = gameData?.fetchGame;
   const bets = betsData?.fetchBetsByGame;
 
-  return (
+  const isSessionEnded = sessionData?.fetchSession?.end
+    ? new Date(sessionData.fetchSession.end) < new Date()
+    : false
+
+    return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
       {game ? (
         <div>
@@ -204,8 +226,8 @@ const Page = () => {
           <p className="mb-6 text-center">
             <span className="font-semibold italic">{game.A1.name} / {game.A2.name}</span> <span className="font-semibold">vs</span> <span className="font-semibold italic"> {game.B1.name} / {game.B2.name}</span>
           </p>
-
-          <BetsForm gameId={slug as string} refetch={refetch} />
+          
+          <BetsForm gameId={slug as string} refetch={refetch} disabled={isSessionEnded}/>
 
           <div className="grid grid-cols-1 gap-4 mt-6">
             {bets && bets.length > 0 ? (
@@ -213,30 +235,24 @@ const Page = () => {
                 <Card key={bet._id} className="shadow-sm">
                   <CardHeader>
                     <CardTitle>{bet.betType}</CardTitle>
-                    <CardDescription className="font-bold">
+                    <CardDescription>
                       Bet Amount: {bet.betAmount.toFixed(2)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col gap-2">
-                    <p>
-                      <span className="font-normal italic">Bettor For A:</span>{" "}
-                      {bet.bettorForA?.map((bettor: any, index: number) => (
-                        <span key={bettor._id}>
-                          <span className="font-bold underline">{bettor.name} </span>
-                          {index !== bet.bettorForA.length - 1 && ' & ' }
-                          </span>
-                      ))}
-                    </p>
-                    <p>
-                      <span className="font-normal italic">Bettor For B:</span>{" "}
-                      {bet.bettorForB?.map((bettor: any, index: number) => (
-                        <span key={bettor._id} className="font-medium">
-                           <span className="font-bold underline">{bettor.name} </span>
-                          {index !== bet.bettorForB.length - 1 && ' & '}
-                        </span>
-                      ))}
-                    </p>
+                      <p>
+                        <span className="font-semibold">Bettor For A:</span>{" "}
+                        {bet.bettorForA.name}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Bettor For B:</span>{" "}
+                        {bet.bettorForB.name}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Status:</span>{" "}
+                        {bet.paid ? <span className="text-green-400">Paid</span> : <span className="text-red-400">Unpaid</span>}
+                      </p>
                     </div>
                   </CardContent>
                     <CardFooter className="flex justify-start text-sm">
@@ -244,6 +260,7 @@ const Page = () => {
                       id={bet._id}
                       gameId={slug as string}
                       refetch={refetch}
+                      disabled={isSessionEnded}
                       />
                     </CardFooter>
                 </Card>

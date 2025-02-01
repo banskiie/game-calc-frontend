@@ -1,7 +1,7 @@
 import ButtonLoader from '@/components/custom/ButtonLoader'
-import MultipleSelector from '@/components/custom/MutliSelector'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import {
     Form,
     FormControl,
@@ -10,6 +10,7 @@ import {
     FormLabel,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
     Sheet,
     SheetClose,
@@ -22,8 +23,7 @@ import {
 } from '@/components/ui/sheet'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { visit } from 'graphql'
-import { Loader2 } from 'lucide-react'
+import { ChevronsUpDown, Loader2 } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -172,10 +172,8 @@ const FETCH_BET = gql`
 `
 const CREATE_BET = gql`
     mutation CreateBet(
-        $bettorForA: [ID!]!
-        $bettorForB: [ID!]!
-        $visitorBettorForA: [String]
-        $visitorBettorForB: [String]
+        $bettorForA: ID!
+        $bettorForB: ID!
         $game: ID!
         $betType: String!
         $betAmount: Float!
@@ -184,16 +182,12 @@ const CREATE_BET = gql`
             input: {
                 bettorForB: $bettorForB
                 bettorForA: $bettorForA
-                visitorBettorForA: $visitorBettorForA
-                visitorBettorForB: $visitorBettorForB
                 game: $game
                 betType: $betType
                 betAmount: $betAmount
             }
         ) {
             _id
-            visitorBettorForA
-            visitorBettorForB
             betType
             betAmount
             paid
@@ -298,10 +292,8 @@ const CREATE_BET = gql`
 const UPDATE_BET = gql`
     mutation UpdateBet(
         $id: ID!
-        $bettorForA: [ID]
-        $bettorForB: [ID]
-        $visitorBettorForA: [String]
-        $visitorBettorForB: [String]
+        $bettorForA: ID
+        $bettorForB: ID
         $game: ID
         $betType: String
         $betAmount: Float
@@ -312,8 +304,6 @@ const UPDATE_BET = gql`
                 _id: $id
                 bettorForA: $bettorForA
                 bettorForB: $bettorForB
-                visitorBettorForA: $visitorBettorForA
-                visitorBettorForB: $visitorBettorForB
                 game: $game
                 betType: $betType
                 betAmount: $betAmount
@@ -321,8 +311,6 @@ const UPDATE_BET = gql`
             }
         ) {
             _id
-            visitorBettorForA
-            visitorBettorForB
             betType
             betAmount
             paid
@@ -442,10 +430,10 @@ export const GameSchema = z.object({
 })
 
 export const BetSchema = z.object({
-    bettorForA: z.array(z.string()).nonempty('BettorForA is required.'),
-    bettorForB: z.array(z.string()).nonempty('BettorForB is required.'),
-    visitorBettorForA: z.array(z.string()).nonempty('VisitorBettorForA is required.'),
-    visitorBettorForB: z.array(z.string()).nonempty('VisitorBettorForB is required.'),
+    bettors: z.array(z.object({
+        bettorForA: z.string().nonempty('BettorForA is required.'),
+        bettorForB: z.string().nonempty('BettorForB is required.'),
+    })),
     game: z.string().nonempty('Game is required.'),
     betType: z.string().nonempty('BetType is required.'),
     betAmount: z.number().nonnegative('BetAmount must be a positive number.'),
@@ -458,10 +446,12 @@ const BetsForm = ({
     gameId,
     id,
     refetch,
+    disabled,
 }: {
     gameId: string
     id?: string
     refetch?: () => void
+    disabled?: boolean
 }) => {
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
@@ -473,64 +463,60 @@ const BetsForm = ({
         fetchPolicy: 'network-only',
     })
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
+    const [bettorRows, setBettorRows] = useState([{ bettorForA: '', bettorForB: '', displayA: '', displayB: '' }]);
+    const [openRoles, setOpenRoles] = useState<boolean>(false)
+
     const form = useForm<z.infer<typeof BetSchema>>({
         resolver: zodResolver(BetSchema),
         defaultValues: {
-            bettorForA: [],
-            bettorForB: [],
-            visitorBettorForA: [],
-            visitorBettorForB: [],
+            bettors: [{ bettorForA: '', bettorForB: ''}],
             game: gameId,
             betType: '',
             betAmount: 0.0,
             paid: false,
         },
     })
-    const [visitorBettorForAInputs, setVisitorBettorForAInputs] = useState<string[]>([])
-    const [visitorBettorForBInputs, setVisitorBettorForBInputs] = useState<string[]>([])
-    
-    const addVisitorBettorForA = () => {
-        setVisitorBettorForAInputs([...visitorBettorForAInputs, ''])
+
+    const addBettorRow = () => {
+        if (disabled) return
+        const newBettorRow = { bettorForA: '', bettorForB: '', displayA: '', displayB: '' }
+        setBettorRows([...bettorRows, newBettorRow])
+        form.setValue('bettors', [...form.getValues().bettors, newBettorRow])
     }
-    const addVisitorBettorForB = () => {
-        setVisitorBettorForBInputs([...visitorBettorForBInputs, ''])
-    }
+    const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({})
     
-    const handleVisitorBettorForAChange = (index: number, value: string) => {
-        // const updated = [...visitorBettorForAInputs]
-        // updated[index] = value
-        // setVisitorBettorForAInputs(updated)
-        const newInputs = [...visitorBettorForAInputs]
-        newInputs[index] = value
-        setVisitorBettorForAInputs(newInputs)
-        form.setValue('visitorBettorForA', newInputs.filter(input => input.trim() !== '') as [string, ...string[]])
+    const handleBettorChange = (index: number, field: 'bettorForA' | 'bettorForB', value: string) => {
+        if (disabled) return
+        const updatedBettorRows = [...bettorRows]
+        updatedBettorRows[index][field] = value
+        setBettorRows(updatedBettorRows) 
+        form.setValue('bettors', updatedBettorRows) 
     }
 
-    const handleVisitorBettorForBChange = (index: number, value: string) => {
-        // const updated = [...visitorBettorForBInputs]
-        // updated[index] = value
-        // setVisitorBettorForBInputs(updated)
-        const newInputs = [...visitorBettorForBInputs]
-        newInputs[index] = value
-        setVisitorBettorForBInputs(newInputs)
-        form.setValue('visitorBettorForB', newInputs.filter(input => input.trim() !== '') as [string, ...string[]])
+    const handlePopoverToggle = (key: string, isOpen: boolean) => {
+        setOpenPopovers((prev) => ({
+            ...prev,
+            [key]: isOpen,
+        }));
     }
-    
+
     useEffect(() => {
         if (data?.fetchBet) {
             const selectedGame = gameData?.fetchGames?.find(
                 (game: any) => game._id === data.fetchBet?.game?._id
             )
 
+            const initialBettors = [{
+                bettorForA: data.fetchBet?.bettorForA?._id || '',
+                bettorForB: data.fetchBet?.bettorForB?._id || '',
+                displayA: data.fetchBet?.bettorForA?.name || '',
+                displayB: data.fetchBet?.bettorForB?.name || '',
+            }]
+
+            setBettorRows(initialBettors)
+
             form.reset({
-                bettorForA:
-                    data.fetchBet?.bettorForA?.map(
-                        (bettor: any) => bettor._id
-                    ) || [],
-                bettorForB:
-                    data.fetchBet?.bettorForB?.map(
-                        (bettor: any) => bettor._id
-                    ) || [],
+                bettors: initialBettors.map(({ bettorForA, bettorForB }) => ({ bettorForA, bettorForB })),
                 game: selectedGame?._id || gameId,
                 betType: data.fetchBet?.betType || '',
                 betAmount: data.fetchBet?.betAmount || 0.0,
@@ -540,22 +526,25 @@ const BetsForm = ({
     }, [data?.fetchBet, gameData, form])
 
     const onSubmit = (values: z.infer<typeof BetSchema>) => {
+        if (disabled) return
         startTransition(async () => {
             try {
-                const formattedValues = {
-                    ...values,
-                    // visitorBettorForA: visitorBettorForAInputs,
-                    // visitorBettorForB: visitorBettorForBInputs,
-                    betAmount: Number(values.betAmount),
-                    paid: Boolean(values.paid),
-                    id: id || undefined,
+                for (const bettor of values.bettors) {
+                    const formattedValues = {
+                        ...values,
+                        bettorForA: bettor.bettorForA,
+                        bettorForB: bettor.bettorForB,
+                        betAmount: Number(values.betAmount),
+                        paid: Boolean(values.paid),
+                        id: id || undefined,
+                    }
+                    await submit({
+                        variables: formattedValues,
+                    })
                 }
-                const response = await submit({
-                    variables: formattedValues,
-                })
-                if (response) closeForm()
+                closeForm();
             } catch (error) {
-                console.error(error)
+                console.error(error);
             }
         })
     }
@@ -566,18 +555,10 @@ const BetsForm = ({
         if (refetch) refetch()
     }
 
-    const userOptions =
-        userData?.fetchUsers.map((user: any) => ({
-            value: user._id,
-            label: user.name,
-        })) || []
-
-    if (loading) return <Loader2 />
-
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button className="w-full">
+                <Button className="w-full" disabled={disabled}>
                     {id ? 'Update Bet' : 'Create Bet'}
                 </Button>
             </SheetTrigger>
@@ -586,7 +567,7 @@ const BetsForm = ({
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 className="w-screen max-h-screen flex flex-col"
             >
-                <SheetHeader>
+                 <SheetHeader>
                     <SheetTitle>{id ? 'Update Bet' : 'Create Bet'}</SheetTitle>
                     <SheetDescription>
                         Please fill up the necessary information below.
@@ -596,121 +577,142 @@ const BetsForm = ({
                             className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
-                            <Button type="button" onClick={addVisitorBettorForA}>
-                                Add Visitor Bettor For Team A
-                            </Button>
-                            {visitorBettorForAInputs.map((input, index) => (
-                                <FormField
-                                control={form.control}
-                                name="bettorForA"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <FormItem>
-                                                <FormLabel className="font-bold">
-                                                    Bettor For Team A
-                                                </FormLabel>
+                         {bettorRows.map((bettor, index) => (
+                                <div key={index} className="flex gap-4">
+                                     <FormField
+                                        control={form.control}
+                                        name={`bettors.${index}.bettorForA`}
+                                        render={({ field }) => (
+                                            <FormItem className="flex-1">
+                                                <FormLabel className="font-bold">Bettor For Team A</FormLabel>
                                                 <FormControl>
-                                                    <MultipleSelector
-                                                        value={field.value.map(
-                                                            (id: string) => ({
-                                                                value: id,
-                                                                label:
-                                                                    userData?.fetchUsers.find(
-                                                                        (
-                                                                            user: any
-                                                                        ) =>
-                                                                            user._id ===
-                                                                            id
-                                                                    )?.name ||
-                                                                    id,
-                                                            })
-                                                        )}
-                                                        onChange={(options) => {
-                                                            field.onChange(
-                                                                options.map(
-                                                                    (option) =>
-                                                                        option.value
-                                                                )
-                                                            )
-                                                        }}
-                                                        defaultOptions={
-                                                            userOptions
-                                                        }
-                                                        placeholder="Select or type to add bettors for Team A"
-                                                        creatable 
-                                                    />
+                                                    <Popover
+                                                        modal
+                                                        open={openPopovers[`bettorA-${index}`] || false}
+                                                        onOpenChange={(isOpen) => handlePopoverToggle(`bettorA-${index}`, isOpen)}
+                                                    >
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                role="combobox"
+                                                                aria-expanded={openPopovers[`bettorA-${index}`]}
+                                                                className="w-full justify-between"
+                                                            >
+                                                                {bettor.bettorForA ?
+                                                                    userData?.fetchUsers.find((user: any) => user._id === bettor.bettorForA)?.name :
+                                                                    <span className="text-muted-foreground">Select Bettor A</span>
+                                                                }
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="p-0 w-fit">
+                                                            <Command>
+                                                                <CommandInput
+                                                                    placeholder="Search Bettor A..."
+                                                                    className="text-sm w-full border border-gray-300 rounded p-2"
+                                                                    value={bettor.displayA}
+                                                                    onValueChange={(value) => {
+                                                                        handleBettorChange(index, 'bettorForA', value);
+                                                                        field.onChange(value)
+                                                                    }}
+                                                                />
+                                                                <CommandList>
+                                                                    <CommandGroup>
+                                                                        {userData?.fetchUsers.map((user: any) => (
+                                                                            <CommandItem
+                                                                                key={user._id}
+                                                                                value={user.name}
+                                                                                onSelect={() => {
+                                                                                    handleBettorChange(index, 'bettorForA', user._id)
+                                                                                    field.onChange(user._id);
+                                                                                    handlePopoverToggle(`bettorA-${index}`, false)
+                                                                                }}
+                                                                            >
+                                                                                {user.name}
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
                                                 </FormControl>
                                             </FormItem>
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                                />
-                            ))}
-                          
-                            {/* <Button onClick={addVisitorBettorForA} type='button'>Add Visitor Bettor A</Button>
-                            {visitorBettorForAInputs.map((inputValue, index) => (
-                                <Input
-                                    key={index}
-                                    value={inputValue}
-                                    onChange={(e) => handleVisitorBettorForAChange(index, e.target.value)}
-                                    placeholder="Enter Visitor Bettor for A"
-                                    className="mt-2"
-                                />
-                            ))} */}
-                        <Button type="button" onClick={addVisitorBettorForB} >
-                                Add Visitor Bettor For Team B
-                            </Button>
-                        {visitorBettorForBInputs.map((input, index ) => (
-                            <FormField
-                            control={form.control}
-                            name="bettorForB"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="font-bold">
-                                        Bettor For Team B
-                                    </FormLabel>
-                                    <FormControl>
-                                        <MultipleSelector
-                                            value={field.value.map(
-                                                (id: string) => ({
-                                                    value: id,
-                                                    label:
-                                                        userData?.fetchUsers.find(
-                                                            (user: any) =>
-                                                                user._id ===
-                                                                id
-                                                        )?.name || id,
-                                                })
-                                            )}
-                                            onChange={(options) => {
-                                                field.onChange(
-                                                    options.map(
-                                                        (option) =>
-                                                            option.value
-                                                    )
-                                                )
-                                            }}
-                                            defaultOptions={userOptions}
-                                            placeholder="Select bettors for Team B"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-/>
-                        ))}
-                          
-                            {/* <Button onClick={addVisitorBettorForB} type='button'>Add Visitor Bettor B</Button>
-                                {visitorBettorForBInputs.map((inputValue, index) => (
-                                    <Input
-                                        key={index}
-                                        value={inputValue}
-                                        onChange={(e) => handleVisitorBettorForBChange(index, e.target.value)}
-                                        placeholder="Enter Visitor Bettor for B"
-                                        className="mt-2"
+                                        )}
                                     />
-                                ))} */}
-                                {/* <FormField
+
+<FormField
+                                        control={form.control}
+                                        name={`bettors.${index}.bettorForB`}
+                                        render={({ field }) => (
+                                            <FormItem className="flex-1">
+                                                <FormLabel className="font-bold">Bettor For Team B</FormLabel>
+                                                <FormControl>
+                                                    <Popover
+                                                        modal
+                                                        open={openPopovers[`bettorB-${index}`] || false}
+                                                        onOpenChange={(isOpen) => handlePopoverToggle(`bettorB-${index}`, isOpen)}
+                                                    >
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                role="combobox"
+                                                                aria-expanded={openPopovers[`bettorB-${index}`]}
+                                                                className="w-full justify-between"
+                                                            >
+                                                                {bettor.bettorForB ?
+                                                                    userData?.fetchUsers.find((user: any) => user._id === bettor.bettorForB)?.name :
+                                                                    <span className="text-muted-foreground">Select Bettor B</span>
+                                                                }
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="p-0 w-fit">
+                                                            <Command>
+                                                                <CommandInput
+                                                                    placeholder="Search Bettor B..."
+                                                                    className="text-sm w-full border border-gray-300 rounded p-2"
+                                                                    value={bettor.displayB}
+                                                                    onValueChange={(value) => {
+                                                                        handleBettorChange(index, 'bettorForB', value);
+                                                                        field.onChange(value)
+                                                                    }}
+                                                                />
+                                                                <CommandList>
+                                                                    <CommandGroup>
+                                                                        {userData?.fetchUsers.map((user: any) => (
+                                                                            <CommandItem
+                                                                                key={user._id}
+                                                                                value={user.name}
+                                                                                onSelect={() => {
+                                                                                    handleBettorChange(index, 'bettorForB', user._id)
+                                                                                    field.onChange(user._id)
+                                                                                    handlePopoverToggle(`bettorB-${index}`, false)
+                                                                                }}
+                                                                            >
+                                                                                {user.name}
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            ))}
+                               <Button
+                                type="button"
+                                onClick={addBettorRow}
+                                className="mt-4"
+                                disabled={disabled || isPending}
+                            >
+                                Add Bettor Pair
+                            </Button>
+                            {/* <FormField
                                 control={form.control}
                                 name="game"
                                 render={({ field }) => (

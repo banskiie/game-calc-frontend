@@ -257,10 +257,12 @@ const GameForm = ({
     sessionId,
     id,
     refetch,
+    disabled,
 }: {
     sessionId: string
     id?: string
     refetch?: () => void
+    disabled?: boolean
 }) => {
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
@@ -405,6 +407,7 @@ const GameForm = ({
     }, [courtData, shuttleData, sessionData, form])
 
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
+        if(disabled) return
         startTransition(async () => {
             const { players, court, shuttles, start, end } = data
 
@@ -461,7 +464,7 @@ const GameForm = ({
     return (
         <Sheet open={open} onOpenChange={setOpen} modal>
             <SheetTrigger asChild>
-                <Button className={id ? undefined : 'w-full'}>
+                <Button className={id ? undefined : 'w-full'} disabled={disabled}>
                     {id ? 'Update Game' : 'Add Game'}
                 </Button>
             </SheetTrigger>

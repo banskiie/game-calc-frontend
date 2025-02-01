@@ -26,12 +26,7 @@ const items = [
     url: "/admin/users",
     icon: CircleUser,
   },
-  // {
-  //   title: "bets",
-  //   url: "/admin/bets",
-  //   icon: Bitcoin,
-  // }
-]
+  ]
 
 const TabNavigation = () => {
   const currentPath = usePathname()

@@ -329,12 +329,17 @@ const Page = () => {
     )
   if (error) return <div>Error: {error.message}</div>
   if (!session) return <div>No session data available</div>
-
+  
+  const isSessionEnded = !!session.end
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
-      <div>
-        <GameForm sessionId={slug as string} refetch={refetchGames} />
-      </div>
+    
+        <div>
+        <GameForm sessionId={slug as string} refetch={refetchGames} 
+          disabled={isSessionEnded}
+        />
+        </div>
+     
       <Card className="p-3 w-full max-w-md mx-auto shadow-inner flex items-center justify-center bg-opacity-100 shadow-gray-500/60">
         <CardContent className="flex flex-col items-center text-center pb-2">
           <span className="block text-muted-foreground font-semibold">
