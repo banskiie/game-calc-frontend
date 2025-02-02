@@ -464,7 +464,8 @@ const BetsForm = ({
     })
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
     const [bettorRows, setBettorRows] = useState([{ bettorForA: '', bettorForB: '', displayA: '', displayB: '' }]);
-    const [openRoles, setOpenRoles] = useState<boolean>(false)
+    const [searchTermA, setSearchTermA] = useState<Record<string, string>>({});
+    const [searchTermB, setSearchTermB] = useState<Record<string, string>>({});
 
     const form = useForm<z.infer<typeof BetSchema>>({
         resolver: zodResolver(BetSchema),
@@ -484,11 +485,42 @@ const BetsForm = ({
         form.setValue('bettors', [...form.getValues().bettors, newBettorRow])
     }
     const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({})
-    
+
+    const handleSearchChangeA = (index: number, value: string) => {
+        setSearchTermA((prev) => ({
+            ...prev,
+            [index]: value,
+        }))
+    }
+    const handleSearchChangeB = (index: number, value: string) => {
+        setSearchTermB((prev) => ({
+            ...prev,
+            [index]: value,
+        }))
+    }
+
+    const filteredUsersA = (index: number) => {
+        return userData?.fetchUsers.filter((user: any) =>
+            user.name.toLowerCase().includes(searchTermA[index]?.toLowerCase() || '')
+        )
+    }
+
+    const filteredUsersB = (index: number) => {
+        return userData?.fetchUsers.filter((user: any) =>
+            user.name.toLowerCase().includes(searchTermB[index]?.toLowerCase() || '')
+        )
+    }
+
     const handleBettorChange = (index: number, field: 'bettorForA' | 'bettorForB', value: string) => {
         if (disabled) return
+
         const updatedBettorRows = [...bettorRows]
         updatedBettorRows[index][field] = value
+        if (field === 'bettorForA') {
+            updatedBettorRows[index].displayA = userData?.fetchUsers.find((user: any) => user._id === value)?.name || '';
+        } else if (field === 'bettorForB') {
+            updatedBettorRows[index].displayB = userData?.fetchUsers.find((user: any) => user._id === value)?.name || '';
+        }
         setBettorRows(updatedBettorRows) 
         form.setValue('bettors', updatedBettorRows) 
     }
@@ -606,42 +638,48 @@ const BetsForm = ({
                                                             </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="p-0 w-fit">
-                                                            <Command>
+                                                            <Command
+                                                               filter={(value, search) => {
+                                                                const user = userData?.fetchUsers.find((user: any) => user.name.toLowerCase().includes(search.toLowerCase()));
+                                                                return user ? 1 : 0
+                                                               }}>
                                                                 <CommandInput
                                                                     placeholder="Search Bettor A..."
                                                                     className="text-sm w-full border border-gray-300 rounded p-2"
-                                                                    value={bettor.displayA}
-                                                                    onValueChange={(value) => {
-                                                                        handleBettorChange(index, 'bettorForA', value);
-                                                                        field.onChange(value)
-                                                                    }}
+                                                                    value={searchTermA[index] || ''}
+                                                                    // onValueChange={(value) => {
+                                                                    //     handleBettorChange(index, 'bettorForA', value);
+                                                                    //     field.onChange(value)
+                                                                    // }}
+                                                                    onValueChange={(value) => handleSearchChangeA(index, value)}
                                                                 />
                                                                 <CommandList>
                                                                     <CommandGroup>
-                                                                        {userData?.fetchUsers.map((user: any) => (
+                                                                        {/* {userData?.fetchUsers.map((user: any) => ( */}
+                                                                        {filteredUsersA(index)?.map((user: any) => (
                                                                             <CommandItem
-                                                                                key={user._id}
-                                                                                value={user.name}
-                                                                                onSelect={() => {
-                                                                                    handleBettorChange(index, 'bettorForA', user._id)
-                                                                                    field.onChange(user._id);
-                                                                                    handlePopoverToggle(`bettorA-${index}`, false)
-                                                                                }}
-                                                                            >
-                                                                                {user.name}
-                                                                            </CommandItem>
-                                                                        ))}
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command>
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+                                                                            key={user._id}
+                                                                            value={user.name}
+                                                                            onSelect={() => {
+                                                                                handleBettorChange(index, 'bettorForA', user._id);
+                                                                                field.onChange(user._id);
+                                                                                handlePopoverToggle(`bettorA-${index}`, false);
+                                                                            }}
+                                                                        >
+                                                                            {user.name}
+                                                                        </CommandItem>
+                                                                    ))}
+                                                                </CommandGroup>
+                                                            </CommandList>
+                                                        </Command>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
 
-<FormField
+                                        <FormField
                                         control={form.control}
                                         name={`bettors.${index}.bettorForB`}
                                         render={({ field }) => (
@@ -672,22 +710,19 @@ const BetsForm = ({
                                                                 <CommandInput
                                                                     placeholder="Search Bettor B..."
                                                                     className="text-sm w-full border border-gray-300 rounded p-2"
-                                                                    value={bettor.displayB}
-                                                                    onValueChange={(value) => {
-                                                                        handleBettorChange(index, 'bettorForB', value);
-                                                                        field.onChange(value)
-                                                                    }}
+                                                                    value={searchTermB[index] || ''}
+                                                                    onValueChange={(value) => handleSearchChangeB(index, value)}
                                                                 />
                                                                 <CommandList>
                                                                     <CommandGroup>
-                                                                        {userData?.fetchUsers.map((user: any) => (
+                                                                        {filteredUsersB(index)?.map((user: any) => (
                                                                             <CommandItem
                                                                                 key={user._id}
                                                                                 value={user.name}
                                                                                 onSelect={() => {
-                                                                                    handleBettorChange(index, 'bettorForB', user._id)
-                                                                                    field.onChange(user._id)
-                                                                                    handlePopoverToggle(`bettorB-${index}`, false)
+                                                                                    handleBettorChange(index, 'bettorForB', user._id);
+                                                                                    field.onChange(user._id);
+                                                                                    handlePopoverToggle(`bettorB-${index}`, false);
                                                                                 }}
                                                                             >
                                                                                 {user.name}
