@@ -693,17 +693,7 @@ const BetsForm = ({
                         >
                             {bettorRows.map((bettor, index) => (
                                 <div key={index} className="flex gap-4">
-                                    
-                                      {/* <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeBettorRow(index)}
-                                        disabled={disabled || isPending}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                     */}
+                                   
                                     <FormField
                                         control={form.control}
                                         name={`bettors.${index}.bettorForA`}
@@ -991,7 +981,18 @@ const BetsForm = ({
                                             </FormItem>
                                         )}
                                     />
+                                     
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeBettorRow(index)}
+                                        disabled={disabled || isPending}
+                                    >
+                                        <X className="self-end" />
+                                    </Button>
                                 </div>
+
                             ))}
                             <Button
                                 type="button"
