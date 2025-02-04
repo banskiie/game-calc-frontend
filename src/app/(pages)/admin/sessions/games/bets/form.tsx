@@ -519,10 +519,21 @@ const BetsForm = ({
 
     const removeBettorRow = (index: number) => {
         if (disabled) return
-        const updatedBettorRows = bettorRows.filter((_, i) => i !== index)
-        setBettorRows(updatedBettorRows)
-        form.setValue('bettors', updatedBettorRows)
-
+        if (index === 0) {
+            const updatedBettorRows = [...bettorRows];
+            updatedBettorRows[index] = {
+                bettorForA: '',
+                bettorForB: '',
+                displayA: '',
+                displayB: '',
+            };
+            setBettorRows(updatedBettorRows);
+            form.setValue('bettors', updatedBettorRows);
+        } else {
+            const updatedBettorRows = bettorRows.filter((_, i) => i !== index);
+            setBettorRows(updatedBettorRows);
+            form.setValue('bettors', updatedBettorRows);
+        }
     }
 
     const handleSearchChangeA = (index: number, value: string) => {
@@ -693,7 +704,6 @@ const BetsForm = ({
                         >
                             {bettorRows.map((bettor, index) => (
                                 <div key={index} className="flex gap-4">
-                                   
                                     <FormField
                                         control={form.control}
                                         name={`bettors.${index}.bettorForA`}
@@ -988,8 +998,9 @@ const BetsForm = ({
                                         size="icon"
                                         onClick={() => removeBettorRow(index)}
                                         disabled={disabled || isPending}
+                                        className='mt-8'
                                     >
-                                        <X className="self-end" />
+                                        <X className='!h-7 !w-7 text-red-400'/>
                                     </Button>
                                 </div>
 
