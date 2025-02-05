@@ -628,7 +628,12 @@ const BetsForm = ({
         startTransition(async () => {
             try {
                 const bettors = [...values.bettors.map((bettor) => bettor.bettorForA), ...values.bettors.map((bettor) => bettor.bettorForB)]
+                const uniqueBettorNames = [...new Set(bettors)];
+
+                 console.log('Unique Bettor Names:', uniqueBettorNames);
+
                 const uniqueBettors = [...new Set(bettors)]
+               
                 const allBettors = (await Promise.all(
                     uniqueBettors.map(async (bettor) => {
                         const existingUser = userData?.fetchUsers.find(
@@ -703,7 +708,7 @@ const BetsForm = ({
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
                             {bettorRows.map((bettor, index) => (
-                                <div key={index} className="flex gap-4">
+                                <div key={index} className="flex gap-2">
                                     <FormField
                                         control={form.control}
                                         name={`bettors.${index}.bettorForA`}
@@ -991,17 +996,18 @@ const BetsForm = ({
                                             </FormItem>
                                         )}
                                     />
-                                     
-                                      <Button
+                                    {(bettorRows.length > 1 || Object.values(bettorRows[index]).some(value => value.trim() !== '')) && (
+                                        <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => removeBettorRow(index)}
                                         disabled={disabled || isPending}
-                                        className='mt-8'
-                                    >
-                                        <X className='!h-7 !w-7 text-red-400'/>
-                                    </Button>
+                                        className='mt-8 shrink-0' 
+                                        >
+                                        <X className='flex items-center justify-center w-full'/>
+                                        </Button>   
+                                    )}
                                 </div>
 
                             ))}
