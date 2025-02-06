@@ -217,7 +217,8 @@ const Page = () => {
   const isSessionEnded = sessionData?.fetchSession?.end
     ? new Date(sessionData.fetchSession.end) < new Date()
     : false
-
+    const allBettorsForA = [...new Set(bets?.map((bet: any) => bet.bettorForA.name))];
+    const allBettorsForB = [...new Set(bets?.map((bet: any) => bet.bettorForB.name))];
     return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
       {game ? (
@@ -231,40 +232,41 @@ const Page = () => {
 
           <div className="grid grid-cols-1 gap-4 mt-6">
             {bets && bets.length > 0 ? (
-              bets.map((bet: any) => (
-                <Card key={bet._id} className="shadow-sm">
+              // bets.map((bet: any) => (
+                // <Card key={bet._id} className="shadow-sm">
+                <Card className="shadow-sm">
                   <CardHeader>
-                    <CardTitle>{bet.betType}</CardTitle>
+                    <CardTitle>{bets.length > 0 ? bets[0].betType : "No Bets"}</CardTitle>
                     <CardDescription>
-                      Bet Amount: {bet.betAmount.toFixed(2)}
+                      Bet Amount: {bets.length > 0 ? bets[0].betAmount.toFixed(2) : 0.00}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col gap-2">
                       <p>
-                        <span className="font-semibold">Bettor For A:</span>{" "}
-                        {bet.bettorForA.name}
+                      <span className="font-semibold">Bettor For A:</span>{" "}
+                      {allBettorsForA.join(', ')}
                       </p>
                       <p>
-                        <span className="font-semibold">Bettor For B:</span>{" "}
-                        {bet.bettorForB.name}
+                      <span className="font-semibold">Bettor For B:</span>{" "}
+                      {allBettorsForB.join(', ')}
                       </p>
                       <p>
                         <span className="font-semibold">Status:</span>{" "}
-                        {bet.paid ? <span className="text-green-400">Paid</span> : <span className="text-red-400">Unpaid</span>}
+                        {bets.every((bet: any) => bet.paid) ? <span className="text-green-400">Paid</span> : <span className="text-red-400">Unpaid</span>}
                       </p>
                     </div>
                   </CardContent>
                     <CardFooter className="flex justify-start text-sm">
-                      <BetsForm
+                      {/* <BetsForm
                       id={bet._id}
                       gameId={slug as string}
                       refetch={refetch}
                       disabled={isSessionEnded}
-                      />
+                      /> */}
                     </CardFooter>
                 </Card>
-              ))
+              // ))
             ) : (
               <Card className="w-full max-w-md text-center p-6 mx-auto">
                 <CardContent>

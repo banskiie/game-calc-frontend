@@ -33,7 +33,7 @@ import {
 import { gql, useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronsUpDown, X } from 'lucide-react'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -450,8 +450,8 @@ export const GameSchema = z.object({
 export const BetSchema = z.object({
     bettors: z.array(
         z.object({
-            bettorForA: z.string().nonempty('BettorForA is required.'),
-            bettorForB: z.string().nonempty('BettorForB is required.'),
+            bettorForA: z.string(),
+            bettorForB: z.string(),
         })
     ),
     game: z.string().nonempty('Game is required.'),
@@ -473,6 +473,8 @@ const BetsForm = ({
     refetch?: () => void
     disabled?: boolean
 }) => {
+    const inputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
+    const sheetContentRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
     const { data: userData } = useQuery(FETCH_USERS)
@@ -503,6 +505,14 @@ const BetsForm = ({
 
     const addBettorRow = () => {
         if (disabled) return
+        
+        // const lastBettorRow = bettorRows[bettorRows.length - 1]
+        // const newBettorRow = {
+        //     bettorForA: lastBettorRow?.bettorForA || '',
+        //     bettorForB: lastBettorRow?.bettorForB || '',
+        //     displayA: lastBettorRow?.displayA || '',
+        //     displayB: lastBettorRow?.displayB || '',
+        // }
         const newBettorRow = {
             bettorForA: '',
             bettorForB: '',
@@ -624,38 +634,57 @@ const BetsForm = ({
     }, [data?.fetchBet, gameData, form])
 
     const onSubmit = async (values: z.infer<typeof BetSchema>) => {
-        if (disabled) return
+        if (disabled) return;
         startTransition(async () => {
             try {
-                const bettors = [...values.bettors.map((bettor) => bettor.bettorForA), ...values.bettors.map((bettor) => bettor.bettorForB)]
-                const uniqueBettorNames = [...new Set(bettors)];
-
-                 console.log('Unique Bettor Names:', uniqueBettorNames);
-
-                const uniqueBettors = [...new Set(bettors)]
-               
+                // Process bettors to fill missing A/B with previous values
+                let prevA = '';
+                let prevB = '';
+                const processedBettors = values.bettors.map((pair, index) => {
+                    let currentA = pair.bettorForA;
+                    let currentB = pair.bettorForB;
+    
+                    if (index === 0) {
+                        if (!currentA || !currentB) {
+                            throw new Error("First pair must have both bettors.");
+                        }
+                        prevA = currentA;
+                        prevB = currentB;
+                        return { bettorForA: currentA, bettorForB: currentB };
+                    } else {
+                        currentA = currentA || prevA;
+                        currentB = currentB || prevB;
+                        prevA = currentA;
+                        prevB = currentB;
+                        return { bettorForA: currentA, bettorForB: currentB };
+                    }
+                });
+    
+                // Process user creation and submission
+                const bettors = [...processedBettors.map(p => p.bettorForA), ...processedBettors.map(p => p.bettorForB)];
+                const uniqueBettors = [...new Set(bettors)];
+    
                 const allBettors = (await Promise.all(
                     uniqueBettors.map(async (bettor) => {
                         const existingUser = userData?.fetchUsers.find(
                             (user: any) => user._id === bettor || user.name === bettor
-                        )
+                        );
                         if (!existingUser) {
-                            const user = await createUser({ variables: { name: bettor } })
-                            console.log({ name: bettor, id: user.data.createUser._id })
-                            return { name: bettor, id: user.data.createUser._id }
+                            const user = await createUser({ variables: { name: bettor } });
+                            return { name: bettor, id: user.data.createUser._id };
                         }
-                        return { name: existingUser.name, id: existingUser._id }
+                        return { name: existingUser.name, id: existingUser._id };
                     })
-                )).filter((bettor) => bettor !== undefined)
+                )).filter((bettor) => bettor !== undefined);
     
-                for (const bettor of values.bettors) {
+                for (const pair of processedBettors) {
                     let bettorForA = allBettors.find(
-                        (b) => b.name === bettor.bettorForA || b.id === bettor.bettorForA
-                    )?.id
-
+                        (b) => b.name === pair.bettorForA || b.id === pair.bettorForA
+                    )?.id;
+    
                     let bettorForB = allBettors.find(
-                        (b) => b.name === bettor.bettorForB || b.id === bettor.bettorForB
-                    )?.id
+                        (b) => b.name === pair.bettorForB || b.id === pair.bettorForB
+                    )?.id;
     
                     const formattedValues = {
                         ...values,
@@ -665,12 +694,10 @@ const BetsForm = ({
                         paid: Boolean(values.paid),
                         id: id || undefined,
                     };
-
-                    console.log('formatted', formattedValues)
-                    
+    
                     await submit({
                         variables: formattedValues,
-                    })
+                    });
                 }
                 closeForm();
             } catch (error) {
@@ -696,6 +723,11 @@ const BetsForm = ({
                 side="bottom"
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 className="w-screen max-h-screen flex flex-col"
+                style={{
+                    top: 'auto',
+                    maxHeight: '90vh',
+                    overflow: 'auto',
+                  }}
             >
                 <SheetHeader>
                     <SheetTitle>{id ? 'Update Bet' : 'Create Bet'}</SheetTitle>
@@ -786,24 +818,48 @@ const BetsForm = ({
                                                                         ? 1
                                                                         : 0
                                                                 }}
-                                                            >
-                                                                <CommandInput
-                                                                    placeholder="Search Bettor A..."
-                                                                    className="text-sm w-full border border-gray-300 rounded p-2"
-                                                                    value={
-                                                                        searchTermA[
-                                                                            index
-                                                                        ] || ''
+                                                                onMouseDown={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    const input = inputRefs.current[`input-${index}`];
+                                                                    if (input) {
+                                                                      setTimeout(() => {
+                                                                        input.scrollIntoView({ 
+                                                                          behavior: 'smooth', 
+                                                                          block: 'center',
+                                                                          inline: 'nearest'
+                                                                        });
+                                                                      }, 100);
                                                                     }
-                                                                    // onValueChange={(value) => {
-                                                                    //     handleBettorChange(index, 'bettorForA', value);
-                                                                    //     field.onChange(value)
-                                                                    // }}
+                                                                  }}
+                                                            >
+                                                                 <CommandInput
+                                                                    ref={(el) => {
+                                                                    if (el) inputRefs.current[`input-${index}`] = el;
+                                                                    }}
+                                                                    placeholder="Search Bettor A..."
+                                                                    value={searchTermA[index] || ''}
                                                                     onValueChange={(value) => {
-                                                                        handleSearchChangeA(index, value);
-                                                                        if (!userData?.fetchUsers.find((user: any) => user.name.toLowerCase() === value.toLowerCase())) {
-                                                                            handleBettorChange(index, 'bettorForA', value)
-                                                                        }
+                                                                    handleSearchChangeA(index, value);
+                                                                    if (!userData?.fetchUsers.find((user: any) => 
+                                                                        user.name.toLowerCase() === value.toLowerCase()
+                                                                    )) {
+                                                                        handleBettorChange(index, 'bettorForA', value);
+                                                                    }
+                                                                    }}
+                                                                    onEnterKey={() => {
+                                                                    const currentValue = searchTermA[index] || '';
+                                                                    if (currentValue) {
+                                                                        handleBettorChange(index, 'bettorForA', currentValue);
+                                                                        handlePopoverToggle(`bettorA-${index}`, false);
+                                                                        // Focus next input
+                                                                        setTimeout(() => {
+                                                                        const nextInput = document.querySelector<HTMLInputElement>(
+                                                                            `input[name="bettors.${index}.bettorForA"]`
+                                                                        );
+                                                                        nextInput?.focus();
+                                                                        }, 100);
+                                                                    }
                                                                     }}
                                                                 />
                                                                 <CommandList>
@@ -835,6 +891,16 @@ const BetsForm = ({
                                                                                             `bettorA-${index}`,
                                                                                             false
                                                                                         )
+                                                                                        setTimeout(() => {
+                                                                                            const nextInput = document.querySelector<HTMLInputElement>(
+                                                                                              `input[name="bettors.${index}.bettorForA"]`
+                                                                                            );
+                                                                                            nextInput?.scrollIntoView({ 
+                                                                                              behavior: 'smooth', 
+                                                                                              block: 'center',
+                                                                                              inline: 'nearest'
+                                                                                            });
+                                                                                          }, 100)
                                                                                     }}
                                                                                 >
                                                                                     {
@@ -930,24 +996,48 @@ const BetsForm = ({
                                                                         ? 1
                                                                         : 0
                                                                 }}
+                                                                onMouseDown={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    const input = inputRefs.current[`input-${index}`];
+                                                                    if (input) {
+                                                                      setTimeout(() => {
+                                                                        input.scrollIntoView({ 
+                                                                          behavior: 'smooth', 
+                                                                          block: 'center',
+                                                                          inline: 'nearest'
+                                                                        });
+                                                                      }, 100);
+                                                                    }
+                                                                  }}
                                                             >
                                                                 <CommandInput
+                                                                    ref={(el) => {
+                                                                    if (el) inputRefs.current[`input-${index}`] = el;
+                                                                    }}
                                                                     placeholder="Search Bettor B..."
-                                                                    className="text-sm w-full border border-gray-300 rounded p-2"
-                                                                    value={
-                                                                        searchTermB[
-                                                                            index
-                                                                        ] || ''
-                                                                    }
-                                                                    // onValueChange={(value) => {
-                                                                    //     handleBettorChange(index, 'bettorForA', value);
-                                                                    //     field.onChange(value)
-                                                                    // }}
+                                                                    value={searchTermB[index] || ''}
                                                                     onValueChange={(value) => {
-                                                                        handleSearchChangeB(index, value);
-                                                                        if (!userData?.fetchUsers.find((user: any) => user.name.toLowerCase() === value.toLowerCase())) {
-                                                                            handleBettorChange(index, 'bettorForB', value)
-                                                                        }
+                                                                    handleSearchChangeB(index, value);
+                                                                    if (!userData?.fetchUsers.find((user: any) => 
+                                                                        user.name.toLowerCase() === value.toLowerCase()
+                                                                    )) {
+                                                                        handleBettorChange(index, 'bettorForB', value);
+                                                                    }
+                                                                    }}
+                                                                    onEnterKey={() => {
+                                                                    const currentValue = searchTermB[index] || '';
+                                                                    if (currentValue) {
+                                                                        handleBettorChange(index, 'bettorForB', currentValue);
+                                                                        handlePopoverToggle(`bettorB-${index}`, false);
+                                                                        // Focus next input
+                                                                        setTimeout(() => {
+                                                                        const nextInput = document.querySelector<HTMLInputElement>(
+                                                                            `input[name="bettors.${index}.bettorForB"]`
+                                                                        );
+                                                                        nextInput?.focus();
+                                                                        }, 100);
+                                                                    }
                                                                     }}
                                                                 />
                                                                 <CommandList>
@@ -979,6 +1069,16 @@ const BetsForm = ({
                                                                                             `bettorB-${index}`,
                                                                                             false
                                                                                         )
+                                                                                        setTimeout(() => {
+                                                                                            const nextInput = document.querySelector<HTMLInputElement>(
+                                                                                              `input[name="bettors.${index}.bettorForB"]`
+                                                                                            );
+                                                                                            nextInput?.scrollIntoView({ 
+                                                                                              behavior: 'smooth', 
+                                                                                              block: 'center',
+                                                                                              inline: 'nearest'
+                                                                                            });
+                                                                                          }, 100);
                                                                                     }}
                                                                                 >
                                                                                     {
