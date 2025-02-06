@@ -180,246 +180,93 @@ const FETCH_BET = gql`
     }
 `
 const CREATE_BET = gql`
-    mutation CreateBet(
-        $bettorForA: ID!
-        $bettorForB: ID!
-        $game: ID!
-        $betType: String!
-        $betAmount: Float!
+  mutation CreateBet(
+    $bettors: [BettorPairInput!]!
+    $game: ID!
+    $betType: String!
+    $betAmount: Float!
+  ) {
+    createBet(
+      input: {
+        bettors: $bettors
+        game: $game
+        betType: $betType
+        betAmount: $betAmount
+      }
     ) {
-        createBet(
-            input: {
-                bettorForB: $bettorForB
-                bettorForA: $bettorForA
-                game: $game
-                betType: $betType
-                betAmount: $betAmount
-            }
-        ) {
-            _id
-            betType
-            betAmount
-            paid
-            active
-            bettorForA {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            bettorForB {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            game {
-                _id
-                start
-                end
-                winner
-                status
-                active
-                A1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                A2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                court {
-                    _id
-                    name
-                    price
-                    active
-                    createdAt
-                    updatedAt
-                }
-                shuttlesUsed {
-                    quantity
-                    shuttle {
-                        _id
-                        name
-                        price
-                        active
-                        createdAt
-                        updatedAt
-                    }
-                }
-            }
+      _id
+      betType
+      betAmount
+      paid
+      active
+      bettors {
+        bettorForA {
+          _id
+          name
         }
+        bettorForB {
+          _id
+          name
+        }
+      }
+      game {
+        _id
+        start
+        end
+        winner
+        status
+        active
+      }
     }
-`
+  }
+`;
 
 const UPDATE_BET = gql`
-    mutation UpdateBet(
-        $id: ID!
-        $bettorForA: ID
-        $bettorForB: ID
-        $game: ID
-        $betType: String
-        $betAmount: Float
-        $paid: Boolean
+  mutation UpdateBet(
+    $id: ID!
+    $bettors: [BettorPairInput!]
+    $game: ID
+    $betType: String
+    $betAmount: Float
+    $paid: Boolean
+  ) {
+    updateBet(
+      input: {
+        _id: $id
+        bettors: $bettors
+        game: $game
+        betType: $betType
+        betAmount: $betAmount
+        paid: $paid
+      }
     ) {
-        updateBet(
-            input: {
-                _id: $id
-                bettorForA: $bettorForA
-                bettorForB: $bettorForB
-                game: $game
-                betType: $betType
-                betAmount: $betAmount
-                paid: $paid
-            }
-        ) {
-            _id
-            betType
-            betAmount
-            paid
-            active
-            bettorForA {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            bettorForB {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            game {
-                _id
-                start
-                end
-                winner
-                status
-                active
-                A1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                A2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                court {
-                    _id
-                    name
-                    price
-                    active
-                    createdAt
-                    updatedAt
-                }
-                shuttlesUsed {
-                    quantity
-                    shuttle {
-                        _id
-                        name
-                        price
-                        active
-                        createdAt
-                        updatedAt
-                    }
-                }
-            }
+      _id
+      betType
+      betAmount
+      paid
+      active
+      bettors {
+        bettorForA {
+          _id
+          name
         }
+        bettorForB {
+          _id
+          name
+        }
+      }
+      game {
+        _id
+        start
+        end
+        winner
+        status
+        active
+      }
     }
+  }
 `
+
 export const CreateUser = gql`
     mutation CreateUser($name: String!) {
         createUser(input: { name: $name }) {
@@ -449,18 +296,18 @@ export const GameSchema = z.object({
 
 export const BetSchema = z.object({
     bettors: z.array(
-        z.object({
-            bettorForA: z.string(),
-            bettorForB: z.string(),
-        })
+      z.object({
+        bettorForA: z.string().nullable(), 
+        bettorForB: z.string().nullable(), 
+      })
     ),
     game: z.string().nonempty('Game is required.'),
     betType: z.string().nonempty('BetType is required.'),
     betAmount: z.number().nonnegative('BetAmount must be a positive number.'),
     paid: z
-        .boolean()
-        .refine((val) => typeof val === 'boolean', 'Paid must be a boolean.'),
-})
+      .boolean()
+      .refine((val) => typeof val === 'boolean', 'Paid must be a boolean.'),
+  })
 
 const BetsForm = ({
     gameId,
@@ -473,6 +320,7 @@ const BetsForm = ({
     refetch?: () => void
     disabled?: boolean
 }) => {
+    const [formId, setFormId] = useState<string>(() => Math.random().toString(36).substr(2, 9));
     const inputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
     const sheetContentRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState<boolean>(false)
@@ -486,78 +334,91 @@ const BetsForm = ({
         fetchPolicy: 'network-only',
     })
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
-    const [bettorRows, setBettorRows] = useState([
-        { bettorForA: '', bettorForB: '', displayA: '', displayB: '' },
-    ])
+    const [bettorRows, setBettorRows] = useState<
+  { 
+    bettorForA: string | null, 
+    bettorForB: string | null, 
+    displayA: string, 
+    displayB: string 
+  }[]
+>([
+  { bettorForA: null, bettorForB: null, displayA: '', displayB: '' },
+])
     const [searchTermA, setSearchTermA] = useState<Record<string, string>>({})
     const [searchTermB, setSearchTermB] = useState<Record<string, string>>({})
 
     const form = useForm<z.infer<typeof BetSchema>>({
         resolver: zodResolver(BetSchema),
         defaultValues: {
-            bettors: [{ bettorForA: '', bettorForB: '' }],
-            game: gameId,
-            betType: '',
-            betAmount: 0.0,
-            paid: false,
+          bettors: [{ bettorForA: null, bettorForB: null }], 
+          game: gameId,
+          betType: '',
+          betAmount: 0.0,
+          paid: false,
         },
-    })
+      });
 
-    const addBettorRow = () => {
-        if (disabled) return
+      const addBettorRow = () => {
+        if (disabled) return;
         
-        // const lastBettorRow = bettorRows[bettorRows.length - 1]
-        // const newBettorRow = {
-        //     bettorForA: lastBettorRow?.bettorForA || '',
-        //     bettorForB: lastBettorRow?.bettorForB || '',
-        //     displayA: lastBettorRow?.displayA || '',
-        //     displayB: lastBettorRow?.displayB || '',
-        // }
         const newBettorRow = {
-            bettorForA: '',
-            bettorForB: '',
-            displayA: '',
-            displayB: '',
-        }
-        setBettorRows([...bettorRows, newBettorRow])
-        form.setValue('bettors', [...form.getValues().bettors, newBettorRow])
-    }
+          bettorForA: null,
+          bettorForB: null,
+          displayA: '',
+          displayB: '',
+        };
+        setBettorRows([...bettorRows, newBettorRow]);
+        form.setValue('bettors', [...form.getValues().bettors, { bettorForA: null, bettorForB: null }]);
+      }
 
     const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>(
         {}
     )
 
     const removeBettorRow = (index: number) => {
-        if (disabled) return
+        if (disabled) return;
+        
+        const updatedBettorRows = [...bettorRows];
         if (index === 0) {
-            const updatedBettorRows = [...bettorRows];
-            updatedBettorRows[index] = {
-                bettorForA: '',
-                bettorForB: '',
-                displayA: '',
-                displayB: '',
-            };
-            setBettorRows(updatedBettorRows);
-            form.setValue('bettors', updatedBettorRows);
+          updatedBettorRows[index] = {
+            bettorForA: null,
+            bettorForB: null,
+            displayA: '',
+            displayB: '',
+          };
         } else {
-            const updatedBettorRows = bettorRows.filter((_, i) => i !== index);
-            setBettorRows(updatedBettorRows);
-            form.setValue('bettors', updatedBettorRows);
+          updatedBettorRows.splice(index, 1);
         }
-    }
+        
+        setBettorRows(updatedBettorRows);
+        form.setValue('bettors', updatedBettorRows.map(({ bettorForA, bettorForB }) => ({
+          bettorForA,
+          bettorForB
+        })));
+      };
 
+    // const handleSearchChangeA = (index: number, value: string) => {
+    //     setSearchTermA((prev) => ({
+    //         ...prev,
+    //         [index]: value,
+    //     }))
+    // }
+    // const handleSearchChangeB = (index: number, value: string) => {
+    //     setSearchTermB((prev) => ({
+    //         ...prev,
+    //         [index]: value,
+    //     }))
+    // }
+    
     const handleSearchChangeA = (index: number, value: string) => {
-        setSearchTermA((prev) => ({
-            ...prev,
-            [index]: value,
-        }))
-    }
-    const handleSearchChangeB = (index: number, value: string) => {
-        setSearchTermB((prev) => ({
-            ...prev,
-            [index]: value,
-        }))
-    }
+        setSearchTermA(prev => ({ ...prev, [index]: value }));
+        if (!value) handleBettorChange(index, 'bettorForA', null);
+      }
+      
+      const handleSearchChangeB = (index: number, value: string) => {
+        setSearchTermB(prev => ({ ...prev, [index]: value }));
+        if (!value) handleBettorChange(index, 'bettorForB', null);
+      }
 
     const filteredUsersA = (index: number) => {
         return userData?.fetchUsers.filter((user: any) =>
@@ -578,22 +439,22 @@ const BetsForm = ({
     const handleBettorChange = async (
         index: number,
         field: 'bettorForA' | 'bettorForB',
-        value: string
+        value: string | null
     ) => {
         if (disabled) return
 
-        const updatedBettorRows = [...bettorRows]
-        updatedBettorRows[index][field] = value
+        const updatedBettorRows = [...bettorRows];
+        updatedBettorRows[index][field] = value;
 
-        const user = userData?.fetchUsers.find((user: any) => user._id === value)
+        const user = value ? userData?.fetchUsers.find((user: any) => user._id === value) : null;
 
         if (field === 'bettorForA') {
-            updatedBettorRows[index].displayA = user?.name || value
+          updatedBettorRows[index].displayA = user?.name || value || '';
         } else if (field === 'bettorForB') {
-            updatedBettorRows[index].displayB = user?.name || value
+          updatedBettorRows[index].displayB = user?.name || value || '';
         }
-        setBettorRows(updatedBettorRows)
-        form.setValue('bettors', updatedBettorRows)
+        setBettorRows(updatedBettorRows);
+        form.setValue('bettors', updatedBettorRows);
     }
 
     const handlePopoverToggle = (key: string, isOpen: boolean) => {
@@ -609,21 +470,18 @@ const BetsForm = ({
                 (game: any) => game._id === data.fetchBet?.game?._id 
             )
 
-            const initialBettors = [
-                {
-                    bettorForA: data.fetchBet?.bettorForA?._id || '',
-                    bettorForB: data.fetchBet?.bettorForB?._id || '',
-                    displayA: data.fetchBet?.bettorForA?.name || '',
-                    displayB: data.fetchBet?.bettorForB?.name || '',
-                },
-            ]
-
-            setBettorRows(initialBettors)
-
-            form.reset({
+            const initialBettors = [{
+                bettorForA: data.fetchBet.bettorForA?._id || null,
+                bettorForB: data.fetchBet.bettorForB?._id || null,
+                displayA: data.fetchBet.bettorForA?.name || '',
+                displayB: data.fetchBet.bettorForB?.name || '',
+              }];
+          
+              setBettorRows(initialBettors);
+              form.reset({
                 bettors: initialBettors.map(({ bettorForA, bettorForB }) => ({
-                    bettorForA,
-                    bettorForB,
+                  bettorForA,
+                  bettorForB
                 })),
                 game: selectedGame?._id || gameId,
                 betType: data.fetchBet?.betType || '',
@@ -633,84 +491,67 @@ const BetsForm = ({
         }
     }, [data?.fetchBet, gameData, form])
 
+    // const onSubmit = async (values: z.infer<typeof BetSchema>) => {
+    //     if (disabled) return;
+    //     startTransition(async () => {
+    //       try {
+    //         const bettors = values.bettors.map((pair) => ({
+    //           bettorForA: pair.bettorForA || null,
+    //           bettorForB: pair.bettorForB || null,
+    //         }));
+      
+    //         const formattedValues = {
+    //           bettors,
+    //           game: values.game,
+    //           betType: values.betType,
+    //           betAmount: Number(values.betAmount),
+    //           paid: Boolean(values.paid),
+    //           id: id || undefined,
+    //         };
+      
+    //         await submit({
+    //           variables: formattedValues,
+    //         });
+    //         closeForm();
+    //       } catch (error) {
+    //         console.error(error);
+    //       }
+    //     });
+    //   }
+
+    const closeForm = () => {
+        setOpen(false);
+        form.reset();
+        if (refetch) refetch();
+      }      
+    
     const onSubmit = async (values: z.infer<typeof BetSchema>) => {
         if (disabled) return;
         startTransition(async () => {
-            try {
-                // Process bettors to fill missing A/B with previous values
-                let prevA = '';
-                let prevB = '';
-                const processedBettors = values.bettors.map((pair, index) => {
-                    let currentA = pair.bettorForA;
-                    let currentB = pair.bettorForB;
-    
-                    if (index === 0) {
-                        if (!currentA || !currentB) {
-                            throw new Error("First pair must have both bettors.");
-                        }
-                        prevA = currentA;
-                        prevB = currentB;
-                        return { bettorForA: currentA, bettorForB: currentB };
-                    } else {
-                        currentA = currentA || prevA;
-                        currentB = currentB || prevB;
-                        prevA = currentA;
-                        prevB = currentB;
-                        return { bettorForA: currentA, bettorForB: currentB };
-                    }
-                });
-    
-                // Process user creation and submission
-                const bettors = [...processedBettors.map(p => p.bettorForA), ...processedBettors.map(p => p.bettorForB)];
-                const uniqueBettors = [...new Set(bettors)];
-    
-                const allBettors = (await Promise.all(
-                    uniqueBettors.map(async (bettor) => {
-                        const existingUser = userData?.fetchUsers.find(
-                            (user: any) => user._id === bettor || user.name === bettor
-                        );
-                        if (!existingUser) {
-                            const user = await createUser({ variables: { name: bettor } });
-                            return { name: bettor, id: user.data.createUser._id };
-                        }
-                        return { name: existingUser.name, id: existingUser._id };
-                    })
-                )).filter((bettor) => bettor !== undefined);
-    
-                for (const pair of processedBettors) {
-                    let bettorForA = allBettors.find(
-                        (b) => b.name === pair.bettorForA || b.id === pair.bettorForA
-                    )?.id;
-    
-                    let bettorForB = allBettors.find(
-                        (b) => b.name === pair.bettorForB || b.id === pair.bettorForB
-                    )?.id;
-    
-                    const formattedValues = {
-                        ...values,
-                        bettorForA,
-                        bettorForB,
-                        betAmount: Number(values.betAmount),
-                        paid: Boolean(values.paid),
-                        id: id || undefined,
-                    };
-    
-                    await submit({
-                        variables: formattedValues,
-                    });
-                }
-                closeForm();
-            } catch (error) {
-                console.error(error);
-            }
-        });
-    }
-
-    const closeForm = () => {
-        setOpen(false)
-        form.reset()
-        if (refetch) refetch()
-    }
+          try {
+            const bettors = values.bettors.map((pair) => ({
+              bettorForA: pair.bettorForA || null, 
+              bettorForB: pair.bettorForB || null, 
+            }));
+      
+            const formattedValues = {
+              bettors,
+              game: values.game,
+              betType: values.betType,
+              betAmount: Number(values.betAmount),
+              paid: Boolean(values.paid),
+              id: id || undefined,
+            };
+      
+            await submit({
+              variables: formattedValues,
+            });
+            closeForm();
+          } catch (error) {
+            console.error(error);
+          }
+        })
+      }
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -766,17 +607,19 @@ const BetsForm = ({
                                                             )
                                                         }
                                                     >
-                                                        <PopoverTrigger asChild>
+                                                      <PopoverTrigger asChild>
                                                             <Button
                                                                 variant="outline"
                                                                 role="combobox"
-                                                                aria-expanded={
-                                                                    openPopovers[
-                                                                        `bettorA-${index}`
-                                                                    ]
-                                                                }
+                                                                aria-expanded={openPopovers[`bettorA-${index}`]}
                                                                 className="w-full justify-between"
                                                             >
+                                                                {/* {bettor.displayA || (
+                                                                <span className="text-muted-foreground">Select Bettor A</span>
+                                                                )} */}
+                                                                {bettor.displayA || <span className="text-muted-foreground"> Select Bettor A </span>}
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
                                                                 {/* {bettor.bettorForA ? (
                                                                     userData?.fetchUsers.find(
                                                                         (
@@ -791,11 +634,7 @@ const BetsForm = ({
                                                                         Bettor A
                                                                     </span>
                                                                 )} */}
-                                                                  {bettor.displayA || (
-                                                                <span className="text-muted-foreground">Select Bettor A</span>
-                                                                 )}
-                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                            </Button>
+                                                                
                                                         </PopoverTrigger>
                                                         <PopoverContent className="p-0 w-fit">
                                                             <Command
@@ -944,17 +783,19 @@ const BetsForm = ({
                                                             )
                                                         }
                                                     >
-                                                        <PopoverTrigger asChild>
-                                                        <Button
+                                                       <PopoverTrigger asChild>
+                                                            <Button
                                                                 variant="outline"
                                                                 role="combobox"
-                                                                aria-expanded={
-                                                                    openPopovers[
-                                                                        `bettorB-${index}`
-                                                                    ]
-                                                                }
+                                                                aria-expanded={openPopovers[`bettorB-${index}`]}
                                                                 className="w-full justify-between"
                                                             >
+                                                                {/* {bettor.displayB || (
+                                                                <span className="text-muted-foreground">Select Bettor B</span>
+                                                                )} */}
+                                                                {bettor.displayB || <span className="text-muted-foreground"> Select Bettor B </span>}
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
                                                                 {/* {bettor.bettorForB ? (
                                                                     userData?.fetchUsers.find(
                                                                         (
@@ -969,11 +810,6 @@ const BetsForm = ({
                                                                         Bettor B
                                                                     </span>
                                                                 )} */}
-                                                                  {bettor.displayB || (
-                                                                <span className="text-muted-foreground">Select Bettor B</span>
-                                                                 )}
-                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                            </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="p-0 w-fit">
                                                         <Command
@@ -1096,16 +932,16 @@ const BetsForm = ({
                                             </FormItem>
                                         )}
                                     />
-                                    {(bettorRows.length > 1 || Object.values(bettorRows[index]).some(value => value.trim() !== '')) && (
+                                    {(bettorRows.length > 1 || Object.values(bettorRows[index]).some(value => value !== null && value.trim() !== '')) && (
                                         <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeBettorRow(index)}
-                                        disabled={disabled || isPending}
-                                        className='mt-8 shrink-0' 
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeBettorRow(index)}
+                                            disabled={disabled || isPending}
+                                            className='mt-8 shrink-0' 
                                         >
-                                        <X className='flex items-center justify-center w-full'/>
+                                            <X className='flex items-center justify-center w-full'/>
                                         </Button>   
                                     )}
                                 </div>
