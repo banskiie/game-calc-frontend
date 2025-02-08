@@ -3,6 +3,7 @@ import { gql, useQuery } from "@apollo/client"
 import { useParams } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
 import Loader from "@/components/custom/Loader"
+import { Loader2 } from "lucide-react"
 
 const FETCH_SUMMARY = gql`
   query FetchSummary($id: ID!) {
@@ -40,7 +41,7 @@ const Page = () => {
     fetchPolicy: "network-only",
   })
 
-  if (loading) return <Loader />
+  if (loading) return <div className="flex-1 h-fit flex items-center justify-center"> <Loader2 className="animate-spin" size={200} /></div>
   if (error) {
     console.error("GraphQL Error:", error)
     return <div>Error fetching Summary.</div>

@@ -66,7 +66,7 @@ const Page = () => {
     onCompleted: (data) => console.log(data),
   })
 
-  if (loading) return <Loader2 />
+  if (loading) return <div className="flex-1 h-fit flex items-center justify-center"> <Loader2 className="animate-spin" size={200} /></div>
   if (error) {
     console.error("GraphQL Error:", error)
     return <div>Error fetching Summary.</div>

@@ -76,112 +76,115 @@ const FETCH_GAMES = gql`
 `
 
 const FETCH_BET = gql`
-    query FetchBet($id: ID!) {
-        fetchBet(_id: $id) {
-            _id
-            betType
-            betAmount
-            paid
-            active
-            bettorForA {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            bettorForB {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            game {
-                _id
-                start
-                end
-                winner
-                status
-                active
-                A1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                A2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B1 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                B2 {
-                    _id
-                    name
-                    contact
-                    password
-                    username
-                    role
-                    active
-                    createdAt
-                    updatedAt
-                }
-                court {
-                    _id
-                    name
-                    price
-                    active
-                    createdAt
-                    updatedAt
-                }
-                shuttlesUsed {
-                    quantity
-                    shuttle {
-                        _id
-                        name
-                        price
-                        active
-                        createdAt
-                        updatedAt
-                    }
-                }
-            }
+  query FetchBet($id: ID!) {
+    fetchBet(_id: $id) {
+      _id
+      betType
+      betAmount
+      paid
+      active
+      bettors {
+        bettorForA {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
         }
+        bettorForB {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
+        }
+      }
+      game {
+        _id
+        start
+        end
+        winner
+        status
+        active
+        A1 {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
+        }
+        A2 {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
+        }
+        B1 {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
+        }
+        B2 {
+          _id
+          name
+          contact
+          password
+          username
+          role
+          active
+          createdAt
+          updatedAt
+        }
+        court {
+          _id
+          name
+          price
+          active
+          createdAt
+          updatedAt
+        }
+        shuttlesUsed {
+          quantity
+          shuttle {
+            _id
+            name
+            price
+            active
+            createdAt
+            updatedAt
+          }
+        }
+      }
     }
+  }
 `
+
 const CREATE_BET = gql`
   mutation CreateBet(
-    $bettors: [BettorPairInput!]!
+    $bettors: [BettorPairInput]
     $game: ID!
     $betType: String!
     $betAmount: Float!
@@ -224,7 +227,7 @@ const CREATE_BET = gql`
 const UPDATE_BET = gql`
   mutation UpdateBet(
     $id: ID!
-    $bettors: [BettorPairInput!]
+    $bettors: [BettorPairInput]
     $game: ID
     $betType: String
     $betAmount: Float
@@ -333,6 +336,7 @@ const BetsForm = ({
         skip: !id,
         fetchPolicy: 'network-only',
     })
+    console.log('This is data in the fetch_bet', data)
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
     const [bettorRows, setBettorRows] = useState<
   { 
@@ -470,16 +474,16 @@ const BetsForm = ({
                 (game: any) => game._id === data.fetchBet?.game?._id 
             )
 
-            const initialBettors = [{
-                bettorForA: data.fetchBet.bettorForA?._id || null,
-                bettorForB: data.fetchBet.bettorForB?._id || null,
-                displayA: data.fetchBet.bettorForA?.name || '',
-                displayB: data.fetchBet.bettorForB?.name || '',
-              }];
+            const initialBettors = data.fetchBet.bettors.map((bettor: any) => ({
+                bettorForA: bettor.bettorForA?._id || null,
+                bettorForB: bettor.bettorForB?._id || null,
+                displayA: bettor.bettorForA?.name || '',
+                displayB: bettor.bettorForB?.name || '',
+            }));
           
               setBettorRows(initialBettors);
               form.reset({
-                bettors: initialBettors.map(({ bettorForA, bettorForB }) => ({
+                bettors: initialBettors.map(({ bettorForA, bettorForB }: { bettorForA: string | null, bettorForB: string | null }) => ({
                   bettorForA,
                   bettorForB
                 })),
@@ -491,66 +495,86 @@ const BetsForm = ({
         }
     }, [data?.fetchBet, gameData, form])
 
-    // const onSubmit = async (values: z.infer<typeof BetSchema>) => {
-    //     if (disabled) return;
-    //     startTransition(async () => {
-    //       try {
-    //         const bettors = values.bettors.map((pair) => ({
-    //           bettorForA: pair.bettorForA || null,
-    //           bettorForB: pair.bettorForB || null,
-    //         }));
-      
-    //         const formattedValues = {
-    //           bettors,
-    //           game: values.game,
-    //           betType: values.betType,
-    //           betAmount: Number(values.betAmount),
-    //           paid: Boolean(values.paid),
-    //           id: id || undefined,
-    //         };
-      
-    //         await submit({
-    //           variables: formattedValues,
-    //         });
-    //         closeForm();
-    //       } catch (error) {
-    //         console.error(error);
-    //       }
-    //     });
-    //   }
-
     const closeForm = () => {
         setOpen(false);
         form.reset();
         if (refetch) refetch();
       }      
     
-    const onSubmit = async (values: z.infer<typeof BetSchema>) => {
+      const onSubmit = async (values: z.infer<typeof BetSchema>) => {
         if (disabled) return;
         startTransition(async () => {
           try {
-            const bettors = values.bettors.map((pair) => ({
-              bettorForA: pair.bettorForA || null, 
-              bettorForB: pair.bettorForB || null, 
+            const submittedValues = { ...values };
+      
+            // Process each bettor pair to resolve user IDs
+            for (const pair of submittedValues.bettors) {
+              // Process bettorForA
+              if (pair.bettorForA) {
+                let bettorAId = pair.bettorForA;
+                const existingUserById = userData.fetchUsers.find((user: any) => user._id === bettorAId);
+      
+                if (!existingUserById) {
+                  const existingUserByName = userData.fetchUsers.find((user: any) => user.name === bettorAId);
+                  if (existingUserByName) {
+                    bettorAId = existingUserByName._id;
+                  } else {
+                    const { data: createUserData } = await createUser({
+                      variables: { name: bettorAId },
+                      refetchQueries: [{ query: FETCH_USERS }],
+                    });
+                    bettorAId = createUserData.createUser._id;
+                  }
+                }
+                pair.bettorForA = bettorAId;
+              }
+      
+              // Process bettorForB
+              if (pair.bettorForB) {
+                let bettorBId = pair.bettorForB;
+                const existingUserById = userData.fetchUsers.find((user: any) => user._id === bettorBId);
+      
+                if (!existingUserById) {
+                  const existingUserByName = userData.fetchUsers.find((user: any) => user.name === bettorBId);
+                  if (existingUserByName) {
+                    bettorBId = existingUserByName._id;
+                  } else {
+                    const { data: createUserData } = await createUser({
+                      variables: { name: bettorBId },
+                      refetchQueries: [{ query: FETCH_USERS }],
+                    });
+                    bettorBId = createUserData.createUser._id;
+                  }
+                }
+                pair.bettorForB = bettorBId;
+              }
+            }
+      
+            // Prepare formatted values for submission
+            const bettors = submittedValues.bettors.map((pair) => ({
+              bettorForA: pair.bettorForA || null,
+              bettorForB: pair.bettorForB || null,
             }));
       
             const formattedValues = {
               bettors,
-              game: values.game,
-              betType: values.betType,
-              betAmount: Number(values.betAmount),
-              paid: Boolean(values.paid),
+              game: submittedValues.game,
+              betType: submittedValues.betType,
+              betAmount: Number(submittedValues.betAmount),
+              paid: Boolean(submittedValues.paid),
               id: id || undefined,
             };
       
+            // Submit the bet
             await submit({
               variables: formattedValues,
-            });
+            })
+
             closeForm();
           } catch (error) {
             console.error(error);
           }
-        })
+        });
       }
 
     return (
