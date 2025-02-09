@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-calculator-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: game-calculator-frontend
+  template:
+    metadata:
+      labels:
+        app: game-calculator-frontend
+    spec:
+      containers:
+        - name: game-calculator-frontend
+          image: localhost:5000/game-calculator-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://game-calculator-backend:4000"
