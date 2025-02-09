@@ -251,6 +251,7 @@ const GameSchema = z.object({
     session: z.string().nonempty('Session is required.'),
     start: z.string().nullable(),
     end: z.string().nullable(),
+    winner: z.enum(["a", "b"]).optional(),
 })
 
 const GameForm = ({
@@ -298,6 +299,7 @@ const GameForm = ({
             session: sessionId || '',
             start: null,
             end: null,
+            winner: undefined,
         },
     })
 
@@ -384,6 +386,7 @@ const GameForm = ({
                 //     : null,
                     start: ensurePM(game.start) || '12:00',
                     end: ensurePM(game.end) || '13:00',
+                    winner: game.winner || undefined,
             })
         }
     }, [data, form, sessionId])
@@ -427,7 +430,7 @@ const GameForm = ({
                         shuttles?.length === 1 && !shuttles[0].shuttle
                             ? []
                             : shuttles,
-                    winner: null,
+                    winner: data.winner || null,
                 }
 
                 try {
@@ -704,6 +707,7 @@ const GameForm = ({
                                                                 )
                                                             }
                                                         />
+                                                    
                                                         <Button
                                                             size="icon"
                                                             type="button"
@@ -748,6 +752,29 @@ const GameForm = ({
                                 </div>
                             )
                         })}
+                            {id && (
+                                                                <FormField
+                                                                    control={form.control}
+                                                                    name="winner"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel>Winner</FormLabel>
+                                                                            <FormControl>
+                                                                                <select
+                                                                                    {...field}
+                                                                                    className="text-sm w-full border border-gray-300 rounded p-2"
+                                                                                    disabled={isPending}
+                                                                                >
+                                                                                    <option value="">Select Winner</option>
+                                                                                    <option value="a">Team A</option>
+                                                                                    <option value="b">Team B</option>
+                                                                                </select>
+                                                                            </FormControl>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
+                                                            )}
                         <Button
                             type="button"
                             variant="outline"

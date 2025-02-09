@@ -367,6 +367,14 @@ const Page = () => {
         >
           View Summary
         </button>
+
+        <button
+            onClick={() => router.push(`/admin/sessions/summary/bets/${slug}`)}
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
+          >
+            View Bet Summary
+      </button>
+
         {!session.end && (
           <button
             onClick={ async () => {
