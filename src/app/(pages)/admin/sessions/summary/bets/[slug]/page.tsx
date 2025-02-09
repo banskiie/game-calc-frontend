@@ -64,7 +64,10 @@ const BetSummaryPage = () => {
           <CardDescription>
             Session:{" "}
             {sessionBetsSummary?.session.start
-              ? format(new Date(sessionBetsSummary.session.start), "MMMM dd, YYY")
+              ? format(
+                  new Date(sessionBetsSummary.session.start),
+                  "MMMM dd, YYY"
+                )
               : "TBA"}
           </CardDescription>
           <CardDescription>
