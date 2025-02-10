@@ -14,13 +14,13 @@ import {
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ChevronDownIcon } from "@radix-ui/react-icons"
+import { ChevronDownIcon } from "lucide-react"
 import { Dropdown } from "react-day-picker"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 const FETCH_SESSION_BETS_SUMMARY = gql`
-  query FetchSessionBetsSummary($id: ID!) {
-    fetchSessionBetsSummary(_id: $id) {
+  query FetchSessionBetsSummary($id: ID!, $betType: String) {
+    fetchSessionBetsSummary(_id: $id, betType: $betType) {
       totalBets
       totalAmount
       session {
@@ -53,36 +53,53 @@ const FETCH_SESSION_BETS_SUMMARY = gql`
 `
 
 const FETCH_BET_TYPES = gql`
-  query {
-    fetchDistinctBetTypes
+  query FetchDistinctBetTypes($sessionId: ID!) {
+    fetchDistinctBetTypes(sessionId: $sessionId)
   }
 `
 
-const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) => void}) => {
+const BetSummaryPage = ({ onSelect = () => {} }: { onSelect?: (betType: string) => void }) => {
   const { slug } = useParams()
   const [betTypes, setBetTypes] = useState<string[]>([])
   const [selectedBetType, setSelectedBetType] = useState<string | null>(null)
-  const { data: dataBetTypes, loading: loadingBetTypes, error: errorBetTypes } = useQuery(FETCH_BET_TYPES);
-  const { data, loading, error, refetch } = useQuery(FETCH_SESSION_BETS_SUMMARY, {
-    variables: { id: slug, betTypes: selectedBetType},
+
+  // Fetch bet types specific sa current session
+  const { data: dataBetTypes, loading: loadingBetTypes, error: errorBetTypes } = useQuery(FETCH_BET_TYPES, {
+    variables: { sessionId: slug },
   })
 
+  // Fetch session bets summary
+  const { data, loading, error, refetch } = useQuery(FETCH_SESSION_BETS_SUMMARY, {
+    variables: { id: slug, betType: selectedBetType },
+  })
+
+    // Gi load ang napili nga filter gikan sa localStorage sa pag-mount sa component
+    useEffect(() => {
+      const savedFilter = localStorage.getItem(`selectedBetType-${slug}`)
+      if (savedFilter) {
+        setSelectedBetType(savedFilter)
+      }
+    }, [slug])
+
+  // I save ang napili nga filter sa localStorage every naay changes
   useEffect(() => {
-     refetch()
-  }, [refetch])
+    if (selectedBetType) {
+      localStorage.setItem(`selectedBetType-${slug}`, selectedBetType)
+    }
+  }, [selectedBetType, slug])
 
   useEffect(() => {
-    if (dataBetTypes && dataBetTypes.fetchDistinctBetTypes){
+    if (dataBetTypes && dataBetTypes.fetchDistinctBetTypes) {
       setBetTypes(dataBetTypes.fetchDistinctBetTypes)
     }
   }, [dataBetTypes])
 
   const handleBetTypeChange = (betType: string) => {
     setSelectedBetType(betType)
-    refetch({ id: slug, betType }) 
+    refetch({ id: slug, betType })
   }
 
-  if (loading)
+  if (loading || loadingBetTypes)
     return (
       <div className="flex-1 h-fit flex items-center justify-center">
         <Loader2 className="animate-spin" size={200} />
@@ -90,6 +107,7 @@ const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) =
     )
 
   if (error) return <div>Error: {error.message}</div>
+  if (errorBetTypes) return <div>Error: {errorBetTypes.message}</div>
 
   const sessionBetsSummary = data?.fetchSessionBetsSummary
 
@@ -99,13 +117,12 @@ const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) =
         <CardContent className="flex flex-col items-center text-center pb-2">
           <CardTitle className="text-2xl font-bold mb-4">Bet Summary</CardTitle>
           <CardDescription>
-            Bets Session:{" "}<span className="font-bold">
-            {sessionBetsSummary?.session.start
-              ? format(
-                  new Date(sessionBetsSummary.session.start),
-                  "MMMM dd, YYY"
-                ) 
-              : "TBA"}</span>
+            Bets Session:{" "}
+            <span className="font-bold">
+              {sessionBetsSummary?.session.start
+                ? format(new Date(sessionBetsSummary.session.start), "MMMM dd, YYY")
+                : "TBA"}
+            </span>
           </CardDescription>
           <CardDescription>
             Total Bets: <span className="font-bold">{sessionBetsSummary?.totalBets}</span>
@@ -118,26 +135,30 @@ const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) =
           <CardHeader>
             <CardTitle className="text-xl font-semibold border-b pb-2 flex items-center justify-between">
               <div className="flex items-center">
-              <NotebookTabs className="w-6 h-6 text-green-500 mr-3 " /> Bettors Lists
+                <NotebookTabs className="w-6 h-6 text-green-500 mr-3" /> Bettors Lists
+                {selectedBetType && (
+                  <span className="ml-2 text-sm text-gray-500">
+                    (Bet: {selectedBetType})
+                  </span>
+                )}
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
-                Filter by Bet Type <ChevronDownIcon className="h-4 w-4" />
-                </Button>
-                </DropdownMenuTrigger>  
+                {selectedBetType ? `Filter: ${selectedBetType}` : "Filter by Bet Type"}
+                    <ChevronDownIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {betTypes.length > 0 ? (
                     betTypes.map((bet: any) => (
-                      <DropdownMenuItem key={bet} onClick={() => onSelect(bet)}>
-                         {bet}
+                      <DropdownMenuItem key={bet} onClick={() => handleBetTypeChange(bet)}>
+                        {bet}
                       </DropdownMenuItem>
-                     ))
-                  ) : 
-                   (
+                    ))
+                  ) : (
                     <DropdownMenuItem disabled>No bet types available</DropdownMenuItem>
-                   )
-                  }
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </CardTitle>
@@ -145,14 +166,9 @@ const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) =
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               {sessionBetsSummary?.playerStats.map((player: any) => (
-                <AccordionItem
-                  key={player.user._id}
-                  value={player.user._id}
-                  className="border-b"
-                >
+                <AccordionItem key={player.user._id} value={player.user._id} className="border-b">
                   <AccordionTrigger className="w-full flex justify-between items-center p-4 hover:bg-gray-50 transition-colors">
                     <span className="font-medium">{player.user.name}</span>
-               
                   </AccordionTrigger>
                   <AccordionContent className="overflow-hidden data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
                     <div className="p-4 space-y-2">
@@ -172,7 +188,7 @@ const BetSummaryPage = ({onSelect = () => {} } : {onSelect?: (betType: string) =
                             {player.competitors.map((competitor: any, index: number) => (
                               <tr
                                 key={competitor.user._id}
-                                className={`border-b ${index % 2 === 1 ? '' : 'bg-gray-100'}`}
+                                className={`border-b ${index % 2 === 1 ? "" : "bg-gray-100"}`}
                               >
                                 <td className="py-2 px-4">{index + 1}</td>
                                 <td className="py-2 px-4 font-semibold">{competitor.user.name}</td>

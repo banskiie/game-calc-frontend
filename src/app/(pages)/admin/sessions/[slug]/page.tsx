@@ -377,11 +377,11 @@ const Page = () => {
       </button>
 
       {/* KANI ANG MODAL */}
-            <BetSummaryModal
+            {/* <BetSummaryModal
         sessionId={slug as string}
         betTypes={betData?.fetchBet ? [betData.fetchBet.betType] : []}
         games={gameData?.fetchGamesBySession || []}
-      />
+      /> */}
       
         {!session.end && (
           <button
