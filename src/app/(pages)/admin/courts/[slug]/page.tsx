@@ -21,7 +21,7 @@ const FETCH_COURT = gql`
       updatedAt
     }
   }
-`;
+`
 
 const Page = () => {
   const { slug } = useParams();

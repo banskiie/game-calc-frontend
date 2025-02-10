@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import ShuttleIcon from "@/assets/svg/shuttle.svg"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import BetSummaryModal from "../modal/BetSummaryModal"
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -375,6 +376,13 @@ const Page = () => {
             View Bet Summary
       </button>
 
+      {/* KANI ANG MODAL */}
+            <BetSummaryModal
+        sessionId={slug as string}
+        betTypes={betData?.fetchBet ? [betData.fetchBet.betType] : []}
+        games={gameData?.fetchGamesBySession || []}
+      />
+      
         {!session.end && (
           <button
             onClick={ async () => {

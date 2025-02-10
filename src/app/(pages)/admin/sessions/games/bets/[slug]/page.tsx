@@ -135,10 +135,10 @@ const Page = () => {
               bets.map((bet: any) => {
                 const bettorsForA = bet.bettors
                   .map((pair: any) => pair.bettorForA?.name)
-                  .filter((name: string) => name); // Filter out undefined values
+                  .filter((name: string) => name); 
                 const bettorsForB = bet.bettors
                   .map((pair: any) => pair.bettorForB?.name)
-                  .filter((name: string) => name); // Filter out undefined values
+                  .filter((name: string) => name); 
 
                 return (
                   <Card key={bet._id} className="shadow-sm">
