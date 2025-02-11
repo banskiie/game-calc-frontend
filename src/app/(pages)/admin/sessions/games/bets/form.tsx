@@ -323,9 +323,7 @@ const BetsForm = ({
     refetch?: () => void
     disabled?: boolean
 }) => {
-    const [formId, setFormId] = useState<string>(() => Math.random().toString(36).substr(2, 9));
     const inputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
-    const sheetContentRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState<boolean>(false)
     const [isPending, startTransition] = useTransition()
     const { data: userData } = useQuery(FETCH_USERS)
@@ -401,19 +399,6 @@ const BetsForm = ({
         })));
       };
 
-    // const handleSearchChangeA = (index: number, value: string) => {
-    //     setSearchTermA((prev) => ({
-    //         ...prev,
-    //         [index]: value,
-    //     }))
-    // }
-    // const handleSearchChangeB = (index: number, value: string) => {
-    //     setSearchTermB((prev) => ({
-    //         ...prev,
-    //         [index]: value,
-    //     }))
-    // }
-    
     const handleSearchChangeA = (index: number, value: string) => {
         setSearchTermA(prev => ({ ...prev, [index]: value }));
         if (!value) handleBettorChange(index, 'bettorForA', null);
@@ -493,7 +478,7 @@ const BetsForm = ({
                 paid: data.fetchBet?.paid || false,
             })
         }
-    }, [data?.fetchBet, gameData, form])
+    }, [data?.fetchBet, gameData, form, gameId])
 
     const closeForm = () => {
         setOpen(false);

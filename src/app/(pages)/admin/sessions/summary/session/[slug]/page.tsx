@@ -2,7 +2,6 @@
 import { gql, useQuery } from "@apollo/client"
 import { useParams } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
-import Loader from "@/components/custom/Loader"
 import { Loader2 } from "lucide-react"
 
 const FETCH_SUMMARY = gql`

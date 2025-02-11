@@ -378,12 +378,6 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                // start: game.start
-                //     ? format(toZonedTime(game.start, 'Asia/Manila'), 'HH:mm')
-                //     : null,
-                // end: game.end
-                //     ? format(toZonedTime(game.end, 'Asia/Manila'), 'HH:mm')
-                //     : null,
                     start: ensurePM(game.start) || '12:00',
                     end: ensurePM(game.end) || '13:00',
                     winner: game.winner || undefined,
@@ -393,21 +387,22 @@ const GameForm = ({
 
     useEffect(() => {
         if (
+            !id && 
             courtData &&
             sessionData &&
             shuttleData &&
             courtData.fetchCourts.length >= 1 &&
             shuttleData.fetchShuttles.length >= 2
         ) {
-            form.setValue('court', sessionData.fetchSession.court._id)
+            form.setValue('court', sessionData.fetchSession.court._id);
             form.setValue('shuttles', [
                 {
                     shuttle: sessionData.fetchSession.shuttle._id,
                     quantity: 1,
                 },
-            ])
+            ]);
         }
-    }, [courtData, shuttleData, sessionData, form])
+    }, [courtData, shuttleData, sessionData, form, id])
 
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
         if(disabled) return
@@ -456,12 +451,32 @@ const GameForm = ({
     }
 
     const closeForm = () => {
-        setOpen(false)
-        form.clearErrors()
-        form.reset()
-        if (refetch) refetch()
+        setOpen(false);
+        form.clearErrors();
+        if (id) {
+            // Retain existing values when updating
+            form.reset({
+                ...form.getValues(),
+            });
+        } else {
+            // Reset to default values for new games
+            form.reset({
+                players: ['', '', '', ''],
+                court: '',
+                shuttles: [
+                    {
+                        quantity: 0,
+                        shuttle: '',
+                    },
+                ],
+                session: sessionId || '',
+                start: null,
+                end: null,
+                winner: undefined,
+            });
+        }
+        if (refetch) refetch();
     }
-
     if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
 
     return (

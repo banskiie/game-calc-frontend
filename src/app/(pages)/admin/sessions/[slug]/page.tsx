@@ -18,7 +18,6 @@ import { Separator } from "@/components/ui/separator"
 import ShuttleIcon from "@/assets/svg/shuttle.svg"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import BetSummaryModal from "../modal/BetSummaryModal"
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -101,110 +100,6 @@ const FETCH_SESSION = gql`
       }
     }
   }
-`
-const FETCH_BET = gql`
-query FetchBet($id: ID!) {
-    fetchBet(_id: $id) {
-        _id
-        betType
-        betAmount
-        paid
-        active
-        bettorForA {
-            _id
-            name
-            contact
-            password
-            username
-            role
-            active
-            createdAt
-            updatedAt
-        }
-        bettorForB {
-            _id
-            name
-            contact
-            password
-            username
-            role
-            active
-            createdAt
-            updatedAt
-        }
-        game {
-            _id
-            start
-            end
-            winner
-            status
-            active
-            A1 {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            A2 {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            B1 {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            B2 {
-                _id
-                name
-                contact
-                password
-                username
-                role
-                active
-                createdAt
-                updatedAt
-            }
-            court {
-                _id
-                name
-                price
-                active
-                createdAt
-                updatedAt
-            }
-            shuttlesUsed {
-                quantity
-                shuttle {
-                    _id
-                    name
-                    price
-                    active
-                    createdAt
-                    updatedAt
-                }
-            }
-        }
-    }
-}
 `
 
 const END_GAME = gql`
@@ -300,7 +195,6 @@ const FETCH_GAMES_BY_SESSION = gql`
     }
   }
 `
-
 const Page = () => {
   const { slug } = useParams()
   const { data, loading, error, refetch } = useQuery(FETCH_SESSION, {
@@ -308,9 +202,7 @@ const Page = () => {
     skip: !slug,
     variables: { id: slug },
   })
-  const { data: betData, refetch: refetchBet } = useQuery(FETCH_BET, {
-    variables: { bet_id: slug },
-  })
+  
   const { data: gameData, refetch: refetchGames } = useQuery(
     FETCH_GAMES_BY_SESSION,
     {

@@ -1,6 +1,6 @@
 "use client";
 import { gql, useQuery } from "@apollo/client";
-import { Ghost, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import BetsForm from "../form";
@@ -12,8 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 const FETCH_GAME = gql`
   query FetchGame($id: ID!) {
@@ -94,7 +92,7 @@ const Page = () => {
     variables: { game: slug },
   });
 
-  const { data: sessionData, loading: sessionLoading, error: sessionError } = useQuery(FETCH_SESSION, {
+  const { data: sessionData, loading: sessionLoading } = useQuery(FETCH_SESSION, {
     variables: { id: gameData?.fetchGame?.session?._id },
     skip: !gameData?.fetchGame?.session?._id,
   });
@@ -123,9 +121,9 @@ const Page = () => {
         <div>
           <h1 className="text-2xl font-bold mb-4 text-center">Bets for Game</h1>
           <p className="mb-6 text-center">
-            <span className="font-semibold italic">{game.A1.name} / {game.A2.name}</span>{" "}
+            <span className="font-semibold italic">{game.A1.name} / {game.A2?.name || 'N/A'}</span>{" "}
             <span className="font-semibold">vs</span>{" "}
-            <span className="font-semibold italic"> {game.B1.name} / {game.B2.name}</span>
+            <span className="font-semibold italic"> {game.B1.name} / {game.B2?.name || 'N/A'}</span>
           </p>
 
           <BetsForm gameId={slug as string} refetch={refetch} disabled={isSessionEnded} />
@@ -133,12 +131,22 @@ const Page = () => {
           <div className="grid grid-cols-1 gap-4 mt-6">
             {bets && bets.length > 0 ? (
               bets.map((bet: any) => {
-                const bettorsForA = bet.bettors
-                  .map((pair: any) => pair.bettorForA?.name)
-                  .filter((name: string) => name); 
-                const bettorsForB = bet.bettors
-                  .map((pair: any) => pair.bettorForB?.name)
-                  .filter((name: string) => name); 
+                // Extract unique bettors for A and B
+                const bettorsForA = Array.from(
+                  new Set(
+                    bet.bettors
+                      .map((pair: any) => pair.bettorForA?.name)
+                      .filter((name: string) => name)
+                  )
+                ).join(", ");
+
+                const bettorsForB = Array.from(
+                  new Set(
+                    bet.bettors
+                      .map((pair: any) => pair.bettorForB?.name)
+                      .filter((name: string) => name)
+                  )
+                ).join(", ");
 
                 return (
                   <Card key={bet._id} className="shadow-sm">
@@ -152,11 +160,11 @@ const Page = () => {
                       <div className="flex flex-col gap-2">
                         <p>
                           <span className="font-semibold">Bettor For A:</span>{" "}
-                          {bettorsForA.join(", ")}
+                          {bettorsForA}
                         </p>
                         <p>
                           <span className="font-semibold">Bettor For B:</span>{" "}
-                          {bettorsForB.join(", ")}
+                          {bettorsForB}
                         </p>
                         <p>
                           <span className="font-semibold">Status:</span>{" "}
@@ -199,4 +207,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Page
