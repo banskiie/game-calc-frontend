@@ -454,12 +454,12 @@ const GameForm = ({
         setOpen(false);
         form.clearErrors();
         if (id) {
-            // Retain existing values when updating
+            // Retain existing values pag mag update or updating
             form.reset({
                 ...form.getValues(),
             });
         } else {
-            // Reset to default values for new games
+            // Reset to default values para sa new games
             form.reset({
                 players: ['', '', '', ''],
                 court: '',
