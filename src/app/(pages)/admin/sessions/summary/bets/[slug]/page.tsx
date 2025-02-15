@@ -213,11 +213,11 @@ const BetSummaryPage = () => {
                     <span className="font-medium">{player.user.name}</span>
                     <span className="text-sm text-gray-800">
                       <span className="font-bold text-green-500"> Wins: </span>{" "}
-                      <span className="font-bold">{player.wins}</span> |
+                      <span className="font-bold">{sessionBetsSummary?.totalWins ? player.wins ?? 0 : 0}</span> |
                       <span className="font-bold text-red-500"> Losses: </span>{" "}
-                      <span className="font-bold">{player.losses}</span> |
+                      <span className="font-bold"> {sessionBetsSummary?.totalWins ? player.losses ?? 0 : 0}</span> |
                       <span className="font-bold text-blue-500"> Total: </span>{" "}
-                      <span className="font-bold">{player.total}</span>
+                      <span className="font-bold">{sessionBetsSummary?.totalWins ? player.total ?? 0 : 0}</span>
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="overflow-hidden data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
@@ -250,13 +250,13 @@ const BetSummaryPage = () => {
                                     {competitor.user.name}
                                   </td>
                                   <td className="py-2 px-4">
-                                    {competitor.wins}
+                                  {sessionBetsSummary?.totalWins ? competitor.wins ?? 0 : 0}
                                   </td>
                                   <td className="py-2 px-4">
-                                    {competitor.losses}
+                                  {sessionBetsSummary?.totalWins ? competitor.losses ?? 0 : 0}
                                   </td>
                                   <td className="py-2 px-4 font-semibold">
-                                    {competitor.total}
+                                  {sessionBetsSummary?.totalWins ? competitor.total ?? 0 : 0}
                                   </td>
                                 </tr>
                               )
