@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { gql, useQuery } from "@apollo/client";
 import { useEffect, useState } from "react";
-import { Loader2, NotebookTabs } from "lucide-react";
+import { Frown, Loader2, NotebookTabs } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -202,6 +202,7 @@ const BetSummaryPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {sessionBetsSummary?.playerStats?.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
               {sessionBetsSummary?.playerStats.map((player: any) => (
                 <AccordionItem
@@ -269,6 +270,17 @@ const BetSummaryPage = () => {
                 </AccordionItem>
               ))}
             </Accordion>
+            ) : (
+              <Card className="w-full max-w-md text-center p-6 mt-5 mx-auto">
+              <CardContent>
+                <div className="flex flex-col items-center">
+                  <Frown className="w-16 h-16 text-gray-500 mb-4" />
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">No bet available for this game</h2>
+                  <p className="text-sm text-gray-600">It seems like there are no Bet Created. Try checking back later!</p>
+                </div>
+              </CardContent>
+            </Card>
+            )}
           </CardContent>
         </Card>
       </div>

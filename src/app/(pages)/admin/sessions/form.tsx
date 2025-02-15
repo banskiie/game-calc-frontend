@@ -23,7 +23,7 @@ import React, { useEffect, useState, useTransition } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import ButtonLoader from '@/components/custom/ButtonLoader'
-import { Loader2, Minus, Plus, X } from 'lucide-react'
+import { Loader2, Minus, Plus, SquarePen, X } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { format, toZonedTime } from 'date-fns-tz'
 import { parse } from 'date-fns'
@@ -482,8 +482,8 @@ const GameForm = ({
     return (
         <Sheet open={open} onOpenChange={setOpen} modal>
             <SheetTrigger asChild>
-                <Button className={id ? undefined : 'w-full'} disabled={disabled}>
-                    {id ? 'Update Game' : 'Add Game'}
+            <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-10 w-18" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20"}`} disabled={disabled} >
+                    {id ? <SquarePen className='!w-7 !h-7'/>  :  <Plus className="!w-7 !h-7"/>}
                 </Button>
             </SheetTrigger>
             <SheetContent

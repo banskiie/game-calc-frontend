@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 const FETCH_SUMMARY = gql`
   query FetchSummary($id: ID!) {
     fetchSessionSummary(_id: $id) {
+      totalShuttlesUsed
       shuttleTotal
       courtTotal
       playerTotal
@@ -63,7 +64,13 @@ const Page = () => {
             {court.court.name} - {court.totalDuration}mins
           </span>
         </div>
-      ))}
+              ))}
+                <div>
+          <span className="block text-muted-foreground">Shuttles Used</span>
+          <span className="block font-semibold text-muted-foreground">
+            {summary?.totalShuttlesUsed} shuttles
+          </span>
+        </div>
       <Separator className="bg-slate-400" />
       <div className="grid grid-cols-2">
         <div>
@@ -84,6 +91,7 @@ const Page = () => {
             {summary?.playerTotal.toFixed(2)}
           </span>
         </div>
+      
       </div>
 
       <Separator className="bg-slate-400" />
