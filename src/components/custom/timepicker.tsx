@@ -92,7 +92,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM" }) => 
         </div>
       </div>
 
-      <div className="flex items-center gap-8 text-sm text-gray-500">
+      <div className="flex mr-16 items-center gap-14 text-sm text-gray-500">
         <span>Hour</span>
         <span>Min</span>
       </div>
