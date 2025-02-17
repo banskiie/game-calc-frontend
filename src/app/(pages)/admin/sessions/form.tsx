@@ -27,6 +27,7 @@ import { Loader2, Minus, Plus, SquarePen, X } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { format, toZonedTime } from 'date-fns-tz'
 import { parse } from 'date-fns'
+import TimePicker from '@/components/custom/timepicker'
 
 const FETCH_SESSION = gql`
     query FetchSession($id: ID!) {
@@ -482,8 +483,8 @@ const GameForm = ({
     return (
         <Sheet open={open} onOpenChange={setOpen} modal>
             <SheetTrigger asChild>
-            <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-10 w-18" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20"}`} disabled={disabled} >
-                    {id ? <SquarePen className='!w-7 !h-7'/>  :  <Plus className="!w-7 !h-7"/>}
+            <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-11 w-11 rounded-full flex items-center justify-center" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center"}`} disabled={disabled} >
+                    {id ? <SquarePen className='!w-6 !h-6'/>  :  <Plus className="!w-6 !h-6"/>}
                 </Button>
             </SheetTrigger>
             <SheetContent
@@ -559,13 +560,14 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>Start Time</FormLabel>
                                         <FormControl>
-                                            <input
+                                            {/* <input
                                                 type="time"
                                                 {...field}
                                                 className="text-sm w-full border border-gray-300 rounded p-2"
                                                 onChange={field.onChange}
                                                 value={field.value || ''}
-                                            />
+                                            /> */}
+                                            <TimePicker initialTime="12:30 PM"/>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

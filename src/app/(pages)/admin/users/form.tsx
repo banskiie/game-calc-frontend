@@ -191,7 +191,7 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="contact"
               render={({ field }) => (
@@ -208,7 +208,7 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
             <SheetFooter className="gap-2 py-2 mt-4">
               <Button
                 disabled={isPending}
