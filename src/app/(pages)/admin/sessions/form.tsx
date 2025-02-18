@@ -350,12 +350,10 @@ const GameForm = ({
                 if (!time) return null;
               
                 const zonedTime = toZonedTime(time, 'Asia/Manila');
-                const hours = zonedTime.getHours();
-              
                 // Convert to 12-hour format with AM/PM
                 const formattedTime = format(zonedTime, 'hh:mm a');
                 return formattedTime;
-              }
+              };
 
             form.reset({
                 session: sessionId,
@@ -411,9 +409,8 @@ const GameForm = ({
 
             try {
                 const gameInput = {
-                    start: start
-                    ? parse(start as string, "hh:mm a", new Date()) : null,
-                    end: end ? parse(end as string, 'hh:mm a', new Date()) : null,
+                    start: start ? parse(start, "hh:mm a", new Date()) : null,
+                    end: end ? parse(end, 'hh:mm a', new Date()) : null,
                     session: sessionId,
                     A1: players[0],
                     A2: players[1] || null,
@@ -551,60 +548,43 @@ const GameForm = ({
                         ))}
                         {/* Time Picker */}
                         <div className="grid grid-cols-2 gap-2">
-                            <FormField
-                                control={form.control}
-                                name="start"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Start Time</FormLabel>
-                                        <FormControl>
-                                            {/* <input
-                                                type="time"
-                                                {...field}
-                                                className="text-sm w-full border border-gray-300 rounded p-2"
-                                                onChange={field.onChange}
-                                                value={field.value || ''}
-                                            /> */}
-                                                <TimePicker
-                                                    initialTime={field.value || "12:00 AM"}
-                                                    onChange={(newTime) => {
-                                                        field.onChange(newTime)
-                                                    }}
-                                                    />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="end"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>End Time</FormLabel>
-                                        <FormControl>
-                                            {/* <input
-                                                type="time"
-                                                {...field}
-                                                className="text-sm w-full border border-gray-300 rounded p-2"
-                                                onChange={(e) =>
-                                                    field.onChange(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                value={field.value || ''}
-                                            /> */}
-                                             <TimePicker
-                                                    initialTime={field.value || "12:00 AM"}
-                                                    onChange={(newTime) => {
-                                                        field.onChange(newTime)
-                                                    }}
-                                                    />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        <FormField
+  control={form.control}
+  name="start"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Start Time</FormLabel>
+      <FormControl>
+        <TimePicker
+          initialTime={field.value || "12:00 AM"}
+          onChange={(newTime) => {
+            field.onChange(newTime);
+          }}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+<FormField
+  control={form.control}
+  name="end"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>End Time</FormLabel>
+      <FormControl>
+        <TimePicker
+          initialTime={field.value || "12:00 AM"}
+          onChange={(newTime) => {
+            field.onChange(newTime);
+          }}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
                         </div>
                         <FormField
                             control={form.control}
