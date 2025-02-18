@@ -326,7 +326,7 @@ const GameForm = ({
                 ].end
 
             form.setValue(
-                'start',
+                "start",
                 format(
                     toZonedTime(
                         new Date(
@@ -336,7 +336,7 @@ const GameForm = ({
                         ),
                         'Asia/Manila'
                     ),
-                    'HH:mm'
+                    "hh:mm a"
                 )
             )
         }
@@ -347,17 +347,16 @@ const GameForm = ({
             const game = data.fetchGame
 
             const ensurePM = (time: Date | null) => {
-                if (!time) return null
+                if (!time) return null;
+              
+                const zonedTime = toZonedTime(time, 'Asia/Manila');
+                const hours = zonedTime.getHours();
+              
+                // Convert to 12-hour format with AM/PM
+                const formattedTime = format(zonedTime, 'hh:mm a');
+                return formattedTime;
+              }
 
-                const zonedTime = toZonedTime(time, 'Asia/Manila')
-                const hours = zonedTime.getHours()
-
-                if(hours < 12) {
-                    zonedTime.setHours(hours + 12)
-                }
-
-                return format(zonedTime, 'HH:mm')
-            }
             form.reset({
                 session: sessionId,
                 court: game.court._id,
@@ -379,8 +378,8 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                    start: ensurePM(game.start) || '12:00',
-                    end: ensurePM(game.end) || '13:00',
+                    start: ensurePM(game.start) || '12:00 PM',
+                    end: ensurePM(game.end) || '01:00 PM',
                     winner: game.winner || undefined,
             })
         }
@@ -413,9 +412,8 @@ const GameForm = ({
             try {
                 const gameInput = {
                     start: start
-                        ? parse(start as string, 'HH:mm', new Date())
-                        : null,
-                    end: end ? parse(end as string, 'HH:mm', new Date()) : null,
+                    ? parse(start as string, "hh:mm a", new Date()) : null,
+                    end: end ? parse(end as string, 'hh:mm a', new Date()) : null,
                     session: sessionId,
                     A1: players[0],
                     A2: players[1] || null,
@@ -567,7 +565,12 @@ const GameForm = ({
                                                 onChange={field.onChange}
                                                 value={field.value || ''}
                                             /> */}
-                                            <TimePicker initialTime="12:30 PM"/>
+                                                <TimePicker
+                                                    initialTime={field.value || "12:00 AM"}
+                                                    onChange={(newTime) => {
+                                                        field.onChange(newTime)
+                                                    }}
+                                                    />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -580,7 +583,7 @@ const GameForm = ({
                                     <FormItem>
                                         <FormLabel>End Time</FormLabel>
                                         <FormControl>
-                                            <input
+                                            {/* <input
                                                 type="time"
                                                 {...field}
                                                 className="text-sm w-full border border-gray-300 rounded p-2"
@@ -590,7 +593,13 @@ const GameForm = ({
                                                     )
                                                 }
                                                 value={field.value || ''}
-                                            />
+                                            /> */}
+                                             <TimePicker
+                                                    initialTime={field.value || "12:00 AM"}
+                                                    onChange={(newTime) => {
+                                                        field.onChange(newTime)
+                                                    }}
+                                                    />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

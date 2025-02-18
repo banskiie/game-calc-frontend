@@ -238,7 +238,7 @@ const Page = () => {
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
       {/* Session Summary Card */}
-      <Card className="p-10 w-full max-w-xl mx-auto shadow-inner flex items-center justify-center bg-opacity-100 shadow-gray-500/60">
+      <Card className="p-5 w-full max-w-xl mx-auto shadow-inner flex items-center justify-center bg-opacity-100 shadow-gray-500/60">
         <CardContent className="flex flex-col items-center text-center pb-2">
           <span className="block text-muted-foreground font-semibold">
             {session.start
@@ -286,23 +286,23 @@ const Page = () => {
           </button>
         )}
       </div>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-2">
         {gameData?.fetchGamesBySession.length > 0 ? (
           gameData?.fetchGamesBySession.map((game: any) => (
-            <Card key={game._id} className="relative p-3 w-full max-w-xl mx-auto shadow-inner bg-opacity-100 shadow-gray-500/60 flex flex-col">
+            <Card key={game._id} className="relative p-1 w-full max-w-xl mx-auto shadow-inner bg-opacity-100 shadow-gray-500/60 flex flex-col">
               <span className="text-center">
-                <CardHeader className="mb-2">
+                <CardHeader className="mb-3 mt-[-0.45rem]">
                   <CardDescription>
                     <div className="flex items-start justify-center gap-52">
                       {/* Left Column: CardTitle and Time Details */}
                       <div className="flex flex-col items-center">
-                        <CardTitle className="mb-2 text-center font-bold text-black text-md">{game.court.name}</CardTitle>
+                        <CardTitle className="text-center font-bold text-black text-md">{game.court.name}</CardTitle>
                         <div className="flex flex-col items-center">
                           <span className="font-bold">
                             {format(new Date(game.start), "hh:mm a")} - {game?.end ? format(new Date(game.end), "hh:mm a") : "TBA"}
                           </span>
                           {game?.end && (
-                            <span className="font-bold">
+                            <span className="text-xs font-semibold font-muted-foreground">
                               ({differenceInMinutes(new Date(game?.end), new Date(game.start)) + " mins"})
                             </span>
                           )}
@@ -310,7 +310,7 @@ const Page = () => {
                       </div>
 
                       <div className="flex flex-col items-center">
-                        <span className="font-bold text-md text-black block mb-2 text-center">Shuttles</span>
+                        <span className="font-bold text-md text-black block text-center">Shuttles</span>
                         <div className="flex flex-col gap-2">
                           {game.shuttlesUsed.map((shuttle: any) =>
                             shuttle.quantity > 0 ? (
@@ -337,16 +337,16 @@ const Page = () => {
               </span>
 
               <CardContent>
-                <Card className="shadow-inner shadow-gray-400/50 p-2 mb-2">
+                <Card className="shadow-inner shadow-gray-400/50 p-2 mb-[-0.95rem] mt-[-2rem]">
                   <div className="grid grid-cols-3 items-center">
-                    <div className="text-center space-y-2">
+                    <div className="text-center">
                       <span className="font-semibold text-sm text-gray-500">Team A</span>
                       <div className="space-y-1">
                         <span className="font-bold">{game.A1.name}</span> & <span className="font-bold">{game.A2?.name}</span>
                       </div>
                     </div>
                     <div className="text-center font-bold text-xl">vs</div>
-                    <div className="text-center space-y-2">
+                    <div className="text-center">
                       <span className="font-semibold text-sm text-gray-500">Team B</span>
                       <div className="space-y-1">
                         <span className="font-bold">{game.B1.name}</span> & <span className="font-bold">{game.B2?.name}</span>
@@ -356,23 +356,22 @@ const Page = () => {
                 </Card>
               </CardContent>
 
-              {/* Hamburger Menu (Dropdown) */}
-              <div className="absolute top-2 right-2">
+             {/* Hamburger Menu (Dropdown) */}
+             <div className="absolute top-2 right-2 z-50">
   <DropdownMenu onOpenChange={(open) => setIsDropdownOpen(open)}>
     <DropdownMenuTrigger asChild>
       <Button variant="ghost" className="h-11 w-11 rounded-full flex items-center justify-center">
-        {/* Use Shadcn's Menu icon */}
         <Menu className={`h-6 w-6 transition-transform ${isDropdownOpen ? "rotate-90" : ""}`} />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent className="w-auto px-4 min-w-0 space-y-3" align="end"> {/* Adjusted styles */}
-      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0"> {/* Remove padding */}
+    <DropdownMenuContent className="w-auto px-4 min-w-0 space-y-3 overflow-y-auto max-h-[300px]" align="end">
+      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
         <div onClick={(e) => e.stopPropagation()}>
           <GameForm id={game._id} refetch={refetchGames} sessionId={slug as string} />
         </div>
       </DropdownMenuItem>
       {game?.end ? (
-        <DropdownMenuItem className="p-0"> {/* Remove padding */}
+        <DropdownMenuItem className="p-0"> 
           <Button
             onClick={() => router.push("/admin/sessions/summary/game/" + game._id)}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center h-11 w-11 rounded-full"
@@ -381,7 +380,7 @@ const Page = () => {
           </Button>
         </DropdownMenuItem>
       ) : (
-        <DropdownMenuItem className="p-0"> {/* Remove padding */}
+        <DropdownMenuItem className="p-0"> 
           <Button
             variant="destructive"
             onClick={() =>

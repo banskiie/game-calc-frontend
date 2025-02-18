@@ -1,221 +1,111 @@
-import { useState, useRef, useEffect } from "react"
-import { ChevronDown } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface TimePickerProps {
-  initialTime?: string
+  initialTime?: string;
+  onChange?: (time: string) => void;
 }
 
-const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM" }) => {
-  const [hour, setHour] = useState<number>(parseInt(initialTime.split(":")[0]))
-  const [minute, setMinute] = useState<number>(
-    parseInt(initialTime.split(":")[1].split(" ")[0])
-  )
-  const [ampm, setAmpm] = useState<string>(initialTime.split(" ")[1])
-  const [isAmPmOpen, setIsAmPmOpen] = useState<boolean>(false)
+const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM", onChange }) => {
+  const safeInitialTime = initialTime || "12:00 AM";
+  const timeParts = safeInitialTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+  const parsedHour = timeParts ? parseInt(timeParts[1]) : 12;
+  const parsedMinute = timeParts ? parseInt(timeParts[2]) : 0;
+  const parsedAmPm = timeParts ? timeParts[3] : "AM";
 
-  const ampmRef = useRef<HTMLDivElement>(null)
+  const [hour, setHour] = useState<number>(parsedHour);
+  const [minute, setMinute] = useState<number>(parsedMinute);
+  const [ampm, setAmpm] = useState<string>(parsedAmPm);
+  const [isAmPmOpen, setIsAmPmOpen] = useState<boolean>(false);
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
+
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      setIsPickerOpen(false);
+      setIsAmPmOpen(false);
+    }
+  };
 
   useEffect(() => {
-    if (ampmRef.current) {
-      const selectedElement = ampmRef.current.querySelector(".selected")
-      if (selectedElement) {
-        selectedElement.scrollIntoView({ block: "center", behavior: "smooth" })
-      }
-    }
-  }, [isAmPmOpen])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>, setValue: (val: number) => void, range: number[]) => {
+    const { scrollTop, clientHeight } = e.currentTarget;
+    const itemHeight = clientHeight / 3;
+    let index = Math.round(scrollTop / itemHeight) % range.length;
+    if (index < 0) index += range.length;
+    setValue(range[index]);
+  };
+
+  useEffect(() => {
+    const newTime = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${ampm}`;
+    onChange?.(newTime);
+  }, [hour, minute, ampm, onChange]);
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative flex items-center gap-2 border border-gray-300 rounded px-4 py-2 text-lg">
-        <div className="relative w-16 h-10 overflow-hidden text-center">
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none before:absolute before:top-0 before:left-0 before:w-full before:h-6 before:bg-gradient-to-b before:from-white before:via-white/50 before:to-transparent after:absolute after:bottom-0 after:left-0 after:w-full after:h-6 after:bg-gradient-to-t after:from-white after:via-white/50 after:to-transparent"></div>
-          <div className="overflow-y-scroll h-10 snap-y snap-mandatory scrollbar-hide">
-            {[...Array(12).keys()].map((h) => (
-              <div
-                key={h}
-                className={`p-1 snap-center ${
-                  h + 1 === hour ? "text-blue-500 font-bold" : "text-gray-700"
-                }`}
-                onClick={() => setHour(h + 1)}
-              >
-                {(h + 1).toString().padStart(2, "0")}
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="relative w-full" ref={pickerRef}>
+      <input
+        type="text"
+        className="w-full p-2 border border-gray-300 rounded text-center cursor-pointer"
+        value={`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${ampm}`}
+        onClick={() => setIsPickerOpen(!isPickerOpen)}
+        readOnly
+      />
 
-        <span>:</span>
-
-        <div className="relative w-16 h-10 overflow-hidden text-center">
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none before:absolute before:top-0 before:left-0 before:w-full before:h-6 before:bg-gradient-to-b before:from-white before:via-white/50 before:to-transparent after:absolute after:bottom-0 after:left-0 after:w-full after:h-6 after:bg-gradient-to-t after:from-white after:via-white/50 after:to-transparent"></div>
-          <div className="overflow-y-scroll h-10 snap-y snap-mandatory scrollbar-hide">
-            {[...Array(60).keys()].map((m) => (
-              <div
-                key={m}
-                className={`p-1 snap-center ${
-                  m === minute ? "text-blue-500 font-bold" : "text-gray-700"
-                }`}
-                onClick={() => setMinute(m)}
-              >
-                {m.toString().padStart(2, "0")}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => setIsAmPmOpen(!isAmPmOpen)}
-          >
-            {ampm}
-            <ChevronDown className="ml-1 w-5 h-5 text-gray-500" />
-          </div>
-          {isAmPmOpen && (
-            <div ref={ampmRef} className="absolute mt-1 w-16 bg-white border rounded shadow-lg z-10">
-              {["AM", "PM"].map((period) => (
-                <div
-                  key={period}
-                  className={`p-2 text-center cursor-pointer ${
-                    period === ampm ? "bg-blue-500 text-white selected" : "hover:bg-gray-200"
-                  }`}
-                  onClick={() => {
-                    setAmpm(period)
-                    setIsAmPmOpen(false)
-                  }}
-                >
-                  {period}
-                </div>
-              ))}
+      {isPickerOpen && (
+        <div className="absolute bg-white border rounded shadow-lg p-2 mt-1 w-full">
+          <div className="relative flex gap-1 justify-center items-center">
+            <div className="relative w-12 h-10 overflow-hidden text-center py-2 hover:bg-gray-300 hover:text-white rounded-lg">
+              <ScrollArea className="h-12 snap-y snap-mandatory scroll-smooth" onScroll={(e) => handleScroll(e, setHour, hours)}>
+                {hours.map((h) => (
+                  <div key={h} className={`h-7 flex items-center justify-center cursor-pointer ${h === hour ? "text-blue-500 font-bold" : "text-gray-700 hover:text-gray-900"}`} onClick={() => setHour(h)}>
+                    {h.toString().padStart(2, "0")}
+                  </div>
+                ))}
+              </ScrollArea>
             </div>
-          )}
+
+            <span>:</span>
+
+            <div className="relative w-12 h-10 overflow-hidden text-center py-2 hover:bg-gray-300 hover:text-white rounded-lg cursor-pointer">
+              <ScrollArea className="h-12 snap-y snap-mandatory scroll-smooth" onScroll={(e) => handleScroll(e, setMinute, minutes)}>
+                {minutes.map((m) => (
+                  <div key={m} className={`h-7 flex items-center justify-center cursor-pointer ${m === minute ? "text-blue-500 font-bold" : "text-gray-700 hover:text-gray-900"}`} onClick={() => setMinute(m)}>
+                    {m.toString().padStart(2, "0")}
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+
+            <div className="relative ">
+              <div className="flex items-center cursor-pointer" onClick={() => setIsAmPmOpen(!isAmPmOpen)}>
+                {ampm} <ChevronDown className="ml-1 w-4 h-4 text-gray-500" />
+              </div>
+              {isAmPmOpen && (
+                <div className="absolute mt-1 w-14 bg-white border rounded shadow-lg z-10">
+                  {["AM", "PM"].map((period) => (
+                    <div key={period} className={`p-1 text-center cursor-pointer ${period === ampm ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`} onClick={() => { setAmpm(period); setIsAmPmOpen(false); }}>
+                      {period}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="flex mr-16 items-center gap-14 text-sm text-gray-500">
-        <span>Hour</span>
-        <span>Min</span>
-      </div>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default TimePicker
-
-
-
-// import { useState, useRef, useEffect } from "react";
-// import { ChevronDown } from "lucide-react";
-
-// interface TimePickerProps {
-//   initialTime?: string | null; // Allow initialTime to be null
-//   onChange?: (time: string) => void; // Add onChange prop
-// }
-
-// const TimePicker: React.FC<TimePickerProps> = ({
-//   initialTime = "12:00 AM", // Default value if initialTime is null or undefined
-//   onChange,
-// }) => {
-//   const [time, setTime] = useState<string>(initialTime || "12:00 AM"); // Fallback to "12:00 AM" if initialTime is null
-//   const [isAmPmOpen, setIsAmPmOpen] = useState<boolean>(false);
-//   const ampmRef = useRef<HTMLDivElement>(null);
-
-//   // Parse the initial time into hours, minutes, and AM/PM
-//   const [hour, minute] = time.split(":");
-//   const [minuteValue, ampm] = minute.split(" ");
-
-//   // Convert 12-hour time to 24-hour format for the native input
-//   const convertTo24HourFormat = (time12h: string): string => {
-//     const [time, period] = time12h.split(" ");
-//     let [hours, minutes] = time.split(":");
-//     if (period === "PM" && hours !== "12") {
-//       hours = String(Number(hours) + 12);
-//     } else if (period === "AM" && hours === "12") {
-//       hours = "00";
-//     }
-//     return `${hours}:${minutes}`;
-//   };
-
-//   // Convert 24-hour time to 12-hour format for the custom dropdown
-//   const convertTo12HourFormat = (time24h: string): string => {
-//     let [hours, minutes] = time24h.split(":");
-//     const period = Number(hours) >= 12 ? "PM" : "AM";
-//     hours = String(Number(hours) % 12 || 12); // Convert 0 to 12 for AM
-//     return `${hours}:${minutes} ${period}`;
-//   };
-
-//   // Handle time change from the native input
-//   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const newTime24h = e.target.value; // Format: "HH:MM"
-//     const newTime12h = convertTo12HourFormat(newTime24h); // Convert to 12-hour format
-//     setTime(newTime12h);
-//     if (onChange) onChange(newTime12h); // Trigger onChange callback
-//   };
-
-//   // Handle AM/PM change from the custom dropdown
-//   const handleAmPmChange = (period: string) => {
-//     const [hour, minute] = time.split(":");
-//     const newTime12h = `${hour}:${minute.split(" ")[0]} ${period}`;
-//     setTime(newTime12h);
-//     if (onChange) onChange(newTime12h); // Trigger onChange callback
-//     setIsAmPmOpen(false);
-//   };
-
-//   // Close AM/PM dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (e: MouseEvent) => {
-//       if (ampmRef.current && !ampmRef.current.contains(e.target as Node)) {
-//         setIsAmPmOpen(false);
-//       }
-//     };
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   return (
-//     <div className="flex flex-col items-center gap-2">
-//       <div className="relative flex items-center gap-2 border border-gray-300 rounded px-4 py-2 text-lg">
-//         {/* Native Time Input */}
-//         <input
-//           type="time"
-//           value={convertTo24HourFormat(time)} // Convert to 24-hour format for the input
-//           onChange={handleTimeChange}
-//           className="text-sm w-full border-none outline-none bg-transparent"
-//         />
-
-//         {/* AM/PM Selector */}
-//         <div className="relative">
-//           <div
-//             className="flex items-center cursor-pointer"
-//             onClick={() => setIsAmPmOpen(!isAmPmOpen)}
-//           >
-//             {ampm}
-//             <ChevronDown className="ml-1 w-5 h-5 text-gray-500" />
-//           </div>
-//           {isAmPmOpen && (
-//             <div
-//               ref={ampmRef}
-//               className="absolute mt-1 w-16 bg-white border rounded shadow-lg z-10"
-//             >
-//               {["AM", "PM"].map((period) => (
-//                 <div
-//                   key={period}
-//                   className={`p-2 text-center cursor-pointer ${
-//                     period === ampm
-//                       ? "bg-blue-500 text-white selected"
-//                       : "hover:bg-gray-200"
-//                   }`}
-//                   onClick={() => handleAmPmChange(period)}
-//                 >
-//                   {period}
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TimePicker;
+export default TimePicker;
