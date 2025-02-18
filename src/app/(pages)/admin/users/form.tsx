@@ -209,6 +209,62 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
                 </FormItem>
               )}
             /> */}
+
+            {/* <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      className="text-sm"
+                      placeholder="Username"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+           
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      className="text-sm"
+                      placeholder="Password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+              <FormField
+      control={form.control}
+      name="role"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Role</FormLabel>
+          <FormControl>
+            <select {...field} disabled={isPending} className="text-sm">
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+            </select>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    /> */}
+    
             <SheetFooter className="gap-2 py-2 mt-4">
               <Button
                 disabled={isPending}
