@@ -57,7 +57,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM", onCha
       <input
         type="text"
         className="w-full p-2 border border-gray-300 rounded text-center cursor-pointer"
-        value={`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${ampm}`}
+        value={`${hour.toString().padStart(2, "0")}  :  ${minute.toString().padStart(2, "0")} ${ampm}`}
         onClick={() => setIsPickerOpen(!isPickerOpen)}
         readOnly
       />
@@ -75,9 +75,9 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM", onCha
               </ScrollArea>
             </div>
 
-            <span>:</span>
+            <span className=""> : </span>
 
-            <div className="relative w-12 h-10 overflow-hidden text-center py-2 hover:bg-gray-300 hover:text-white rounded-lg cursor-pointer">
+            <div className="relative w-12 h-10 overflow-hidden text-center py-2 hover:bg-gray-300 hover:text-white rounded-lg cursor-pointer ">
               <ScrollArea className="h-12 snap-y snap-mandatory scroll-smooth" onScroll={(e) => handleScroll(e, setMinute, minutes)}>
                 {minutes.map((m) => (
                   <div key={m} className={`h-7 flex items-center justify-center cursor-pointer ${m === minute ? "text-blue-500 font-bold" : "text-gray-700 hover:text-gray-900"}`} onClick={() => setMinute(m)}>
