@@ -293,7 +293,7 @@ const GameForm = ({
             court: '',
             shuttles: [
                 {
-                    quantity: 0,
+                    quantity: 1,
                     shuttle: '',
                 },
             ],
@@ -348,12 +348,9 @@ const GameForm = ({
 
             const ensurePM = (time: Date | null) => {
                 if (!time) return null;
-              
                 const zonedTime = toZonedTime(time, 'Asia/Manila');
-                // Convert to 12-hour format with AM/PM
-                const formattedTime = format(zonedTime, 'hh:mm a');
-                return formattedTime;
-              };
+                return format(zonedTime, 'hh:mm a');
+              }          
 
             form.reset({
                 session: sessionId,
@@ -372,7 +369,7 @@ const GameForm = ({
                           }))
                         : [
                               {
-                                  quantity: 0,
+                                  quantity: 1,
                                   shuttle: '',
                               },
                           ],
@@ -385,22 +382,29 @@ const GameForm = ({
 
     useEffect(() => {
         if (
-            !id && 
-            courtData &&
+            !id &&
             sessionData &&
-            shuttleData &&
-            courtData.fetchCourts.length >= 1 &&
-            shuttleData.fetchShuttles.length >= 2
+            sessionData.fetchSession &&
+            courtData &&
+            shuttleData
         ) {
-            form.setValue('court', sessionData.fetchSession.court._id);
-            form.setValue('shuttles', [
-                {
-                    shuttle: sessionData.fetchSession.shuttle._id,
-                    quantity: 1,
-                },
-            ]);
+            const { court, shuttle, start, end } = sessionData.fetchSession;
+
+            form.reset({
+                ...form.getValues(),
+                court: court._id,
+                shuttles: [
+                    {
+                        shuttle: shuttle._id,
+                        quantity: 1,
+                    },
+                // start: start ? format(toZonedTime(start, 'Asia/Manila'), 'hh:mm a') : '12:00 PM',
+                // end: end ? format(toZonedTime(end, 'Asia/Manila'), 'hh:mm a') : '01:00 PM',
+
+                ],
+            })
         }
-    }, [courtData, shuttleData, sessionData, form, id])
+    }, [sessionData, courtData, shuttleData, form, id]);
 
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
         if(disabled) return
@@ -450,19 +454,19 @@ const GameForm = ({
         setOpen(false);
         form.clearErrors();
         if (id) {
-            // Retain existing values pag mag update or updating
             form.reset({
                 ...form.getValues(),
             });
         } else {
-            // Reset to default values para sa new games
+            const defaultCourt = sessionData?.fetchSession?.court?._id || ''
+            const defaultShuttle = sessionData?.fetchSession?.shuttle?._id || ''
             form.reset({
                 players: ['', '', '', ''],
-                court: '',
+                court: defaultCourt,
                 shuttles: [
                     {
-                        quantity: 0,
-                        shuttle: '',
+                        quantity: 1,
+                        shuttle: defaultShuttle,
                     },
                 ],
                 session: sessionId || '',
@@ -575,7 +579,7 @@ const GameForm = ({
       <FormLabel>End Time</FormLabel>
       <FormControl>
         <TimePicker
-          initialTime={field.value || "12:00 AM"}
+          initialTime={field.value || "00:00 PM"}
           onChange={(newTime) => {
             field.onChange(newTime);
           }}

@@ -109,106 +109,110 @@
 // };
 
 // export default TimePicker;
-
-
-import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Clock } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
+import { Clock } from "lucide-react";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface TimePickerProps {
-  initialTime?: string
-  onChange?: (time: string) => void
+  initialTime?: string;
+  onChange?: (time: string) => void;
 }
 
-const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "12:00 AM", onChange }) => {
-  const safeInitialTime = initialTime || "12:00 AM";
-  const timeParts = safeInitialTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "--:-- PM", onChange }) => {
+  const timeParts = initialTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
   const parsedHour = timeParts ? parseInt(timeParts[1]) : 12;
   const parsedMinute = timeParts ? parseInt(timeParts[2]) : 0;
-  const parsedAmPm = timeParts ? timeParts[3] : "AM";
+  const parsedAmPm = timeParts ? timeParts[3] : "PM";
 
   const [hour, setHour] = useState<number>(parsedHour);
   const [minute, setMinute] = useState<number>(parsedMinute);
   const [ampm, setAmpm] = useState<string>(parsedAmPm);
-  const [isAmPmOpen, setIsAmPmOpen] = useState<boolean>(false);
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
-  const ampmRef = useRef<HTMLDivElement>(null);
+  const hourRef = useRef<HTMLDivElement | null>(null);
+  const minuteRef = useRef<HTMLDivElement | null>(null);
+  const ampmRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (ampmRef.current) {
-      const selectedElement = ampmRef.current.querySelector(".selected");
-      if (selectedElement) {
-        selectedElement.scrollIntoView({ block: "center", behavior: "smooth" });
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setIsPickerOpen(false);
       }
-    }
-  }, [isAmPmOpen]);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const newTime = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${ampm}`;
     onChange?.(newTime);
   }, [hour, minute, ampm, onChange]);
 
+  useEffect(() => {
+    if (isPickerOpen) {
+      hourRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      minuteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      ampmRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isPickerOpen]);
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative flex items-center gap-2 border border-gray-300 rounded px-2 py-1 text-sm">
-        <Clock className="w-4 h-4 text-gray-500" />
-        <div className="relative w-12 h-8 overflow-hidden text-center">
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none before:absolute before:top-0 before:left-0 before:w-full before:h-4 before:bg-gradient-to-b before:from-white before:via-white/50 before:to-transparent after:absolute after:bottom-0 after:left-0 after:w-full after:h-4 after:bg-gradient-to-t after:from-white after:via-white/50 after:to-transparent"></div>
-          <div className="overflow-y-scroll h-8 snap-y snap-mandatory scrollbar-hide">
-            {[...Array(12).keys()].map((h) => (
-              <div
-                key={h}
-                className={`p-1 snap-center ${h + 1 === hour ? "text-blue-500 font-bold" : "text-gray-700"}`}
-                onClick={() => setHour(h + 1)}
-              >
-                {(h + 1).toString().padStart(2, "0")}
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="relative w-full" ref={pickerRef}>
+      <div
+        className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-sm cursor-pointer flex items-center justify-between"
+        onClick={() => setIsPickerOpen(!isPickerOpen)}
+      >
+        {`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} ${ampm}`}
+        <Clock className="h-5 w-5 text-muted-foreground" />
+      </div>
 
-        <span>:</span>
+      {isPickerOpen && (
+        <div className="absolute inset-0 bg-popover text-popover-foreground rounded-lg border shadow-lg flex items-center justify-center p-6">
+          <div className="flex items-center gap-4">
+            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
+              {[...Array(12).keys()].map((h) => (
+                <div
+                  key={h}
+                  ref={h + 1 === hour ? hourRef : null}
+                  className={`p-1 text-center cursor-pointer rounded ${h + 1 === hour ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  onClick={() => setHour(h + 1)}
+                >
+                  {(h + 1).toString().padStart(2, "0")}
+                </div>
+              ))}
+            </ScrollArea>
 
-        <div className="relative w-12 h-8 overflow-hidden text-center">
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none before:absolute before:top-0 before:left-0 before:w-full before:h-4 before:bg-gradient-to-b before:from-white before:via-white/50 before:to-transparent after:absolute after:bottom-0 after:left-0 after:w-full after:h-4 after:bg-gradient-to-t after:from-white after:via-white/50 after:to-transparent"></div>
-          <div className="overflow-y-scroll h-8 snap-y snap-mandatory scrollbar-hide">
-            {[...Array(60).keys()].map((m) => (
-              <div
-                key={m}
-                className={`p-1 snap-center ${m === minute ? "text-blue-500 font-bold" : "text-gray-700"}`}
-                onClick={() => setMinute(m)}
-              >
-                {m.toString().padStart(2, "0")}
-              </div>
-            ))}
-          </div>
-        </div>
+            <span className="text-lg">:</span>
 
-        <div className="relative">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => setIsAmPmOpen(!isAmPmOpen)}
-          >
-            {ampm}
-            <ChevronDown className="ml-1 w-4 h-4 text-gray-500" />
-          </div>
-          {isAmPmOpen && (
-            <div ref={ampmRef} className="absolute mt-1 w-14 bg-white border rounded shadow-lg z-10">
+            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
+              {[...Array(60).keys()].map((m) => (
+                <div
+                  key={m}
+                  ref={m === minute ? minuteRef : null}
+                  className={`p-1 text-center cursor-pointer rounded ${m === minute ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  onClick={() => setMinute(m)}
+                >
+                  {m.toString().padStart(2, "0")}
+                </div>
+              ))}
+            </ScrollArea>
+
+            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
               {["AM", "PM"].map((period) => (
                 <div
                   key={period}
-                  className={`p-1 text-center cursor-pointer ${period === ampm ? "bg-blue-500 text-white selected" : "hover:bg-gray-200"}`}
-                  onClick={() => {
-                    setAmpm(period);
-                    setIsAmPmOpen(false);
-                  }}
+                  ref={period === ampm ? ampmRef : null}
+                  className={`p-1 text-center cursor-pointer rounded ${period === ampm ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  onClick={() => setAmpm(period)}
                 >
                   {period}
                 </div>
               ))}
-            </div>
-          )}
+            </ScrollArea>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
