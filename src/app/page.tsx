@@ -15,29 +15,59 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useTransition } from "react"
-
-const AuthSchema = z.object({
-  username: z.string().nonempty({ message: "Username is required" }),
-  password: z.string().nonempty({ message: "Password must not be empty" }),
-})
+import { gql } from "@apollo/client"
+import { LoginSchema } from "@/lib/schemas"
+import { getSession, signIn } from "next-auth/react"
 
 const Home = () => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const form = useForm<z.infer<typeof AuthSchema>>({
-    resolver: zodResolver(AuthSchema),
+  const form = useForm<z.infer<typeof LoginSchema>>({
+    resolver: zodResolver(LoginSchema),
     values: {
       username: "",
       password: "",
     },
   })
-
-  const onSubmit = (values: z.infer<typeof AuthSchema>) => {
-    console.log(values)
+  // const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  //   console.log(values)
+  //   startTransition(async () => {
+  //     router.push("/admin/sessions")
+  //   })
+  // }
+  const onSubmit = (values: z.infer<typeof LoginSchema>) =>
     startTransition(async () => {
-      router.push("/admin/sessions")
-    })
-  }
+      try{
+        const response = await signIn("credentials", {
+          ...values,
+          redirect: false,
+        })
+        if (response?.error) throw new Error(response.error)
+
+          const session = await getSession()
+          const user = (session as any)?.user
+
+          switch(user.role){
+            case "admin": 
+              router.push("/admin/sessions")
+              break
+            case "user":
+              router.push("/users/page")
+              break
+          }
+          console.log("test")
+      }
+        catch(error: any) {
+          if (error) {
+            console.error(error)
+            form.setError("username", {type: "custom", message: ""})
+            form.setError("password", {
+              type: "custom",
+              message: "Invalid Username or Password.",
+            })
+          }
+        }
+     })
 
   return (
     <div className="h-screen w-screen flex justify-center items-center">
@@ -83,11 +113,14 @@ const Home = () => {
                 </FormItem>
               )}
             />
-            <Button className="w-full mt-5" disabled={isPending}>
+            <Button className="w-full mt-5" disabled={isPending} type="submit">
               {isPending ? <ButtonLoader /> : "Sign In"}
             </Button>
           </form>
         </Form>
+        <span className="absolute bottom-7 text-xs text-slate-400 drop-shadow-sm">
+        ©2025 C-ONE Development Team{" "}
+      </span>
       </div>
     </div>
   )
