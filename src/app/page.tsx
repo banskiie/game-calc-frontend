@@ -42,28 +42,28 @@ const Home = () => {
         const response = await signIn("credentials", {
           ...values,
           redirect: false,
-        });
+        })
         if (response?.error) throw new Error(response.error);
   
         const session = await getSession();
-        console.log("Session after login:", session); // Log the session
+        console.log("Session after login:", session)
   
         const user = (session as any)?.user;
-        const accessToken = (session as any)?.accessToken; // Retrieve the accessToken from the session
+        const accessToken = (session as any)?.accessToken
         console.log("User from session:", user);
-        console.log("AccessToken from session:", accessToken); // Log the accessToken
+        console.log("AccessToken from session:", accessToken)
   
         if (user && accessToken) {
-          // Pass the token to the Apollo Client
-          const client = createApolloClient(accessToken);
+          
+          const client = createApolloClient(accessToken)
   
           switch (user.role) {
             case "admin":
-              router.push("/admin/sessions");
-              break;
+              router.push("/admin/sessions")
+              break
             case "user":
-              router.push("/users/page");
-              break;
+              router.push("/users/page")
+              break
           }
         }
       } catch (error: any) {
@@ -73,7 +73,7 @@ const Home = () => {
           form.setError("password", {
             type: "custom",
             message: "Invalid Username or Password.",
-          });
+          })
         }
       }
     })
