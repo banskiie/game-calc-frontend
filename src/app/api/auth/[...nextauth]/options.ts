@@ -1,4 +1,4 @@
-import CredentialsProvider  from "next-auth/providers/credentials"
+import CredentialsProvider from "next-auth/providers/credentials"
 import dotenv from "dotenv"
 import { createApolloClient } from "@/lib/apollo"
 import { NextAuthOptions } from "next-auth"
@@ -30,13 +30,6 @@ const LOGOUT = gql`
     logout(token: $token) {
         _id
         name
-        contact
-        password
-        username
-        role
-        active
-        createdAt
-        updatedAt
     }
 }
 `
@@ -59,7 +52,7 @@ export const options: NextAuthOptions = {
                     const client = createApolloClient()
                     const { username, password} = credentials as LoginCredentials
 
-                    const { data, errors} = await client.mutate({
+                    const { data, errors } = await client.mutate({
                         mutation: LOGIN,
                         variables: { username, password },
                     })
@@ -95,7 +88,6 @@ export const options: NextAuthOptions = {
             async session({ session, token }: any) {
             session.accessToken = token.accessToken
             session.user = token.user
-            
             return session
         },
         },

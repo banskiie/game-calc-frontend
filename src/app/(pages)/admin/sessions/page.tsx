@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { gql, useLazyQuery, useMutation } from "@apollo/client"
 import { differenceInMinutes, format } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
@@ -315,6 +316,9 @@ const page = () => {
       >
         LOAD MORE?
       </Button>
+      <Button className="w-full" onClick={() => signOut()} type="submit">
+              Logout
+            </Button>
     </div>
   )
 }

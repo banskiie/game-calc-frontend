@@ -18,6 +18,7 @@ import { useTransition } from "react"
 import { gql } from "@apollo/client"
 import { LoginSchema } from "@/lib/schemas"
 import { getSession, signIn } from "next-auth/react"
+import { createApolloClient } from "@/lib/apollo"
 
 const Home = () => {
   const router = useRouter()
@@ -37,37 +38,46 @@ const Home = () => {
   // }
   const onSubmit = (values: z.infer<typeof LoginSchema>) =>
     startTransition(async () => {
-      try{
+      try {
         const response = await signIn("credentials", {
           ...values,
           redirect: false,
-        })
-        if (response?.error) throw new Error(response.error)
-
-          const session = await getSession()
-          const user = (session as any)?.user
-
-          switch(user.role){
-            case "admin": 
-              router.push("/admin/sessions")
-              break
+        });
+        if (response?.error) throw new Error(response.error);
+  
+        const session = await getSession();
+        console.log("Session after login:", session); // Log the session
+  
+        const user = (session as any)?.user;
+        const accessToken = (session as any)?.accessToken; // Retrieve the accessToken from the session
+        console.log("User from session:", user);
+        console.log("AccessToken from session:", accessToken); // Log the accessToken
+  
+        if (user && accessToken) {
+          // Pass the token to the Apollo Client
+          const client = createApolloClient(accessToken);
+  
+          switch (user.role) {
+            case "admin":
+              router.push("/admin/sessions");
+              break;
             case "user":
-              router.push("/users/page")
-              break
-          }
-          console.log("test")
-      }
-        catch(error: any) {
-          if (error) {
-            console.error(error)
-            form.setError("username", {type: "custom", message: ""})
-            form.setError("password", {
-              type: "custom",
-              message: "Invalid Username or Password.",
-            })
+              router.push("/users/page");
+              break;
           }
         }
-     })
+      } catch (error: any) {
+        if (error) {
+          console.error(error);
+          form.setError("username", { type: "custom", message: "" });
+          form.setError("password", {
+            type: "custom",
+            message: "Invalid Username or Password.",
+          });
+        }
+      }
+    })
+
 
   return (
     <div className="h-screen w-screen flex justify-center items-center">
