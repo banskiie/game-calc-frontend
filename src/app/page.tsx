@@ -56,7 +56,8 @@ const Home = () => {
         if (user && accessToken) {
           
           const client = createApolloClient(accessToken)
-  
+          console.log("Apollo Client created with token:", client, accessToken)
+
           switch (user.role) {
             case "admin":
               router.push("/admin/sessions")
