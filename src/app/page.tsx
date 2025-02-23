@@ -19,6 +19,8 @@ import { gql } from "@apollo/client"
 import { LoginSchema } from "@/lib/schemas"
 import { getSession, signIn } from "next-auth/react"
 import { createApolloClient } from "@/lib/apollo"
+import favicon from "@/app/favicon.ico" // Import the favicon
+import Image from "next/image" // Import the Image component from Next.js
 
 const Home = () => {
   const router = useRouter()
@@ -30,12 +32,7 @@ const Home = () => {
       password: "",
     },
   })
-  // const onSubmit = (values: z.infer<typeof LoginSchema>) => {
-  //   console.log(values)
-  //   startTransition(async () => {
-  //     router.push("/admin/sessions")
-  //   })
-  // }
+
   const onSubmit = (values: z.infer<typeof LoginSchema>) =>
     startTransition(async () => {
       try {
@@ -79,27 +76,38 @@ const Home = () => {
       }
     })
 
-
   return (
-    <div className="h-screen w-screen flex justify-center items-center">
-      <div className=" max-w-96 flex flex-col h-fit w-full items-center bg-white">
+    <div className="h-screen w-screen flex justify-center items-center bg-gray-50">
+      <div className="max-w-96 w-full bg-white p-8 rounded-lg shadow-md">
+        {/* Updated: Use flex-row to align icon and text horizontally */}
+        <div className="flex flex-row items-center justify-center mb-6">
+          <Image
+            src={favicon}
+            alt="Game Calculator Icon"
+            width={48} // Adjust the size as needed
+            height={48}
+            className="mr-2" // Add margin to the right of the icon
+          />
+          <h1 className="text-2xl font-bold">Game Calculator</h1>
+        </div>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-center">Welcome Back!!</h2>
+          <p className="text-sm text-gray-500 text-center mt-2">Enter your Credentials to Login</p>
+        </div>
         <Form {...form}>
-          <form
-            className="flex-1 overflow-auto px-1 -mx-1"
-            onSubmit={form.handleSubmit(onSubmit)}
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
+                <FormItem className="mb-4">
+                  <FormLabel className="text-sm text-gray-700">Username</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
                       disabled={isPending}
-                      className="text-sm"
+                      className="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:ring-0 rounded-none"
                       placeholder="Username"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -110,28 +118,32 @@ const Home = () => {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem className="my-1">
-                  <FormLabel>Password</FormLabel>
+                <FormItem className="mb-6">
+                  <FormLabel className="text-sm text-gray-700">Password</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
                       disabled={isPending}
-                      className="text-sm"
+                      className="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:ring-0 rounded-none"
                       placeholder="Password"
+                      type="password"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button className="w-full mt-5" disabled={isPending} type="submit">
-              {isPending ? <ButtonLoader /> : "Sign In"}
+            <div className="flex justify-end mb-6">
+              <a href="#" className="text-sm text-blue-500 hover:text-blue-700">Forgot Password?</a>
+            </div>
+            <Button className="w-full bg-blue-500 hover:bg-blue-600" disabled={isPending} type="submit">
+              {isPending ? <ButtonLoader /> : "Login"}
             </Button>
           </form>
         </Form>
-        <span className="absolute bottom-7 text-xs text-slate-400 drop-shadow-sm">
-        ©2025 C-ONE Development Team{" "}
-      </span>
+        <span className="block text-center text-xs text-slate-400 mt-6">
+          ©2025 C-ONE Development Team
+        </span>
       </div>
     </div>
   )

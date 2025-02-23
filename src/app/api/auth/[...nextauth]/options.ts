@@ -66,6 +66,17 @@ export const options: NextAuthOptions = {
                     return {
                         authUser,
                         accessToken,
+                            // authUser: {
+                            //   _id: login.user._id,
+                            //   name: login.user.name,
+                            //   contact: login.user.contact,
+                            //   username: login.user.username,
+                            //   role: login.user.role,
+                            //   active: login.user.active,
+                            //   createdAt: login.user.createdAt,
+                            //   updatedAt: login.user.updatedAt
+                            // },
+                            // accessToken: login.token
                     }
                 }
                 catch(error: any) {
