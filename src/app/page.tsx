@@ -79,7 +79,7 @@ const Home = () => {
   return (
     <div className="h-screen w-screen flex justify-center items-center bg-gray-50">
       <div className="max-w-[30rem] w-full bg-white p-10 rounded-lg shadow-md">
-        <div className="flex flex-row items-center justify-center mb-6">
+        <div className="flex flex-row items-center justify-center mb-14">
           <Image
             src={favicon}
             alt="Game Calculator Icon"
@@ -89,9 +89,9 @@ const Home = () => {
           />
           <h1 className="text-2xl font-bold">Game Calculator</h1>
         </div>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-center">Welcome Back!!</h2>
-          <p className="text-sm text-gray-500 text-center mt-2">Enter your Credentials to Login</p>
+        <div className="mb-10">
+          <h2 className="text-2xl font-semibold">Welcome Back!!</h2>
+          <p className="text-sm text-gray-500 text-start mt-4">Enter your Credentials to Login</p>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -99,7 +99,7 @@ const Home = () => {
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem className="relative mb-6">
+                <FormItem className="relative mb-8">
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -130,7 +130,7 @@ const Home = () => {
                         disabled={isPending}
                         placeholder=" "
                         type="password"
-                        className="peer placeholder-transparent focus:border-blue-500 focus:ring-0" 
+                        className="peer placeholder-transparent focus:ring-0" 
                         {...field}
                         onMouseEnter={() => setIsHovered(prev => ({ ...prev, password: true }))}
                         onMouseLeave={() => setIsHovered(prev => ({ ...prev, password: false }))}
@@ -147,7 +147,7 @@ const Home = () => {
             <div className="flex justify-end mb-6">
               <a href="#" className="text-sm text-blue-500 hover:text-blue-700">Forgot Password?</a>
             </div>
-            <Button className="w-full bg-green-600 hover:bg-green-700" disabled={isPending} type="submit">
+            <Button className="w-full bg-green-700 hover:bg-green-800" disabled={isPending} type="submit">
               {isPending ? <ButtonLoader /> : "Login"}
             </Button>
           </form>
