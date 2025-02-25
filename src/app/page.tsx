@@ -20,6 +20,7 @@ import { getSession, signIn } from "next-auth/react"
 import { createApolloClient } from "@/lib/apollo"
 import favicon from "@/app/favicon.ico"
 import Image from "next/image"
+import ForgotPassword from "@/views/login/ForgotPassword"
 
 const Home = () => {
   const router = useRouter()
@@ -40,39 +41,35 @@ const Home = () => {
         const response = await signIn("credentials", {
           ...values,
           redirect: false,
-        })
+        });
         if (response?.error) throw new Error(response.error);
-
+  
         const session = await getSession();
-        console.log("Session after login:", session)
-
+  
+        if (!session) throw new Error("Session not available");
+  
         const user = (session as any)?.user;
-        const accessToken = (session as any)?.accessToken
-        console.log("User from session:", user);
-        console.log("AccessToken from session:", accessToken)
-
+        const accessToken = (session as any)?.accessToken;
+  
         if (user && accessToken) {
-          const client = createApolloClient(accessToken)
-          console.log("Apollo Client created with token:", client, accessToken)
-
+          const client = createApolloClient(accessToken);
+  
           switch (user.role) {
             case "admin":
-              router.push("/admin/sessions")
-              break
+              router.push("/admin/sessions");
+              break;
             case "user":
-              router.push("/users/page")
-              break
+              router.push("/users/page");
+              break;
           }
         }
       } catch (error: any) {
-        if (error) {
-          console.error(error);
-          form.setError("username", { type: "custom", message: "" });
-          form.setError("password", {
-            type: "custom",
-            message: "Invalid Username or Password.",
-          })
-        }
+        console.error(error);
+        form.setError("username", { type: "custom", message: "" });
+        form.setError("password", {
+          type: "custom",
+          message: "Invalid Username or Password.",
+        });
       }
     })
 
@@ -93,6 +90,7 @@ const Home = () => {
           <h2 className="text-2xl font-semibold">Welcome Back!!</h2>
           <p className="text-sm text-gray-500 text-start mt-4">Enter your Credentials to Login</p>
         </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
@@ -145,13 +143,14 @@ const Home = () => {
               )}
             />
             <div className="flex justify-end mb-6">
-              <a href="#" className="text-sm text-blue-500 hover:text-blue-700">Forgot Password?</a>
+                <ForgotPassword />
             </div>
-            <Button className="w-full bg-green-700 hover:bg-green-800" disabled={isPending} type="submit">
+            <Button className="w-full bg-green-700 hover:bg-green-800" disabled={isPending} type="submit" >
               {isPending ? <ButtonLoader /> : "Login"}
             </Button>
           </form>
         </Form>
+        
         <span className="block text-center text-xs text-slate-400 mt-6">
           ©2025 C-ONE Development Team
         </span>

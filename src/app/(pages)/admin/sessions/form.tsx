@@ -277,9 +277,7 @@ const GameForm = ({
         variables: { id: sessionId },
         skip: !sessionId,
         fetchPolicy: 'network-only',
-        onCompleted: (data) => {
-            console.log(data, 'sessionData')
-        }
+      
     })
     const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
     const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)

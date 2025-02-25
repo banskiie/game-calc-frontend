@@ -1,15 +1,33 @@
+// layouts/Client.tsx
 "use client"
+import React, { use, useEffect, useMemo, useState } from "react"
 import { createApolloClient } from "@/lib/apollo"
 import { ApolloProvider } from "@apollo/client"
-import { useMemo } from "react"
+import { signOut, useSession } from "next-auth/react"
+import PageLoader from "@/components/custom/page-loader"
+import { SessionProvider } from "@/hooks/use-requests"
+import { addHours, addMonths } from "date-fns"
 
-const ClientLayout = ({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) => {
-  const client = useMemo(() => createApolloClient(), [])
-  return <ApolloProvider client={client}>{children}</ApolloProvider>
-}
+const ClientLayout = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession({
+    onUnauthenticated: () => signOut(),
+    required: false,
+  });
 
-export default ClientLayout
+  const client = useMemo(
+    () => createApolloClient((session as any)?.accessToken),
+    [session]
+  )
+  if( status === "loading") return <p>Loading</p>
+  return (
+    <ApolloProvider client={client}>
+      {status === "authenticated" ? (
+        <SessionProvider>{children}</SessionProvider>
+      ) : (
+        <>{children}</>
+      )}
+    </ApolloProvider>
+  );
+};
+
+export default ClientLayout;

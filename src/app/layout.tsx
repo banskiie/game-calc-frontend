@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientLayout from "@/components/layout/Client"
+import SessionLayout from "@/components/layout/Session"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +23,7 @@ const HomeLayout = ({
 }>) => (
   <html lang="en">
     <body className={`${inter.className} antialiased`}>
-      <ClientLayout>{children}</ClientLayout>
+      <SessionLayout>{children}</SessionLayout>
     </body>
   </html>
 )

@@ -13,13 +13,7 @@ mutation Login($username: String!, $password: String!) {
         user {
             _id
             name
-            contact
-            password
-            username
             role
-            active
-            createdAt
-            updatedAt
         }
     }
 }
@@ -41,83 +35,72 @@ interface LoginCredentials {
 
 export const options: NextAuthOptions = {
     providers: [
-        CredentialsProvider({
-            name: "Credentials",
-            credentials: {
-                username: { label: "Username", type: "text"},
-                password: { label: "Password", type: "password"},
-            },
-            async authorize(credentials): Promise<any> {
-                try{
-                    const client = createApolloClient()
-                    const { username, password} = credentials as LoginCredentials
-
-                    const { data, errors } = await client.mutate({
-                        mutation: LOGIN,
-                        variables: { username, password },
-                    })
-
-                    if (errors) throw errors
-                    
-                    if(!data) throw new Error("Login Failed")
-                    const { login } = data
-                    const { user: authUser, token: accessToken} = login
-
-                    return {
-                        authUser,
-                        accessToken,
-                            // authUser: {
-                            //   _id: login.user._id,
-                            //   name: login.user.name,
-                            //   contact: login.user.contact,
-                            //   username: login.user.username,
-                            //   role: login.user.role,
-                            //   active: login.user.active,
-                            //   createdAt: login.user.createdAt,
-                            //   updatedAt: login.user.updatedAt
-                            // },
-                            // accessToken: login.token
-                    }
-                }
-                catch(error: any) {
-                    if (error) {
-                        console.error(error)
-                        throw new Error("Invalid Username or Password.")
-                    }
-                }
+      CredentialsProvider({
+        name: "Credentials",
+        credentials: {
+          username: { label: "Username", type: "text" },
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials): Promise<any> {
+          try {
+            const client = createApolloClient()
+            const { username, password } = credentials as LoginCredentials
+  
+            const { data, errors } = await client.mutate({
+              mutation: LOGIN,
+              variables: { username, password },
+            })
+  
+            if (errors) throw errors
+  
+            if (!data) throw new Error("Login failed")
+            const { login } = data
+            const { user: authUser, token: accessToken } = login
+  
+            return {
+              authUser,
+              accessToken,
             }
-        }),
+          } catch (error) {
+            console.error(error)
+          }
+        },
+      }),
     ],
     callbacks: {
-        async jwt({token, user}: any){
-            if(user) {
-                token.accessToken = user.accessToken
-                token.user = user.authUser
-            }
-            return token
-        },
-            async session({ session, token }: any) {
-            session.accessToken = token.accessToken
-            session.user = token.user
-            return session
-        },
-        },
-        events: {
-            async signOut({ token }) {
-                const client = createApolloClient(token.accessToken as string)
-                await client.mutate({
-                    mutation: LOGOUT,
-                    variables: {token: token.accessToken},
-                })
-            },
-        },
-        session: {
-            strategy: "jwt",
-            maxAge: 12 * 60 * 60, //12 hours
-        },
-        pages: {
-            signIn: "/",
-            signOut: "/",
-        },
-        secret: process.env.NEXTAUTH_SECRET,
-    }
+      async jwt({ token, user }: any) {
+        if (user) {
+          token.accessToken = user.accessToken
+          token.user = user.authUser
+        }
+        return token
+      },
+      async session({ session, token }: any) {
+        session.accessToken = token.accessToken
+        session.user = token.user
+        // if (session.user.role === "monitoring") {
+        //   session.maxAge = 6 * 60 * 60 // 6 hours
+        // }
+        return session
+      },
+    },
+    events: {
+      async signOut({ token }) {
+        const client = createApolloClient(token.accessToken as string)
+        await client.mutate({
+          mutation: LOGOUT,
+          variables: { token: token.accessToken },
+        })
+      },
+    },
+    session: {
+      strategy: "jwt",
+      maxAge: 12 * 60 * 60, // 12 hours
+    },
+    pages: {
+      signIn: "/",
+      signOut: "/",
+    },
+    secret: process.env.NEXTAUTH_SECRET,
+  }
+  

@@ -334,7 +334,6 @@ const BetsForm = ({
         skip: !id,
         fetchPolicy: 'network-only',
     })
-    console.log('This is data in the fetch_bet', data)
     const [submit] = useMutation(id ? UPDATE_BET : CREATE_BET)
     const [bettorRows, setBettorRows] = useState<
   { 

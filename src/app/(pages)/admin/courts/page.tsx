@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/card"
 import { gql, useQuery } from "@apollo/client"
 import { useRouter } from "next/navigation"
-import React from "react"
+import React, { useEffect } from "react"
 import CourtForm from "./form"
+import { useSession } from "next-auth/react"
 
 const FETCH_COURTS = gql`
   query FetchCourts {
@@ -23,11 +24,17 @@ const FETCH_COURTS = gql`
     }
   }
 `
-
 const Page = () => {
   const { data, refetch, loading } = useQuery(FETCH_COURTS)
   const courts = data?.fetchCourts
   const router = useRouter()
+  const { data: session } = useSession()
+
+  useEffect(() => {
+    if(session){
+      console.log("courts", session)
+    }
+  }, [session])
 
   if (loading) return <Loader />
 
@@ -54,7 +61,7 @@ const Page = () => {
         </Card>
       ))}
       <span className="text-muted-foreground text-center">
-        Court Count: {courts.length}
+        Court Count: {courts?.length}
       </span>
     </div>
   )

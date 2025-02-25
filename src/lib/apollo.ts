@@ -24,15 +24,13 @@ export const createApolloClient = (token?: string) => {
   // Set up the HTTP Link
   const httpLink = new HttpLink({
     uri: graphqlUrl,
-  });
+  })
 
-  // Set up the Authorization header
   const authLink = setContext((_, { headers }) => {
-    console.log("Token being sent in headers:", token); // Log the token being sent
     return {
       headers: {
         ...headers,
-        Authorization: token ? `Bearer ${token}` : "",
+        Authorization: token ? `Bearer ${token}` : "no token",
       },
     };
   });
@@ -43,7 +41,7 @@ export const createApolloClient = (token?: string) => {
       url: wsUrl,
       connectionParams: {
         headers: {
-          Authorization: token ? `Bearer ${token}` : "",
+          Authorization: token ? `Bearer ${token}` : "no token",
         },
       },
       keepAlive: 10000,
@@ -66,6 +64,6 @@ export const createApolloClient = (token?: string) => {
   // Return the Apollo Client with the correctly initialized cache
   return new ApolloClient({
     link: splitLink,
-    cache, // Use the persisted cache
+    cache: new InMemoryCache(), 
   });
 }

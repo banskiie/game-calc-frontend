@@ -278,7 +278,6 @@ const Page = () => {
             onClick={async () => {
               await endSession({ variables: { id: session._id } });
               await refetch();
-              console.log("Ending session...");
             }}
             className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 rounded-r-3xl h-10 w-20 flex justify-center align-center"
           >
