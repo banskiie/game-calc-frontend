@@ -14,7 +14,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useTransition, useState } from "react"
-import { gql } from "@apollo/client"
 import { LoginSchema } from "@/lib/schemas"
 import { getSession, signIn } from "next-auth/react"
 import { createApolloClient } from "@/lib/apollo"
@@ -108,7 +107,9 @@ const Home = () => {
                         onMouseEnter={() => setIsHovered(prev => ({ ...prev, username: true }))}
                         onMouseLeave={() => setIsHovered(prev => ({ ...prev, username: false }))}
                       />
-                      <span className={`absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 transform -translate-y-1/2 ${(isHovered.username || field.value) ? 'top-[-0.45rem] text-sm text-green-500' : 'peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-focus:top-[-0.45rem] peer-focus:text-sm peer-focus:text-green-500'}`}>
+                      <span className={`absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 transform -translate-y-1/2 pointer-events-none ${
+                        (isHovered.username || field.value) ? 'top-[-0.45rem] text-sm text-green-500' : 'peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-focus:top-[-0.45rem] peer-focus:text-sm peer-focus:text-green-500'
+                      }`}>
                         Username
                       </span>
                     </div>
@@ -133,7 +134,9 @@ const Home = () => {
                         onMouseEnter={() => setIsHovered(prev => ({ ...prev, password: true }))}
                         onMouseLeave={() => setIsHovered(prev => ({ ...prev, password: false }))}
                       />
-                      <span className={`absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 transform -translate-y-1/2 ${(isHovered.password || field.value) ? 'top-[-0.45rem] text-sm text-green-500' : 'peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-focus:top-[-0.45rem] peer-focus:text-sm peer-focus:text-green-500'}`}>
+                      <span className={`absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 transform -translate-y-1/2 pointer-events-none ${
+                        (isHovered.password || field.value) ? 'top-[-0.45rem] text-sm text-green-500' : 'peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-base peer-focus:top-[-0.45rem] peer-focus:text-sm peer-focus:text-green-500'
+                      }`}>
                         Password
                       </span>
                     </div>

@@ -27,7 +27,7 @@ const FETCH_USER = gql`
 `;
 
 const Page = () => {
-  const { slug } = useParams();
+  const { slug } = useParams()
   const { data, loading } = useQuery(FETCH_USER, {
     ssr: false,
     skip: !slug,

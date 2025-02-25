@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation"
 import { gql, useMutation, useQuery } from "@apollo/client"
-import { CircleStop, Dice5, FileText, Loader2, Menu } from "lucide-react"
+import { CircleStop, Dice5, FileText, Loader2, MoreVertical } from "lucide-react" // Import MoreVertical
 import drink from "@/assets/drink.png"
 import {
   Card,
@@ -198,6 +198,7 @@ const FETCH_GAMES_BY_SESSION = gql`
     }
   }
 `
+
 const Page = () => {
   const { slug } = useParams();
   const { data, loading, error, refetch } = useQuery(FETCH_SESSION, {
@@ -355,47 +356,47 @@ const Page = () => {
                 </Card>
               </CardContent>
 
-             {/* Hamburger Menu (Dropdown) */}
-             <div className="absolute top-2 right-2 z-50">
-  <DropdownMenu onOpenChange={(open) => setIsDropdownOpen(open)}>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" className="h-11 w-11 rounded-full flex items-center justify-center">
-        <Menu className={`h-6 w-6 transition-transform ${isDropdownOpen ? "rotate-90" : ""}`} />
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent className="w-auto px-4 min-w-0 space-y-3 overflow-y-auto max-h-[300px]" align="end">
-      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
-        <div onClick={(e) => e.stopPropagation()}>
-          <GameForm id={game._id} refetch={refetchGames} sessionId={slug as string} />
-        </div>
-      </DropdownMenuItem>
-      {game?.end ? (
-        <DropdownMenuItem className="p-0"> 
-          <Button
-            onClick={() => router.push("/admin/sessions/summary/game/" + game._id)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center h-11 w-11 rounded-full"
-          >
-            <FileText className="!h-6 !w-6" />
-          </Button>
-        </DropdownMenuItem>
-      ) : (
-        <DropdownMenuItem className="p-0"> 
-          <Button
-            variant="destructive"
-            onClick={() =>
-              endGame({
-                variables: { id: game._id, end: new Date(), status: "completed" },
-              })
-            }
-            className="flex items-center justify-center h-11 w-11 rounded-full"
-          >
-            <CircleStop className="!h-6 !w-6" />
-          </Button>
-        </DropdownMenuItem>
-      )}
-    </DropdownMenuContent>
-  </DropdownMenu>
-</div>
+              {/* Vertical Three-Dots Menu (Dropdown) */}
+              <div className="absolute top-2 right-2 z-50">
+                <DropdownMenu onOpenChange={(open) => setIsDropdownOpen(open)}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-11 w-11 rounded-full flex items-center justify-center">
+                      <MoreVertical className={`h-6 w-6 transition-transform ${isDropdownOpen ? "rotate-90" : ""}`} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-auto px-4 min-w-0 space-y-3 overflow-y-auto max-h-[300px]" align="end">
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <GameForm id={game._id} refetch={refetchGames} sessionId={slug as string} />
+                      </div>
+                    </DropdownMenuItem>
+                    {game?.end ? (
+                      <DropdownMenuItem className="p-0"> 
+                        <Button
+                          onClick={() => router.push("/admin/sessions/summary/game/" + game._id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center h-11 w-11 rounded-full"
+                        >
+                          <FileText className="!h-6 !w-6" />
+                        </Button>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem className="p-0"> 
+                        <Button
+                          variant="destructive"
+                          onClick={() =>
+                            endGame({
+                              variables: { id: game._id, end: new Date(), status: "completed" },
+                            })
+                          }
+                          className="flex items-center justify-center h-11 w-11 rounded-full"
+                        >
+                          <CircleStop className="!h-6 !w-6" />
+                        </Button>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </Card>
           ))
         ) : (
@@ -418,6 +419,5 @@ const Page = () => {
     </div>
   );
 };
-
 
 export default Page;

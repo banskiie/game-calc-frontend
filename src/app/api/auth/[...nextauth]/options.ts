@@ -13,6 +13,8 @@ mutation Login($username: String!, $password: String!) {
         user {
             _id
             name
+            username
+            contact
             role
         }
     }

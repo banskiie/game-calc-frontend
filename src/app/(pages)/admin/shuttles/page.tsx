@@ -1,5 +1,4 @@
 "use client"
-import Loader from "@/components/custom/Loader"
 import {
   Card,
   CardDescription,
@@ -10,6 +9,7 @@ import { gql, useQuery } from "@apollo/client"
 import { useRouter } from "next/navigation"
 import React from "react"
 import ShuttleForm from "./form"
+import { Loader2 } from "lucide-react"
 
 const FETCH_SHUTTLES = gql`
   query FetchShuttles {
@@ -29,7 +29,7 @@ const Page = () => {
   const shuttles = data?.fetchShuttles
   const router = useRouter()
 
-  if (loading) return <Loader />
+  if (loading) return <Loader2 />
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">

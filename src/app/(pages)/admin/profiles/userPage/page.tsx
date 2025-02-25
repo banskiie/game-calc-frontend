@@ -10,7 +10,7 @@ import { gql, useLazyQuery } from "@apollo/client"
 import { Loader2 } from "lucide-react"
 // import { useRouter } from "next/navigation"
 import React, { useEffect } from "react"
-import UserForm from "./form"
+import UserForm from "../form"
 import { useRouter } from "next/navigation"
 
 const FETCH_USERS = gql`
@@ -52,12 +52,12 @@ const page = () => {
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
-      <div className="sticky top-0 w-full bg-slate-200 p-2">
+      <div className="sticky top-0 w-full p-2">
       <UserForm refetch={refetch} />
       </div>
       {users?.map((user: any) => (
         <Card key={user._id} className="mx-2"
-        onClick={() => router.push("/admin/users/" + user._id)}
+        onClick={() => router.push("/admin/profiles/" + user._id)}
         >
           <CardHeader>
             <CardTitle>{user.name}</CardTitle>

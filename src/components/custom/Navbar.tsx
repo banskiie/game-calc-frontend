@@ -22,8 +22,8 @@ const items = [
     icon: PackageOpen,
   },
   {
-    title: "users",
-    url: "/admin/users",
+    title: "Profiles",
+    url: "/admin/profiles",
     icon: CircleUser,
   },
   ]

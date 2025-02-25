@@ -7,6 +7,7 @@ import { signOut, useSession } from "next-auth/react"
 import PageLoader from "@/components/custom/page-loader"
 import { SessionProvider } from "@/hooks/use-requests"
 import { addHours, addMonths } from "date-fns"
+import { Loader2 } from "lucide-react"
 
 const ClientLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession({
@@ -18,7 +19,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
     () => createApolloClient((session as any)?.accessToken),
     [session]
   )
-  if( status === "loading") return <p>Loading</p>
+  if(status === "loading") return <Loader2/>
   return (
     <ApolloProvider client={client}>
       {status === "authenticated" ? (

@@ -1,5 +1,4 @@
 "use client"
-import Loader from "@/components/custom/Loader"
 import {
   Card,
   CardDescription,
@@ -11,6 +10,7 @@ import { useRouter } from "next/navigation"
 import React, { useEffect } from "react"
 import CourtForm from "./form"
 import { useSession } from "next-auth/react"
+import { Loader2 } from "lucide-react"
 
 const FETCH_COURTS = gql`
   query FetchCourts {
@@ -36,7 +36,7 @@ const Page = () => {
     }
   }, [session])
 
-  if (loading) return <Loader />
+  if (loading) return <Loader2 />
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">

@@ -22,8 +22,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import React, { useEffect, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import Loader from "@/components/custom/Loader"
 import ButtonLoader from "@/components/custom/ButtonLoader"
+import { Loader2 } from "lucide-react"
 
 const FETCH_SHUTTLE = gql`
   query FetchShuttle($id: ID!) {
@@ -116,7 +116,7 @@ const ShuttleForm = ({
     if (refetch) refetch()
   }
 
-  if (loading) return <Loader />
+  if (loading) return <Loader2 />
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

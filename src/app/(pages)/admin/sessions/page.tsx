@@ -316,9 +316,7 @@ const page = () => {
       >
         LOAD MORE?
       </Button>
-      <Button className="w-full" onClick={() => signOut()} type="submit">
-              Logout
-            </Button>
+     
     </div>
   )
 }
