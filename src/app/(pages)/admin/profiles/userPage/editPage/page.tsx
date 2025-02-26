@@ -1,13 +1,13 @@
 "use client"
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSession } from "next-auth/react";
-import { gql, useQuery, useMutation } from "@apollo/client";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSession } from "next-auth/react"
+import { gql, useQuery, useMutation } from "@apollo/client"
+import { toast } from "sonner"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 
 const FETCH_USER = gql`
   query FetchUser($id: ID!) {
@@ -31,36 +31,41 @@ const UPDATE_USER = gql`
       username
       password
       role
-      
     }
   }
 `
 
 const EditUserPage = ({ params }: { params: { id: string } }) => {
-  const { data: session } = useSession()
-  const [countryCode, setCountryCode] = useState("+63")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [name, setName] = useState("")
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [role, setRole] = useState("user")
+  const { data: session } = useSession();
+  const [countryCode, setCountryCode] = useState("+63");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [role, setRole] = useState("user");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
-  const firstLetterName = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "N/A"
+  const firstLetterName = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "N/A";
   const { data, loading } = useQuery(FETCH_USER, {
-    variables: { id: params.id },
-  })
+    variables: { id: session?.user?._id },
+    skip: !session?.user?._id,
+  });
 
-  const [updateUser] = useMutation(UPDATE_USER)
+  const [updateUser] = useMutation(UPDATE_USER);
 
   useEffect(() => {
+    console.log("GraphQL Fetch User Response:", data);
     if (data?.fetchUser) {
-      const user = data.fetchUser
-      setName(user.name)
-      setUsername(user.username)
-      setPhoneNumber(user.contact)
-      setRole(user.role)
+      const user = data.fetchUser;
+      setName(user.name);
+      setUsername(user.username);
+      setPhoneNumber(user.contact);
+      setTimeout(() => {
+        setRole(data.fetchUser.role || "user");
+      }, 100)
     }
-  }, [data])
+  }, [data]);
 
   const formatPhoneNumber = (value: string) => {
     const cleaned = value.replace(/\D/g, "").slice(0, 10);
@@ -69,46 +74,50 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
     if (match) {
       return `${match[1]}-${match[2]}-${match[3] || ""}`;
     }
-    return cleaned
-  }
+    return cleaned;
+  };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhoneNumber(formatPhoneNumber(e.target.value))
-  }
+    setPhoneNumber(formatPhoneNumber(e.target.value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+   
     try {
-     const input: any = {
-        _id: params.id,
+      const input: any = {
+        _id: params.id || session?.user?._id,
         name,
         contact: phoneNumber,
         username,
         role,
-     }
+      }
 
-     if(password) {
-        input.password = password
-     }
+      console.log("EditUserPage params:", params)
+      console.log("Session User ID:", session?.user?._id)
 
-     const response = await updateUser({ variables: { input }})
+      if (newPassword) {
+        input.password = newPassword;
+      }
+
+      console.log("Update Input:", input)
+
+      const response = await updateUser({ variables: { input } });
 
       if (response.data.updateUser) {
         toast.success("User updated successfully!");
       }
     } catch (error) {
-      toast.error("Failed to update user. Please try again.")
+      console.error("Update Error:", error)
+      toast.error("Failed to update user. Please try again.");
     }
-  }
+  };
 
-  if (loading) return <Loader2 />
+  if (loading) return <Loader2 />;
 
   return (
     <div className="h-screen w-full bg-gray-100 flex flex-col items-center">
-      <div className="w-full h-52 bg-green-600 rounded-b-2xl relative flex justify-center">
-       
-      </div>
+      <div className="w-full h-52 bg-green-600 rounded-b-2xl relative flex justify-center"></div>
 
       <div className="relative -mt-16 w-32 h-32 bg-green-900 text-white flex items-center justify-center rounded-full border-4 border-white shadow-lg">
         <span className="text-5xl font-bold"> {firstLetterName} </span>
@@ -142,14 +151,23 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
 
             <div className="flex flex-col gap-3 mb-2">
               <label className="text-left text-gray-600 font-semibold">New Password</label>
-              <Input
-                type="password"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
-
 
             <div className="flex flex-col gap-3 mb-2">
               <label className="text-left text-gray-600 font-semibold">Contact No</label>
@@ -182,7 +200,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
               <label className="text-left text-gray-600 font-semibold">Role</label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder={role || "Select a Role"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
@@ -198,7 +216,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default EditUserPage
+export default EditUserPage;

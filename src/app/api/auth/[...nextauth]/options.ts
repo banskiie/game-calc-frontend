@@ -45,45 +45,54 @@ export const options: NextAuthOptions = {
         },
         async authorize(credentials): Promise<any> {
           try {
-            const client = createApolloClient()
-            const { username, password } = credentials as LoginCredentials
-  
+            const client = createApolloClient();
+            const { username, password } = credentials as LoginCredentials;
+        
             const { data, errors } = await client.mutate({
               mutation: LOGIN,
               variables: { username, password },
-            })
-  
-            if (errors) throw errors
-  
-            if (!data) throw new Error("Login failed")
-            const { login } = data
-            const { user: authUser, token: accessToken } = login
-  
+            });
+        
+            if (errors) throw errors;
+        
+            if (!data) throw new Error("Login failed");
+            const { login } = data;
+            const { user: authUser, token: accessToken } = login;
+        
             return {
-              authUser,
+              _id: authUser._id, 
+              name: authUser.name,
+              email: authUser.email,
+              role: authUser.role,
+              username: authUser.username,
               accessToken,
-            }
+            };
           } catch (error) {
-            console.error(error)
-          }
-        },
+            console.error(error);
+            return null;
+          }}
       }),
     ],
     callbacks: {
       async jwt({ token, user }: any) {
         if (user) {
-          token.accessToken = user.accessToken
-          token.user = user.authUser
+          token.accessToken = user.accessToken;
+          token.user = {
+            _id: user._id, 
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            username: user.username,
+          };
         }
-        return token
+        return token;
       },
       async session({ session, token }: any) {
-        session.accessToken = token.accessToken
-        session.user = token.user
-        // if (session.user.role === "monitoring") {
-        //   session.maxAge = 6 * 60 * 60 // 6 hours
-        // }
+        session.accessToken = token.accessToken;
+        session.user = token.user; 
+        console.log("Session:", session)
         return session
+        
       },
     },
     events: {
