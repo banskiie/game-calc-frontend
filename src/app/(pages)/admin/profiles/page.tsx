@@ -1,17 +1,47 @@
 "use client"
 import { signOut, useSession } from "next-auth/react"
-import React from "react"
-import { Users, History, Gamepad2, LogOut, ChevronRight, Pencil } from "lucide-react" // Lucide icons
+import React, { useEffect, useState } from "react"
+import { Users, History, Gamepad2, LogOut, ChevronRight, Pencil, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { gql, useQuery } from "@apollo/client"
+
+const FETCH_USER = gql`
+ query FetchUser($id: ID!) {
+    fetchUser(_id: $id) {
+      _id
+      name
+      contact
+      username
+      password
+      role
+    }
+  }
+`
 
 const Page = () => {
   const { data: session } = useSession()
   const router = useRouter()
+  const [userData, setUserData] = useState<any>(null)
 
-  const firstLetterName = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "N/A"
-  const fullName = session?.user?.name || "Guest User"
-  const userRole = session?.user?.role || "No Role"
+  const { data, loading } = useQuery(FETCH_USER, {
+    variables: { id: session?.user?._id },
+    skip: !session?.user?._id,
+  });
+
+  useEffect(() => {
+    if (data?.fetchUser) {
+      setUserData(data.fetchUser);
+    }
+  }, [data])
+
+  if (loading) return <Loader2 />
+
+  // const firstLetterName = userData?.name ? userData.name.charAt(0).toUpperCase() : "N/A"
+  const firstLetterName = userData?.name ? userData.name.split(" ").map((word: any) => word.charAt(0).toUpperCase()).join("") : "N/A"
+  console.log(firstLetterName)
+  const fullName = userData?.name || "Guest User"
+  const userRole = userData?.role || "No Role"
   
   return (
     <div className="h-screen w-full bg-gray-100 flex flex-col items-center">

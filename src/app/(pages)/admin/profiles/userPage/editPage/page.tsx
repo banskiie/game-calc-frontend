@@ -1,13 +1,14 @@
-"use client"
-import React, { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSession } from "next-auth/react"
-import { gql, useQuery, useMutation } from "@apollo/client"
-import { toast } from "sonner"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+"use client";
+import React, { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
+import { gql, useQuery, useMutation } from "@apollo/client";
+import { toast } from "sonner";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const FETCH_USER = gql`
   query FetchUser($id: ID!) {
@@ -33,10 +34,11 @@ const UPDATE_USER = gql`
       role
     }
   }
-`
+`;
 
 const EditUserPage = ({ params }: { params: { id: string } }) => {
   const { data: session } = useSession();
+  const router = useRouter(); // Initialize useRouter
   const [countryCode, setCountryCode] = useState("+63");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [name, setName] = useState("");
@@ -63,7 +65,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
       setPhoneNumber(user.contact);
       setTimeout(() => {
         setRole(data.fetchUser.role || "user");
-      }, 100)
+      }, 100);
     }
   }, [data]);
 
@@ -83,7 +85,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   
+
     try {
       const input: any = {
         _id: params.id || session?.user?._id,
@@ -91,24 +93,25 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
         contact: phoneNumber,
         username,
         role,
-      }
+      };
 
-      console.log("EditUserPage params:", params)
-      console.log("Session User ID:", session?.user?._id)
+      console.log("EditUserPage params:", params);
+      console.log("Session User ID:", session?.user?._id);
 
       if (newPassword) {
         input.password = newPassword;
       }
 
-      console.log("Update Input:", input)
+      console.log("Update Input:", input);
 
       const response = await updateUser({ variables: { input } });
 
       if (response.data.updateUser) {
         toast.success("User updated successfully!");
+        router.push("/admin/profiles/")
       }
     } catch (error) {
-      console.error("Update Error:", error)
+      console.error("Update Error:", error);
       toast.error("Failed to update user. Please try again.");
     }
   };
@@ -178,9 +181,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="+63">+63</SelectItem>
-                    <SelectItem value="+1">+1</SelectItem>
-                    <SelectItem value="+44">+44</SelectItem>
-                    <SelectItem value="+91">+91</SelectItem>
+                    <SelectItem value="+81">+81</SelectItem>
                   </SelectContent>
                 </Select>
 
