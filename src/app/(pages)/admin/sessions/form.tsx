@@ -480,8 +480,8 @@ const GameForm = ({
     return (
         <Sheet open={open} onOpenChange={setOpen} modal>
             <SheetTrigger asChild>
-            <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-11 w-11 rounded-full flex items-center justify-center" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center"}`} disabled={disabled} >
-                    {id ? <SquarePen className='!w-6 !h-6'/>  :  <Plus className="!w-6 !h-6"/>}
+            <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-9 w-9 rounded-full flex items-center justify-center" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center"}`} disabled={disabled} >
+                    {id ? <SquarePen className='!w-5 !h-5'/>  :  <Plus className="!w-6 !h-6"/>}
                 </Button>
             </SheetTrigger>
             <SheetContent
