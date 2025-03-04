@@ -21,6 +21,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
+import { saveAs } from 'file-saver'
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -235,7 +236,25 @@ const Page = () => {
   const totalShuttlesUsed = gameData?.fetchGamesBySession
     ?.flatMap((game: any) => game.shuttlesUsed)
     .reduce((acc: number, shuttle: any) => acc + shuttle.quantity, 0);
-
+  
+    const exportToCSV = () => {
+      let csvContent = "Game ID,Start Time,End Time,Winner,Court,Shuttles Used\n";
+  
+      data.fetchSessionSummary.games.forEach((game: any) => {
+        const shuttles = game.shuttlesUsed
+          .map((s: any) => `${s.shuttle.name} (${s.quantity})`)
+          .join("; ");
+  
+        csvContent += `${game._id},${game.start},${game.end || "N/A"},${game.winner || "N/A"},${game.court.name},${shuttles}\n`;
+      });
+  
+      csvContent += `\nTotal Shuttles Used:,${data.fetchSessionSummary.totalShuttlesUsed}`;
+      csvContent += `\nTotal Duration:,${data.fetchSessionSummary.totalDuration} minutes`;
+  
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      saveAs(blob, `session_${slug}_summary.csv`);
+    }
+    
     return (
       <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
         <Card className="p-5 w-full max-w-xl mx-auto shadow-inner flex items-center justify-center bg-opacity-100 shadow-gray-500/60">
@@ -267,7 +286,11 @@ const Page = () => {
             disabled={isSessionEnded}
           />
           <button
+            // onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
             onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
+            // onClick={() => {
+            //   exportToCSV();
+            // }}
             className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
           >
             View Summary
