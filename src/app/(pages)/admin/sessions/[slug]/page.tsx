@@ -212,6 +212,8 @@ const Page = () => {
     FETCH_GAMES_BY_SESSION,
     {
       variables: { session: slug },
+      skip: !slug,
+      fetchPolicy: "network-only",
     }
   );
   const [endSession] = useMutation(END_SESSION);
@@ -219,7 +221,6 @@ const Page = () => {
   const router = useRouter();
   const session = data?.fetchSession;
 
-  // State for dropdown open/close
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   if (loading)
@@ -282,7 +283,7 @@ const Page = () => {
         </Card>
   
         <div className="flex flex-row justify-center gap-4 mt-4">
-          <GameForm sessionId={slug as string} refetch={refetchGames}
+          <GameForm sessionId={slug as string} refetch={refetchGames} 
             disabled={isSessionEnded}
           />
           <button

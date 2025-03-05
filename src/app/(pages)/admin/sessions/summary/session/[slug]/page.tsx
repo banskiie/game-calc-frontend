@@ -51,7 +51,7 @@ const Page = () => {
 
   const exportToCSV = (summary: any) => {
     const today = new Date().toISOString().split("T")[0] 
-    const filename = `session_${slug}_summary_${today}.csv`
+    const filename = `session_summary_${today}.csv`
     let csvContent = "Category,Value\n"
 
     csvContent += `ID,${slug}\n`

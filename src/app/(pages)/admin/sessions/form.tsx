@@ -28,6 +28,7 @@ import { Separator } from '@/components/ui/separator'
 import { format, toZonedTime } from 'date-fns-tz'
 import { parse } from 'date-fns'
 import TimePicker from '@/components/custom/timepicker'
+import { toast } from 'sonner'
 
 const FETCH_SESSION = gql`
     query FetchSession($id: ID!) {
@@ -273,12 +274,12 @@ const GameForm = ({
         skip: !id,
         fetchPolicy: 'network-only',
     })
-    const { data: sessionData } = useQuery(FETCH_SESSION, {
+    const { data: sessionData, refetch: refetchSession } = useQuery(FETCH_SESSION, {
         variables: { id: sessionId },
         skip: !sessionId,
         fetchPolicy: 'network-only',
-      
     })
+   
     const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS)
     const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS)
     const { data: shuttleData, loading: shuttlesLoading } =
@@ -312,40 +313,32 @@ const GameForm = ({
     })
 
     useEffect(() => {
-        if (
-            !id &&
-            sessionData &&
-            sessionData.fetchSession &&
-            sessionData.fetchSession.games.length > 0
-        ) {
-            const latestGameEnd =
-                sessionData.fetchSession.games[
-                    sessionData.fetchSession.games.length - 1
-                ].end
-
-            form.setValue(
-                "start",
-                format(
-                    toZonedTime(
-                        new Date(
-                            new Date(latestGameEnd).setMinutes(
-                                new Date(latestGameEnd).getMinutes() + 1
-                            )
-                        ),
-                        'Asia/Manila'
-                    ),
-                    "hh:mm a"
-                )
-            )
+        if (!id && sessionData?.fetchSession?.games) {
+          const games = sessionData.fetchSession.games;
+          const lastGame = games[games.length - 1];
+      
+          let newStart = '05:00 PM';
+          if (lastGame?.end) {
+            const lastEnd = new Date(lastGame.end);
+            lastEnd.setMinutes(lastEnd.getMinutes() + 1);
+            newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
+          }
+      
+          if (form.getValues('start') !== newStart) {
+            form.setValue('start', newStart);
+          }
+          if (form.getValues('end') !== '00:00 PM') {
+            form.setValue('end', '00:00 PM');
+          }
         }
-    }, [sessionData, id, form])
-
+      console.log("Session Data after refetch:", sessionData)
+      }, [sessionData, id, form, sessionData?.fetchSession?.games?.length])
     useEffect(() => {
         if (data) {
             const game = data.fetchGame
 
             const ensurePM = (time: Date | null) => {
-                if (!time) return null;
+                if (!time) return null
                 const zonedTime = toZonedTime(time, 'Asia/Manila');
                 return format(zonedTime, 'hh:mm a');
               }          
@@ -371,8 +364,8 @@ const GameForm = ({
                                   shuttle: '',
                               },
                           ],
-                    start: ensurePM(game.start) || '12:00 PM',
-                    end: ensurePM(game.end) || '01:00 PM',
+                    start: ensurePM(game.start) || '05:00 PM',
+                    end: ensurePM(game.end) || '00:00 PM',
                     winner: game.winner || undefined,
             })
         }
@@ -386,7 +379,7 @@ const GameForm = ({
             courtData &&
             shuttleData
         ) {
-            const { court, shuttle, start, end } = sessionData.fetchSession;
+            const { court, shuttle } = sessionData.fetchSession;
 
             form.reset({
                 ...form.getValues(),
@@ -405,10 +398,10 @@ const GameForm = ({
     }, [sessionData, courtData, shuttleData, form, id]);
 
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
-        if(disabled) return
+        if (disabled) return;
         startTransition(async () => {
-            const { players, court, shuttles, start, end } = data
-
+            const { players, court, shuttles, start, end } = data;
+    
             try {
                 const gameInput = {
                     start: start ? parse(start, "hh:mm a", new Date()) : null,
@@ -424,61 +417,92 @@ const GameForm = ({
                             ? []
                             : shuttles,
                     winner: data.winner || null,
-                }
-
-                try {
-                    const response = await submitForm({
-                        variables: id
-                            ? { id, ...gameInput }
-                            : { ...gameInput, status: 'ongoing' },
-                    })
-
-                    if (
-                        response.data?.createGame ||
-                        response.data?.updateGame
-                    ) {
-                        closeForm()
+                };
+    
+                const response = await submitForm({
+                    variables: id
+                        ? { id, ...gameInput }
+                        : { ...gameInput, status: 'ongoing' },
+                });
+    
+                if (response.data?.createGame || response.data?.updateGame) {
+                    await refetchSession(); // Ensure session data is updated
+    
+                    const updatedSession = sessionData?.fetchSession;
+                    const games = updatedSession?.games || [];
+                    const lastGame = games[games.length - 1];
+    
+                    let newStart = '05:00 PM';
+                    if (lastGame?.end) {
+                        const lastEnd = new Date(lastGame.end);
+                        lastEnd.setMinutes(lastEnd.getMinutes() + 1);
+                        newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
                     }
-                } catch (error) {
-                    console.error('Error creating game:', error)
+    
+                    form.reset({
+                        players: ['', '', '', ''],
+                        court: updatedSession?.court?._id || '',
+                        shuttles: [{ quantity: 1, shuttle: updatedSession?.shuttle?._id || '' }],
+                        start: newStart,
+                        end: '00:00 PM',
+                    });
+    
+                    closeForm();
+                    toast.success(id ? 'Game updated successfully!' : 'Game created successfully!');
                 }
             } catch (error) {
-                console.error('Error creating game:', error)
+                console.error('Error creating game:', error);
+                toast.error('Failed to save game. Please try again.');
             }
-        })
-    }
+        });
+    };
 
-    const closeForm = () => {
+      const closeForm = () => {
         setOpen(false);
         form.clearErrors();
+      
         if (id) {
-            form.reset({
-                ...form.getValues(),
-            });
+          form.reset({
+            players: ["", "", "", ""],
+            court: "",
+            shuttles: [{ quantity: 1, shuttle: "" }],
+            session: sessionId || "",
+            start: null,
+            end: null,
+            winner: undefined,
+          });
         } else {
-            const defaultCourt = sessionData?.fetchSession?.court?._id || ''
-            const defaultShuttle = sessionData?.fetchSession?.shuttle?._id || ''
-            form.reset({
-                players: ['', '', '', ''],
-                court: defaultCourt,
-                shuttles: [
-                    {
-                        quantity: 1,
-                        shuttle: defaultShuttle,
-                    },
-                ],
-                session: sessionId || '',
-                start: null,
-                end: null,
-                winner: undefined,
-            });
+          const defaultCourt = sessionData?.fetchSession?.court?._id || '';
+          const defaultShuttle = sessionData?.fetchSession?.shuttle?._id || '';
+          const games = sessionData?.fetchSession?.games || [];
+          const lastGame = games[games.length - 1];
+      
+          let newStart = '05:00 PM';
+          if (lastGame?.end) {
+            const lastEnd = new Date(lastGame.end);
+            lastEnd.setMinutes(lastEnd.getMinutes() + 1);
+            newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
+          }
+      
+          form.reset({
+            players: ['', '', '', ''],
+            court: defaultCourt,
+            shuttles: [{ quantity: 1, shuttle: defaultShuttle }],
+            session: sessionId || '',
+            start: newStart,
+            end: '00:00 PM',
+            winner: undefined,
+          });
         }
+      
         if (refetch) refetch();
-    }
+      }
+      
     if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
 
     return (
         <Sheet open={open} onOpenChange={setOpen} modal>
+
             <SheetTrigger asChild>
             <Button className = {`${id ? "bg-green-600 hover:bg-green-700 text-white h-9 w-9 rounded-full flex items-center justify-center" : "bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center"}`} disabled={disabled} >
                     {id ? <SquarePen className='!w-5 !h-5'/>  :  <Plus className="!w-6 !h-6"/>}
@@ -551,42 +575,42 @@ const GameForm = ({
                         {/* Time Picker */}
                         <div className="grid grid-cols-2 gap-2">
                         <FormField
-  control={form.control}
-  name="start"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Start Time</FormLabel>
-      <FormControl>
-        <TimePicker
-          initialTime={field.value || "12:00 AM"}
-          onChange={(newTime) => {
-            field.onChange(newTime);
-          }}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                        control={form.control}
+                        name="start"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Start Time</FormLabel>
+                            <FormControl>
+                                <TimePicker
+                                initialTime={field.value || "05:00 PM"}
+                                onChange={(newTime) => {
+                                    field.onChange(newTime);
+                                }}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
 
-<FormField
-  control={form.control}
-  name="end"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>End Time</FormLabel>
-      <FormControl>
-        <TimePicker
-          initialTime={field.value || "00:00 PM"}
-          onChange={(newTime) => {
-            field.onChange(newTime);
-          }}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                            <FormField
+                            control={form.control}
+                            name="end"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>End Time</FormLabel>
+                                <FormControl>
+                                    <TimePicker
+                                    initialTime={field.value || "00:00 PM"}
+                                    onChange={(newTime) => {
+                                        field.onChange(newTime);
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
                         </div>
                         <FormField
                             control={form.control}
