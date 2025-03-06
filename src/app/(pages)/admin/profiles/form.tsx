@@ -205,7 +205,7 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem className="mt-5">
+                  <FormItem className="mt-6">
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input
@@ -263,11 +263,11 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
               />
            )} 
 
-            <SheetFooter className="!flex !flex-col gap-2 py-2 mt-8">
+            <SheetFooter className="!flex !flex-row gap-2 py-2 mt-8">
               <Button type="submit" disabled={isPending} className="w-full bg-green-900 hover:bg-green-800 !p-4">
                 {isPending ? <ButtonLoader /> : "Submit"}
               </Button>
-              <Button disabled={isPending} onClick={closeForm} className="w-full !p-4 !m-0">
+              <Button disabled={isPending} onClick={closeForm} className="w-full !p-4 !m-0 bg-red-600 hover:bg-red-700">
                 Close
               </Button>
             </SheetFooter>

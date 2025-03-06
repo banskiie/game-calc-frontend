@@ -1,7 +1,7 @@
 "use client"
 import { signOut, useSession } from "next-auth/react"
 import React, { useEffect, useState } from "react"
-import { Users, History, Gamepad2, LogOut, ChevronRight, Pencil, Loader2 } from "lucide-react"
+import { Users, History, Gamepad2, LogOut, ChevronRight, Pencil, Loader2, ScrollText } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { gql, useQuery } from "@apollo/client"
@@ -73,19 +73,28 @@ const Page = () => {
         </button>
         </Link>
         
-        <button className="flex items-center justify-between w-full px-12 py-6 text-lg text-gray-700 bg-white hover:bg-gray-100 transition border-t border-gray-300 mb-4">
+        {/* <button className="flex items-center justify-between w-full px-12 py-6 text-lg text-gray-700 bg-white hover:bg-gray-100 transition border-t border-gray-300 mb-4">
           <div className="flex items-center">
             <History className="mr-4" size={26} /> Sessions
           </div>
           <ChevronRight size={22} className="text-gray-400" />
-        </button>
+        </button> */}
 
-        <button className="flex items-center justify-between w-full px-12 py-6 text-lg text-gray-700 bg-white hover:bg-gray-100 transition border-t border-gray-300 mb-4">
+        {/* <button className="flex items-center justify-between w-full px-12 py-6 text-lg text-gray-700 bg-white hover:bg-gray-100 transition border-t border-gray-300 mb-4">
           <div className="flex items-center">
             <Gamepad2 className="mr-4" size={26} /> Game History
           </div>
           <ChevronRight size={22} className="text-gray-400" />
+        </button> */}
+
+    <Link href="/admin/profiles/summaryHistory/">
+        <button className="flex items-center justify-between w-full px-12 py-6 text-lg text-gray-700 bg-white hover:bg-gray-100 transition border-t border-gray-300 mb-4">
+          <div className="flex items-center">
+            <ScrollText className="mr-4" size={26} /> Summary History
+          </div>
+          <ChevronRight size={22} className="text-gray-400" />
         </button>
+        </Link>
 
         <button
           onClick={() => signOut()}

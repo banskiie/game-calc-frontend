@@ -188,15 +188,16 @@ const ShuttleForm = ({
               )}
             />
             <SheetFooter className="gap-2 py-2">
+             
+              <Button disabled={isPending} className="w-full bg-green-900 hover:bg-green-800 !p-4">
+                {isPending ? <ButtonLoader /> : "Submit"}
+              </Button>
               <Button
                 disabled={isPending}
                 onClick={() => closeForm()}
-                className="w-full"
+                className="w-full !p-4 !m-0 bg-red-600 hover:bg-red-700"
               >
                 Close
-              </Button>
-              <Button disabled={isPending} className="bg-green-900">
-                {isPending ? <ButtonLoader /> : "Submit"}
               </Button>
             </SheetFooter>
           </form>

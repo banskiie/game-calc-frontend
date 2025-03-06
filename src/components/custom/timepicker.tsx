@@ -44,9 +44,9 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "05:00 PM", onCha
   // Scroll to selected time when picker opens
   useEffect(() => {
     if (isPickerOpen) {
-      hourRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      minuteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      ampmRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (hourRef.current) hourRef.current.parentElement!.scrollTop = hourRef.current.offsetTop - 48;
+    if (minuteRef.current) minuteRef.current.parentElement!.scrollTop = minuteRef.current.offsetTop - 48;
+    if (ampmRef.current) ampmRef.current.parentElement!.scrollTop = ampmRef.current.offsetTop - 24;
     }
   }, [isPickerOpen]);
 
@@ -61,15 +61,15 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "05:00 PM", onCha
       </div>
 
       {isPickerOpen && (
-        <div className="absolute inset-0 bg-popover text-popover-foreground rounded-lg border shadow-lg flex items-center justify-center p-6">
-          <div className="flex items-center gap-4">
+       <div className="absolute left-0 right-0 bg-white rounded-lg border shadow-lg flex items-center justify-center p-4">
+          <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
             {/* Hour Picker */}
-            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
+            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
               {[...Array(12).keys()].map((h) => (
                 <div
                   key={h}
                   ref={h + 1 === hour ? hourRef : null}
-                  className={`p-1 text-center cursor-pointer rounded ${h + 1 === hour ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  className={`p-2 text-center cursor-pointer rounded ${h + 1 === hour ? "bg-primary text-white" : "hover:bg-gray-200"}`}
                   onClick={() => setHour(h + 1)}
                 >
                   {(h + 1).toString().padStart(2, "0")}
@@ -80,12 +80,12 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "05:00 PM", onCha
             <span className="text-lg">:</span>
 
             {/* Minute Picker */}
-            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
+            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
               {[...Array(60).keys()].map((m) => (
                 <div
                   key={m}
                   ref={m === minute ? minuteRef : null}
-                  className={`p-1 text-center cursor-pointer rounded ${m === minute ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  className={`p-2 text-center cursor-pointer rounded ${m === minute ? "bg-primary text-white" : "hover:bg-gray-200"}`}
                   onClick={() => setMinute(m)}
                 >
                   {m.toString().padStart(2, "0")}
@@ -94,12 +94,12 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialTime = "05:00 PM", onCha
             </ScrollArea>
 
             {/* AM/PM Picker */}
-            <ScrollArea className="h-8 w-12 overflow-hidden flex flex-col items-center">
+            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
               {["AM", "PM"].map((period) => (
                 <div
                   key={period}
                   ref={period === ampm ? ampmRef : null}
-                  className={`p-1 text-center cursor-pointer rounded ${period === ampm ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                  className={`p-2 text-center cursor-pointer rounded ${period === ampm ? "bg-primary text-white" : "hover:bg-gray-200"}`}
                   onClick={() => setAmpm(period)}
                 >
                   {period}

@@ -43,11 +43,11 @@ const Page = () => {
     fetchPolicy: "network-only",
   })
 
-  useEffect(() => {
-    if (data?.fetchSessionSummary) {
-      exportToCSV(data.fetchSessionSummary)
-    }
-  }, [data])
+  // useEffect(() => {
+  //   if (data?.fetchSessionSummary) {
+  //     exportToCSV(data.fetchSessionSummary)
+  //   }
+  // }, [data])
 
   const exportToCSV = (summary: any) => {
     const today = new Date().toISOString().split("T")[0] 
