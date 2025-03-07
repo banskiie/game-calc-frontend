@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import { saveAs } from 'file-saver'
+import { toast } from "sonner"
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -107,11 +108,23 @@ const FETCH_SESSION = gql`
 `
 
 const END_GAME = gql`
-  mutation EndGame($id: ID!, $end: DateTime!, $status: Status) {
-    updateGame(input: { _id: $id, end: $end, status: $status }) {
-      status
-      end
+  mutation UpdateGame(
+    $id: ID!
+    $end: DateTime!
+    $status: Status!
+    $session: ID!
+  ) {
+    updateGame(
+      input: {
+        _id: $id
+        end: $end
+        status: $status
+        session: $session
+      }
+    ) {
       _id
+      end
+      status
     }
   }
 `
@@ -215,9 +228,17 @@ const Page = () => {
       skip: !slug,
       fetchPolicy: "network-only",
     }
-  );
+  )
   const [endSession] = useMutation(END_SESSION);
-  const [endGame] = useMutation(END_GAME);
+  const [endGame] = useMutation(END_GAME, {
+    onCompleted: () => {
+      toast.success("Game ended successfully!");
+      refetchGames();
+    },
+    onError: (error) => {
+      toast.error(`Failed to end game: ${error.message}`);
+    },
+  });
   const router = useRouter();
   const session = data?.fetchSession;
 
@@ -254,6 +275,21 @@ const Page = () => {
   
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       saveAs(blob, `session_${slug}_summary.csv`);
+    }
+
+    const handleEndGame = async (gameId: string) => {
+      try {
+        await endGame({
+          variables: {
+            id: gameId,
+            end: new Date().toISOString(),
+            status: "completed",
+            session: slug,
+          },
+        });
+      } catch (error) {
+        console.error("Error ending game:", error);
+      }
     }
     
     return (
@@ -395,11 +431,7 @@ const Page = () => {
                   ) : (
                     <Button
                       variant="destructive"
-                      onClick={() =>
-                        endGame({
-                          variables: { id: game._id, end: new Date(), status: "completed" },
-                        })
-                      }
+                      onClick={() => handleEndGame(game._id)}
                       className="flex items-center justify-center h-9 w-9 rounded-full"
                     >
                       <CircleStop className="!h-5 !w-5" />

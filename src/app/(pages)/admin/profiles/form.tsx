@@ -82,8 +82,8 @@ export const UserSchema = z.object({
   role: z.enum(["admin", "user"]),
 });
 
-const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
-  const [open, setOpen] = useState<boolean>(false);
+const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: () => void; open?: boolean; onOpenChange?:(open: boolean) => void }) => {
+  // const [open, setOpen] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const { data, loading } = useQuery(FETCH_USER, {
     variables: { id },
@@ -144,15 +144,15 @@ const UserForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
   };
 
   const closeForm = () => {
-    setOpen(false);
-    form.reset();
-    if (refetch) refetch();
-  };
+    if (onOpenChange) onOpenChange(false)
+    form.reset()
+    if (refetch) refetch()
+  }
 
   if (loading) return <Loader2 />;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button className="w-full">{id ? "Edit User" : "Add User"}</Button>
       </SheetTrigger>

@@ -247,7 +247,11 @@ const ShuttleUsedSchema = z.object({
 });
 
 const GameSchema = z.object({
-  players: z.array(z.string().nonempty('Player is required.')),
+        players: z.array(
+          z.string().optional()
+        ).refine(players => players[0] && players[2], {
+          message: "Player A1 and Player B1 are required.",
+        }),
   court: z.string().nonempty('Court is required.'),
   shuttles: z.array(ShuttleUsedSchema).default([]).optional(),
   session: z.string().nonempty('Session is required.'),
@@ -310,18 +314,33 @@ const GameForm = ({
     name: 'shuttles',
   });
 
+  // const getAvailablePlayers = (currentIndex: number) => {
+  //   const selectedPlayers = form.watch('players')
+  //   // const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
+  
+  //   const isGroupA = currentIndex < 2
+  //   const groupStartIndex = isGroupA ? 0 : 2
+  //   const groupEndIndex = groupStartIndex + 2
+  
+  //   return userData?.fetchUsers.filter(
+  //     (user: any) => 
+  //       !selectedPlayers.slice(groupStartIndex, groupEndIndex).includes(user._id) ||
+  //       selectedPlayers[currentIndex] === user._id
+  //   ).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
+  // }
+
   const getAvailablePlayers = (currentIndex: number) => {
-    const selectedPlayers = form.watch('players');
+    const selectedPlayers = form.watch('players')
+    const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
   
     const isGroupA = currentIndex < 2
     const groupStartIndex = isGroupA ? 0 : 2
     const groupEndIndex = groupStartIndex + 2
   
     return userData?.fetchUsers.filter(
-      (user: any) =>
-        !selectedPlayers.slice(groupStartIndex, groupEndIndex).includes(user._id) ||
-        selectedPlayers[currentIndex] === user._id
-    )
+      (user: any) => availablePlayers.includes(user._id) && 
+      (!selectedPlayers.includes(user._id) || selectedPlayers[currentIndex] === user._id)
+).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
   }
 
   useEffect(() => {
@@ -540,8 +559,8 @@ const GameForm = ({
             onSubmit={form.handleSubmit(handleSubmit)}
           >
             {/* Player Selection Section */}
-        <div className="flex flex-row gap-2">
-                <div className="flex flex-col gap-4 flex-1"> 
+            <div className="flex flex-row gap-2">
+                <div className="flex flex-col gap-4 flex-1">
                     {['Player A1', 'Player A2'].map((label, index) => (
                     <FormField
                         key={label}
@@ -554,7 +573,7 @@ const GameForm = ({
                             <select
                                 {...field}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                className="text-sm w-full border border-gray-300 rounded p-3" 
+                                className="text-sm w-full border border-gray-300 rounded p-3"
                                 disabled={isPending}
                             >
                                 <option value="">Select Player</option>
@@ -565,27 +584,28 @@ const GameForm = ({
                                 ))}
                             </select>
                             </FormControl>
-                            <FormMessage />
+                            {/* Only show error for Player A1 */}
+                            {index === 0 && <FormMessage />}
                         </FormItem>
                         )}
                     />
                     ))}
                 </div>
 
-                <div className="flex flex-col gap-4 flex-1 items-end"> 
+                <div className="flex flex-col gap-4 flex-1 items-end">
                     {['Player B1', 'Player B2'].map((label, index) => (
                     <FormField
                         key={label}
                         control={form.control}
-                        name={`players.${index + 2}`} 
+                        name={`players.${index + 2}`}
                         render={({ field }) => (
-                        <FormItem className="w-full text-left"> 
+                        <FormItem className="w-full text-left">
                             <FormLabel>{label}</FormLabel>
                             <FormControl>
                             <select
                                 {...field}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                className="text-sm w-full border border-gray-300 rounded p-3" 
+                                className="text-sm w-full border border-gray-300 rounded p-3"
                                 disabled={isPending}
                             >
                                 <option value="">Select Player</option>
@@ -596,7 +616,8 @@ const GameForm = ({
                                 ))}
                             </select>
                             </FormControl>
-                            <FormMessage />
+                            {/* Only show error for Player B1 */}
+                            {index === 0 && <FormMessage />}
                         </FormItem>
                         )}
                     />

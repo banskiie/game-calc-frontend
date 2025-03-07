@@ -43,6 +43,17 @@ const Page = () => {
     fetchPolicy: "network-only",
   })
 
+  const formatNumberWithCommas = (number: number) => {
+    return number.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
+  // Sort the name to A-Z
+  const sortedPlayerSummaryRates = data?.fetchSessionSummary?.playerSummaryRates ?
+  [...data.fetchSessionSummary.playerSummaryRates].sort((a, b) => a.name.localeCompare(b.name)) : []
+
   // useEffect(() => {
   //   if (data?.fetchSessionSummary) {
   //     exportToCSV(data.fetchSessionSummary)
@@ -85,54 +96,54 @@ const Page = () => {
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
       <div>
-        <span className="block text-muted-foreground">ID</span>
-        <span className="block font-semibold text-muted-foreground">
+        <span className="block font-semibold text-muted-foreground">ID</span>
+        <span className="block font-bold text-muted-foreground">
           {slug}
         </span>
       </div>
       {summary?.durationPerCourt.map((court: any) => (
         <div key={court.court._id}>
-          <span className="block text-muted-foreground">Court Duration</span>
-          <span className="block font-semibold text-muted-foreground">
+          <span className="block font-semibold text-muted-foreground">Court Duration</span>
+          <span className="block font-bold text-muted-foreground">
             {court.court.name} - {court.totalDuration}mins
           </span>
         </div>
       ))}
       <div>
-        <span className="block text-muted-foreground">Shuttles Used</span>
-        <span className="block font-semibold text-muted-foreground">
+        <span className="block font-semibold text-muted-foreground">Shuttles Used</span>
+        <span className="block font-bold text-muted-foreground">
           {summary?.totalShuttlesUsed} shuttles
         </span>
       </div>
       <Separator className="bg-slate-400" />
       <div className="grid grid-cols-2">
         <div>
-          <span className="block text-muted-foreground">Court Total</span>
-          <span className="block font-semibold text-muted-foreground">
-            {summary?.courtTotal.toFixed(2)}
+          <span className="block font-semibold text-muted-foreground">Court Total</span>
+          <span className="block font-bold text-muted-foreground">
+            {formatNumberWithCommas(summary?.courtTotal)}
           </span>
         </div>
         <div>
-          <span className="block text-muted-foreground">Shuttle Total</span>
-          <span className="block font-semibold text-muted-foreground">
-            {summary?.shuttleTotal.toFixed(2)}
+          <span className="block font-semibold text-muted-foreground">Shuttle Total</span>
+          <span className="block font-bold text-muted-foreground">
+          {formatNumberWithCommas(summary?.shuttleTotal)}
           </span>
         </div>
         <div>
-          <span className="block text-muted-foreground">Player Total</span>
-          <span className="block font-semibold text-muted-foreground">
-            {summary?.playerTotal.toFixed(2)}
+          <span className="block font-semibold text-muted-foreground">Player Total</span>
+          <span className="block font-bold text-muted-foreground">
+            {formatNumberWithCommas(summary?.playerTotal)}
           </span>
         </div>
       </div>
 
       <Separator className="bg-slate-400" />
       <div className="grid grid-cols-2">
-        {summary?.playerSummaryRates.map((player: any) => (
+        {sortedPlayerSummaryRates.map((player: any) => (
           <div key={player._id}>
-            <span className="block text-muted-foreground">{player.name}</span>
-            <span className="block font-semibold text-muted-foreground">
-              {player.totalRate.toFixed(2)}
+            <span className="block font-semibold text-muted-foreground">{player.name}</span>
+            <span className="block font-bold text-muted-foreground">
+              {formatNumberWithCommas(player.totalRate)}
             </span>
           </div>
         ))}

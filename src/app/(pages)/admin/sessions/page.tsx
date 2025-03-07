@@ -1,4 +1,5 @@
 "use client"
+import { PlayerSelect } from "@/components/custom/PlayerSelect"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { gql, useLazyQuery, useMutation } from "@apollo/client"
@@ -150,6 +152,15 @@ const FETCH_SHUTTLES = gql`
   }
 `
 
+const FETCH_USERS = gql`
+  query FetchUsers {
+      fetchUsers {
+          _id
+          name
+      }
+  }
+`
+
 // const END_SESSION = gql`
 //   mutation EndSession($id: ID!) {
 //     endSession(_id: $id) {
@@ -167,6 +178,7 @@ const page = () => {
   })
   const [fetchCourts, { data: courtsData }] = useLazyQuery(FETCH_COURTS)
   const [fetchShuttles, { data: shuttlesData }] = useLazyQuery(FETCH_SHUTTLES)
+  const [fetchUsers, { data: usersData}] = useLazyQuery(FETCH_USERS)
   const [startSession, {loading: startLoading}] = useMutation(START_SESSION, {
     onCompleted: () => {
       refetch()
@@ -182,24 +194,41 @@ const page = () => {
   const [open, setOpen] = useState(false)
   const [selectedCourt, setSelectCourt] = useState<string | null>(null)
   const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null)
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const handleOpenModal = async () => {
     setOpen(true)
     await fetchCourts()
     await fetchShuttles()
+    await fetchUsers()
   }
 
+  // const handleCreateSession = async () => {
+  //   if (!selectedCourt || !selectedShuttle) {
+  //     return alert("Please select a court and a shuttle.")
+  //   }
+
+
+  //   await startSession({
+  //     variables: {
+  //       courtId: selectedCourt,
+  //       shuttleId: selectedShuttle,
+  //     },
+  //   })
+  // }
   const handleCreateSession = async () => {
     if (!selectedCourt || !selectedShuttle) {
-      return alert("Please select a court and a shuttle.")
+      return alert("Please select a court and a shuttle.");
     }
-
+  
     await startSession({
       variables: {
         courtId: selectedCourt,
         shuttleId: selectedShuttle,
       },
     })
+  
+    localStorage.setItem("availablePlayers", JSON.stringify(selectedPlayers));
   }
 
   useEffect(() => {
@@ -209,12 +238,21 @@ const page = () => {
     fetchData()
   }, [limit, fetchMore])
 
+  const handlePlayerSelection = (playerId: string) => {
+    setSelectedPlayers((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId) 
+        : [...prev, playerId]
+    )
+  }
+
   if (loading)
     return (
       <div className="flex-1 h-fit flex items-center justify-center">
         <Loader2 className="animate-spin" size={200} />
       </div>
     )
+    
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
@@ -255,7 +293,13 @@ const page = () => {
               ))}
             </SelectContent>
           </Select>
-
+          {/* List of Players in checkboxes */}
+            <PlayerSelect 
+            players = {usersData?.fetchUsers || []}
+            selectedPlayers={selectedPlayers}
+            onSelectPlayer={handlePlayerSelection}
+            />
+          {/* List of Players in checkboxes */}
           <Button className="w-full" onClick={handleCreateSession} disabled={startLoading}>
             {startLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Create Session"}
           </Button>
