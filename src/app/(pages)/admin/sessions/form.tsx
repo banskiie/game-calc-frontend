@@ -14,8 +14,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +22,6 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import ButtonLoader from '@/components/custom/ButtonLoader';
 import { Loader2, Minus, Plus, SquarePen, X } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { format, toZonedTime } from 'date-fns-tz';
 import { parse } from 'date-fns';
 import TimePicker from '@/components/custom/timepicker';
@@ -335,7 +332,7 @@ const GameForm = ({
   
     const isGroupA = currentIndex < 2
     const groupStartIndex = isGroupA ? 0 : 2
-    const groupEndIndex = groupStartIndex + 2
+    // const groupEndIndex = groupStartIndex + 2
   
     return userData?.fetchUsers.filter(
       (user: any) => availablePlayers.includes(user._id) && 
@@ -554,6 +551,7 @@ const GameForm = ({
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
           <form
             className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -839,8 +837,8 @@ const GameForm = ({
              <span className='text-white '> Close </span>      
            </Button>
                 </div>
-            
           </form>
+          </div>
         </Form>
       </SheetContent>
     </Sheet>

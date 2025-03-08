@@ -1,8 +1,7 @@
 "use client"
 import { gql, useQuery } from "@apollo/client"
 import { useParams } from "next/navigation"
-import { useEffect } from "react"
-import { saveAs } from "file-saver"
+// import { saveAs } from "file-saver"
 import { Separator } from "@/components/ui/separator"
 import { Loader2 } from "lucide-react"
 
@@ -60,30 +59,31 @@ const Page = () => {
   //   }
   // }, [data])
 
-  const exportToCSV = (summary: any) => {
-    const today = new Date().toISOString().split("T")[0] 
-    const filename = `session_summary_${today}.csv`
-    let csvContent = "Category,Value\n"
+  // HERE IS COMMENTED
+  // const exportToCSV = (summary: any) => {
+  //   const today = new Date().toISOString().split("T")[0] 
+  //   const filename = `session_summary_${today}.csv`
+  //   let csvContent = "Category,Value\n"
 
-    csvContent += `ID,${slug}\n`
-    csvContent += `Total Shuttles Used,${summary.totalShuttlesUsed}\n`
-    csvContent += `Court Total,${summary.courtTotal.toFixed(2)}\n`
-    csvContent += `Shuttle Total,${summary.shuttleTotal.toFixed(2)}\n`
-    csvContent += `Player Total,${summary.playerTotal.toFixed(2)}\n\n`
+  //   csvContent += `ID,${slug}\n`
+  //   csvContent += `Total Shuttles Used,${summary.totalShuttlesUsed}\n`
+  //   csvContent += `Court Total,${summary.courtTotal.toFixed(2)}\n`
+  //   csvContent += `Shuttle Total,${summary.shuttleTotal.toFixed(2)}\n`
+  //   csvContent += `Player Total,${summary.playerTotal.toFixed(2)}\n\n`
 
-    csvContent += "Court Name,Total Duration (mins)\n"
-    summary.durationPerCourt.forEach((court: any) => {
-      csvContent += `${court.court.name},${court.totalDuration}\n`
-    })
+  //   csvContent += "Court Name,Total Duration (mins)\n"
+  //   summary.durationPerCourt.forEach((court: any) => {
+  //     csvContent += `${court.court.name},${court.totalDuration}\n`
+  //   })
 
-    csvContent += "\nPlayer Name,Total Rate\n"
-    summary.playerSummaryRates.forEach((player: any) => {
-      csvContent += `${player.name},${player.totalRate.toFixed(2)}\n`
-    })
+  //   csvContent += "\nPlayer Name,Total Rate\n"
+  //   summary.playerSummaryRates.forEach((player: any) => {
+  //     csvContent += `${player.name},${player.totalRate.toFixed(2)}\n`
+  //   })
 
-    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" })
-    saveAs(blob, filename)
-  }
+  //   const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" })
+  //   saveAs(blob, filename)
+  // }
 
   if (loading) return <div className="flex-1 h-fit flex items-center justify-center"> <Loader2 className="animate-spin" size={200} /></div>
   if (error) {

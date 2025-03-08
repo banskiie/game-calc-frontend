@@ -1,12 +1,10 @@
 // layouts/Client.tsx
 "use client"
-import React, { use, useEffect, useMemo, useState } from "react"
+import React, { useMemo } from "react"
 import { createApolloClient } from "@/lib/apollo"
 import { ApolloProvider } from "@apollo/client"
 import { signOut, useSession } from "next-auth/react"
-import PageLoader from "@/components/custom/page-loader"
 import { SessionProvider } from "@/hooks/use-requests"
-import { addHours, addMonths } from "date-fns"
 import { Loader2 } from "lucide-react"
 
 const ClientLayout = ({ children }: { children: React.ReactNode }) => {

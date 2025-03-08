@@ -1,22 +1,20 @@
-"use client"
-import { PlayerSelect } from "@/components/custom/PlayerSelect"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+"use client";
+import { PlayerSelect } from "@/components/custom/PlayerSelect";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { gql, useLazyQuery, useMutation } from "@apollo/client"
-import { differenceInMinutes, format } from "date-fns"
-import { Loader2 } from "lucide-react"
-import { signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+} from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { gql, useLazyQuery, useMutation } from "@apollo/client";
+import { differenceInMinutes, format } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 const FETCH_SESSIONS = gql`
   query FetchSessions($limit: Int!) {
@@ -96,26 +94,26 @@ const FETCH_SESSIONS = gql`
             updatedAt
           }
         }
-      },
-    court {
-            _id
-            name
-            price
-            active
-            createdAt
-            updatedAt
-        }
+      }
+      court {
+        _id
+        name
+        price
+        active
+        createdAt
+        updatedAt
+      }
       shuttle {
-            _id
-            name
-            price
-            active
-            createdAt
-            updatedAt
-        }
+        _id
+        name
+        price
+        active
+        createdAt
+        updatedAt
+      }
     }
   }
-`
+`;
 
 const START_SESSION = gql`
   mutation StartSession($courtId: ID!, $shuttleId: ID!) {
@@ -132,7 +130,20 @@ const START_SESSION = gql`
       }
     }
   }
-`
+`;
+
+const ADD_PLAYERS_TO_SESSION = gql`
+  mutation AddPlayersToSession($sessionId: ID!, $playerIds: [ID!]!) {
+    addPlayersToSession(sessionId: $sessionId, playerIds: $playerIds) {
+      _id
+      players {
+        _id
+        name
+      }
+    }
+  }
+`;
+
 const FETCH_COURTS = gql`
   query FetchCourts {
     fetchCourts {
@@ -140,9 +151,8 @@ const FETCH_COURTS = gql`
       name
     }
   }
-`
+`;
 
-// Fetch shuttles
 const FETCH_SHUTTLES = gql`
   query FetchShuttles {
     fetchShuttles {
@@ -150,109 +160,115 @@ const FETCH_SHUTTLES = gql`
       name
     }
   }
-`
+`;
 
 const FETCH_USERS = gql`
   query FetchUsers {
-      fetchUsers {
-          _id
-          name
-      }
+    fetchUsers {
+      _id
+      name
+    }
   }
-`
-
-// const END_SESSION = gql`
-//   mutation EndSession($id: ID!) {
-//     endSession(_id: $id) {
-//       _id
-//     }
-//   }
-// `
+`;
 
 const page = () => {
-  const [limit, setLimit] = useState<number>(5)
+  const [limit, setLimit] = useState<number>(5);
   const [fetchMore, { data, refetch, loading }] = useLazyQuery(FETCH_SESSIONS, {
     onCompleted: (data) => console.log(data),
     variables: { limit },
     onError: (error) => console.log(error),
-  })
-  const [fetchCourts, { data: courtsData }] = useLazyQuery(FETCH_COURTS)
-  const [fetchShuttles, { data: shuttlesData }] = useLazyQuery(FETCH_SHUTTLES)
-  const [fetchUsers, { data: usersData}] = useLazyQuery(FETCH_USERS)
-  const [startSession, {loading: startLoading}] = useMutation(START_SESSION, {
+  });
+  const [fetchCourts, { data: courtsData }] = useLazyQuery(FETCH_COURTS);
+  const [fetchShuttles, { data: shuttlesData }] = useLazyQuery(FETCH_SHUTTLES);
+  const [fetchUsers, { data: usersData, refetch: refetchUsers }] = useLazyQuery(FETCH_USERS);
+  const [startSession, { loading: startLoading }] = useMutation(START_SESSION, {
     onCompleted: () => {
-      refetch()
-      setOpen(false)
-      setSelectCourt(null)
-      setSelectedShuttle(null)
+      refetch();
+      setOpen(false);
+      setSelectCourt(null);
+      setSelectedShuttle(null);
+      setSelectedPlayers([]); // Clear selected players after session creation
     },
     onError: (error) => console.log(error),
-  })
-  const router = useRouter()
-  const sessions = data?.fetchSessions
+  });
+  const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
+    onError: (error) => console.log(error),
+  });
+  const router = useRouter();
+  const sessions = data?.fetchSessions;
 
-  const [open, setOpen] = useState(false)
-  const [selectedCourt, setSelectCourt] = useState<string | null>(null)
-  const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null)
+  const [open, setOpen] = useState(false);
+  const [selectedCourt, setSelectCourt] = useState<string | null>(null);
+  const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const handleOpenModal = async () => {
-    setOpen(true)
-    await fetchCourts()
-    await fetchShuttles()
-    await fetchUsers()
-  }
+    setOpen(true);
+    await fetchCourts();
+    await fetchShuttles();
+    await fetchUsers();
+  };
 
-  // const handleCreateSession = async () => {
-  //   if (!selectedCourt || !selectedShuttle) {
-  //     return alert("Please select a court and a shuttle.")
-  //   }
-
-
-  //   await startSession({
-  //     variables: {
-  //       courtId: selectedCourt,
-  //       shuttleId: selectedShuttle,
-  //     },
-  //   })
-  // }
   const handleCreateSession = async () => {
     if (!selectedCourt || !selectedShuttle) {
       return alert("Please select a court and a shuttle.");
     }
-  
-    await startSession({
+
+    // Step 1: Create the session
+    const sessionResponse = await startSession({
       variables: {
         courtId: selectedCourt,
         shuttleId: selectedShuttle,
       },
-    })
-  
+    });
+
+    const sessionId = sessionResponse.data.startSession._id;
+
+    // Step 2: Add players to the session
+    if (selectedPlayers.length > 0) {
+      await addPlayersToSession({
+        variables: {
+          sessionId,
+          playerIds: selectedPlayers,
+        },
+      });
+    }
+
     localStorage.setItem("availablePlayers", JSON.stringify(selectedPlayers));
-  }
+    refetchUsers(); // Refetch users to ensure the list is up-to-date
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      await fetchMore({ variables: { limit } })
-    }
-    fetchData()
-  }, [limit, fetchMore])
+      await fetchMore({ variables: { limit } });
+    };
+    fetchData();
+  }, [limit, fetchMore]);
 
   const handlePlayerSelection = (playerId: string) => {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId) 
-        : [...prev, playerId]
-    )
-  }
+        ? prev.filter((id) => id !== playerId) // Deselect player
+        : [...prev, playerId] // Select player
+    );
+  };
+
+  // Clear selected players when the dialog is closed
+  const handleDialogClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      setSelectedPlayers([]); // Clear selected players
+      setSelectCourt(null); // Clear selected court
+      setSelectedShuttle(null); // Clear selected shuttle
+    }
+    setOpen(isOpen);
+  };
 
   if (loading)
     return (
       <div className="flex-1 h-fit flex items-center justify-center">
         <Loader2 className="animate-spin" size={200} />
       </div>
-    )
-    
+    );
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
@@ -262,7 +278,7 @@ const page = () => {
         </Button>
       </div>
 
-     <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleDialogClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create a New Session</DialogTitle>
@@ -293,19 +309,20 @@ const page = () => {
               ))}
             </SelectContent>
           </Select>
-          {/* List of Players in checkboxes */}
-            <PlayerSelect 
-            players = {usersData?.fetchUsers || []}
+
+          <PlayerSelect
+            players={usersData?.fetchUsers || []}
             selectedPlayers={selectedPlayers}
             onSelectPlayer={handlePlayerSelection}
-            />
-          {/* List of Players in checkboxes */}
+            refetchUsers={refetchUsers} // Pass refetchUsers to PlayerSelect
+          />
+
           <Button className="w-full" onClick={handleCreateSession} disabled={startLoading}>
             {startLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Create Session"}
           </Button>
         </DialogContent>
       </Dialog>
-      
+
       {sessions?.map((session: any) => (
         <Card
           key={session._id}
@@ -332,13 +349,13 @@ const page = () => {
                   </>
                 )}
               </span>
-              <span> 
+              <span>
                 {format(new Date(session.start), "h:mm a")} to{" "}
                 {session.end ? format(new Date(session.end), "h:mm a") : "TBA"}
               </span>
 
-                  <span className="font-bold"> Court: {session.court?.name || "Unknown"} </span>
-                  <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
+              <span className="font-bold"> Court: {session.court?.name || "Unknown"} </span>
+              <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
               <Badge
                 className={`${
                   session?.end ? "bg-green-900/80" : "bg-blue-600/80"
@@ -353,16 +370,15 @@ const page = () => {
       <Button
         variant="link"
         onClick={() => {
-          setLimit(limit + 5)
-          fetchMore({ variables: { limit } })
+          setLimit(limit + 5);
+          fetchMore({ variables: { limit } });
         }}
         className="font-bold"
       >
         LOAD MORE?
       </Button>
-     
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default page;

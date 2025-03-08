@@ -1,7 +1,6 @@
 "use client"
 import { createContext, useContext, useEffect, useState } from "react"
 import { gql, useQuery } from "@apollo/client"
-import { User } from "@/lib/interfaces"
 import { useSession } from "next-auth/react"
 
 const FETCH_SESSIONS = gql`
@@ -117,7 +116,7 @@ export const SessionProvider = ({
 }: {
   children: React.ReactNode
 }) => {
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
   const [limit, setLimit] = useState<number>(50)
   const [sessions, setSessions] = useState<any[]>([])
   const { data, loading } = useQuery(FETCH_SESSIONS, {

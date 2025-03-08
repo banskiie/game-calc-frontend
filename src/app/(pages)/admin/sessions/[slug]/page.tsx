@@ -2,24 +2,20 @@
 
 import { useRouter, useParams } from "next/navigation"
 import { gql, useMutation, useQuery } from "@apollo/client"
-import { CircleStop, Dice5, FileText, Loader2, MoreVertical } from "lucide-react" // Import MoreVertical
-import drink from "@/assets/drink.png"
+import { CircleStop,  FileText, Loader2 } from "lucide-react" // Import MoreVertical
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Frown } from "lucide-react"
 import GameForm from "../form"
 import { differenceInMinutes, format } from "date-fns"
-import { Separator } from "@/components/ui/separator"
 import ShuttleIcon from "@/assets/svg/shuttle.svg"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import { saveAs } from 'file-saver'
 import { toast } from "sonner"
@@ -242,7 +238,7 @@ const Page = () => {
   const router = useRouter();
   const session = data?.fetchSession;
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   if (loading)
     return (
@@ -259,23 +255,23 @@ const Page = () => {
     ?.flatMap((game: any) => game.shuttlesUsed)
     .reduce((acc: number, shuttle: any) => acc + shuttle.quantity, 0);
   
-    const exportToCSV = () => {
-      let csvContent = "Game ID,Start Time,End Time,Winner,Court,Shuttles Used\n";
+    // const exportToCSV = () => {
+    //   let csvContent = "Game ID,Start Time,End Time,Winner,Court,Shuttles Used\n";
   
-      data.fetchSessionSummary.games.forEach((game: any) => {
-        const shuttles = game.shuttlesUsed
-          .map((s: any) => `${s.shuttle.name} (${s.quantity})`)
-          .join("; ");
+    //   data.fetchSessionSummary.games.forEach((game: any) => {
+    //     const shuttles = game.shuttlesUsed
+    //       .map((s: any) => `${s.shuttle.name} (${s.quantity})`)
+    //       .join("; ");
   
-        csvContent += `${game._id},${game.start},${game.end || "N/A"},${game.winner || "N/A"},${game.court.name},${shuttles}\n`;
-      });
+    //     csvContent += `${game._id},${game.start},${game.end || "N/A"},${game.winner || "N/A"},${game.court.name},${shuttles}\n`;
+    //   });
   
-      csvContent += `\nTotal Shuttles Used:,${data.fetchSessionSummary.totalShuttlesUsed}`;
-      csvContent += `\nTotal Duration:,${data.fetchSessionSummary.totalDuration} minutes`;
+    //   csvContent += `\nTotal Shuttles Used:,${data.fetchSessionSummary.totalShuttlesUsed}`;
+    //   csvContent += `\nTotal Duration:,${data.fetchSessionSummary.totalDuration} minutes`;
   
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      saveAs(blob, `session_${slug}_summary.csv`);
-    }
+    //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    //   saveAs(blob, `session_${slug}_summary.csv`);
+    // }
 
     const handleEndGame = async (gameId: string) => {
       try {

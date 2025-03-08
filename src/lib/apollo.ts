@@ -11,7 +11,7 @@ export const createApolloClient = (token?: string) => {
   const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL;
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
 
-  const cache = new InMemoryCache();
+  // const cache = new InMemoryCache();
 
   if (!graphqlUrl) {
     throw new Error("The GraphQL URL is not defined.");

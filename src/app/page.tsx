@@ -51,7 +51,7 @@ const Home = () => {
         const accessToken = (session as any)?.accessToken;
   
         if (user && accessToken) {
-          const client = createApolloClient(accessToken);
+          // const client = createApolloClient(accessToken);
   
           switch (user.role) {
             case "admin":

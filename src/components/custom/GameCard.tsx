@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import ShuttleIcon from "@/assets/svg/shuttle.svg"
-import drink from "@/assets/drink.png"
 import { FileText } from "lucide-react"
 import GameForm from "@/app/(pages)/admin/sessions/form"
 
@@ -19,7 +18,7 @@ interface GameCardProps {
   totalGames: number
 }
 
-const GameCard = ({ game, refetchGames, sessionId, onEndGame, onViewSummary, onViewBets, gameNumber, totalGames  }: GameCardProps) => {
+const GameCard = ({ game, refetchGames, sessionId, onEndGame, onViewSummary, gameNumber, totalGames  }: GameCardProps) => {
   const descendingGameNumber = totalGames - gameNumber + 1
   return (
   <Card key={game._id} className="mb-4">

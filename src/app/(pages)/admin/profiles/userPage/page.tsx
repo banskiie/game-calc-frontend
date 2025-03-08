@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { gql, useLazyQuery, useMutation } from "@apollo/client";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2, Search, Settings } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import UserForm from "../form";
 import {
@@ -24,10 +24,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
+import { Sponsor, SponsorSelect } from "@/components/custom/SponsorSelect";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
 
 const FETCH_USERS = gql`
   query FetchUsers {
@@ -42,6 +41,10 @@ const FETCH_USERS = gql`
         _id
         name
       }
+      sponsoredBy {
+        _id
+        name
+      }
       createdAt
       updatedAt
     }
@@ -49,102 +52,46 @@ const FETCH_USERS = gql`
 `;
 
 const UPDATE_USER_SPONSORS = gql`
-mutation UpdateUserSponsors($input: UpdateUserSponsorsInput!) {
-  updateUserSponsors(input: $input) {
-    _id
-    name
-    sponsors {
+  mutation UpdateUserSponsors($input: UpdateUserSponsorsInput!) {
+    updateUserSponsors(input: $input) {
       _id
       name
+      sponsors {
+        _id
+        name
+      }
+      sponsoredBy {
+        _id
+        name
+      }
     }
   }
-}`
+`;
 
-// SponsorSelect Component
-interface Sponsor {
-  _id: string;
-  name: string;
-}
+const CREATE_USER = gql`
+  mutation CreateUser($input: UserInput!) {
+    createUser(input: $input) {
+      _id
+      name
+      role
+    }
+  }
+`;
 
-interface SponsorSelectProps {
-  sponsors: Sponsor[];
-  selectSponsors: string[];
-  onSelectSponsor: (playerId: string) => void;
-}
-
-export const SponsorSelect: React.FC<SponsorSelectProps> = ({
-  sponsors,
-  selectSponsors,
-  onSelectSponsor,
-}) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const selectedSponsorNames =
-    selectSponsors
-      .map((id) => sponsors.find((p) => p._id === id)?.name)
-      .filter(Boolean)
-      .join(", ") || "Search Sponsors...";
-
-  const filteredSponsors = sponsors.filter((player) =>
-    player.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  return (
-    <Select>
-      <SelectTrigger className="truncate">
-        <div className="truncate">
-          {selectSponsors.length
-            ? selectSponsors
-                .map((id) => sponsors.find((p) => p._id === id)?.name)
-                .join(", ")
-            : "Select Sponsors"}
-        </div>
-      </SelectTrigger> 
-      <SelectContent>
-        <div className="p-2">
-          <Input
-            placeholder={selectedSponsorNames}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 bg-white px-1"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-        {filteredSponsors.map((player) => (
-          <div key={player._id} className="flex items-center gap-2 p-2">
-            <Checkbox
-              id={player._id}
-              checked={selectSponsors.includes(player._id)}
-              onCheckedChange={() => onSelectSponsor(player._id)}
-            />
-            <label htmlFor={player._id} className="text-sm">
-              {player.name}
-            </label>
-          </div>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-};
-
-// Main Page Component
 const Page = () => {
   const [fetchMore, { data, refetch, loading }] = useLazyQuery(FETCH_USERS, {
     onCompleted: (data) => console.log("Fetched users:", data),
     onError: (error) => console.error("Error fetching users:", error),
   });
   const [updateUserSponsors] = useMutation(UPDATE_USER_SPONSORS);
+  const [createUser] = useMutation(CREATE_USER);
   const users = data?.fetchUsers;
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState<boolean>(false);
   const [isSponsorDialogOpen, setIsSponsorDialogOpen] = useState<boolean>(false);
   const [selectedSponsors, setSelectedSponsors] = useState<string[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,13 +100,25 @@ const Page = () => {
     fetchData();
   }, [fetchMore]);
 
+  useEffect(() => {
+    if (users) {
+      setSponsors(users);
+    }
+  }, [users]);
+
+  const filteredUsers = users?.filter((user: any) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleEditClick = (user: any) => {
     setSelectedUser(user);
     setIsEditFormOpen(true);
   };
 
-  const handleAddSponsorClick = (user: any) => {
-    setSelectedUser(user); // Set the selected user when "Add Sponsors" is clicked
+  const handleAddSponsorClick = async (user: any) => {
+    setSelectedUser(user);
+    // Safely handle null/undefined sponsors
+    setSelectedSponsors(user.sponsors?.map((sponsor: any) => sponsor._id) ?? []);
     setIsSponsorDialogOpen(true);
   };
 
@@ -171,15 +130,36 @@ const Page = () => {
     );
   };
 
+  const handleCreateSponsor = async (name: string) => {
+    try {
+      const response = await createUser({
+        variables: {
+          input: {
+            name: name,
+            role: "user",
+          },
+        },
+      });
+
+      if (response.data?.createUser) {
+        const newSponsor = response.data.createUser;
+        setSponsors((prev) => [...prev, newSponsor]);
+        setSelectedSponsors((prev) => [...prev, newSponsor._id]);
+        toast.success("Sponsor created successfully!");
+        return newSponsor._id;
+      }
+    } catch (error) {
+      toast.error("Failed to create sponsor. Please try again.");
+      return null;
+    }
+  };
+
   const handleAddSponsor = async () => {
-    if (!selectedUser || selectedSponsors.length === 0) {
-      console.error("Please select a user and at least one sponsor.")
+    if (!selectedUser) {
+      toast.error("Please select a user.");
       return;
     }
-  
-    console.log("Selected User ID:", selectedUser._id);
-    console.log("Selected Sponsors:", selectedSponsors);
-  
+
     try {
       const response = await updateUserSponsors({
         variables: {
@@ -189,18 +169,18 @@ const Page = () => {
           },
         },
       });
-  
+
       if (response.data?.updateUserSponsors) {
-        console.log("Sponsors added successfully!");
+        toast.success("Sponsors updated successfully!");
         setIsSponsorDialogOpen(false);
         setSelectedSponsors([]);
-        refetch();
+        refetch(); // Refetch data to update the UI
       }
     } catch (error) {
       console.error("Error adding sponsors:", error);
-      console.error("Failed to add sponsors. Please try again.");
+      toast.error("Failed to update sponsors. Please try again.");
     }
-  }
+  };
 
   if (loading)
     return (
@@ -214,7 +194,20 @@ const Page = () => {
       <div className="sticky top-0 w-full p-2">
         <UserForm refetch={refetch} />
       </div>
-      {users?.map((user: any) => (
+
+      <div className="sticky top-16 w-full p-2 bg-white z-10">
+        <div className="relative">
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e: any) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+        </div>
+      </div>
+
+      {filteredUsers?.map((user: any) => (
         <Card key={user._id} className="mx-2">
           <CardHeader className="flex flex-row justify-between items-center">
             <div>
@@ -224,11 +217,19 @@ const Page = () => {
                   <span className="font-semibold">Contact No: </span>
                   <span>{user.contact}</span>
                 </span>
-                {user.sponsors && user.sponsors.length > 0 && (
+                {user.sponsors?.length > 0 && (
                   <span>
                     <span className="font-semibold">Sponsors: </span>
                     <span>
                       {user.sponsors.map((sponsor: any) => sponsor.name).join(", ")}
+                    </span>
+                  </span>
+                )}
+                {user.sponsoredBy?.length > 0 && (
+                  <span>
+                    <span className="font-semibold">Sponsored By: </span>
+                    <span>
+                      {user.sponsoredBy.map((sponsor: any) => sponsor.name).join(", ")}
                     </span>
                   </span>
                 )}
@@ -252,6 +253,7 @@ const Page = () => {
           </CardHeader>
         </Card>
       ))}
+
       <Button
         variant="link"
         onClick={() => {
@@ -262,7 +264,6 @@ const Page = () => {
         LOAD MORE?
       </Button>
 
-      {/* Edit User Form */}
       {selectedUser && (
         <UserForm
           id={selectedUser._id}
@@ -272,7 +273,6 @@ const Page = () => {
         />
       )}
 
-      {/* Sponsor Dialog */}
       <Dialog open={isSponsorDialogOpen} onOpenChange={setIsSponsorDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -287,9 +287,11 @@ const Page = () => {
             </DialogDescription>
           </DialogHeader>
           <SponsorSelect
-            sponsors={users || []}
-            selectSponsors={selectedSponsors}
+            sponsors={sponsors}
+            selectedSponsors={selectedSponsors}
+            setSelectedSponsors={setSelectedSponsors}
             onSelectSponsor={handleSelectSponsor}
+            onCreateSponsor={handleCreateSponsor}
           />
           <DialogFooter>
             <Button

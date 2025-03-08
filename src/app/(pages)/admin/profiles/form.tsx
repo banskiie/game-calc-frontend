@@ -19,7 +19,7 @@ import {
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ButtonLoader from "@/components/custom/ButtonLoader";
@@ -135,9 +135,9 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
 
         if (response) {
           closeForm();
-          toast.success(id ? "User updated successfully!" : "User created successfully!");
+          toast.success("User created successfully!");
         }
-      } catch (error) {
+      } catch (err) {
         toast.error("Failed to submit user. Please try again.");
       }
     });
@@ -154,11 +154,11 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button className="w-full">{id ? "Edit User" : "Add User"}</Button>
+        <Button className="w-full">{"Add User"}</Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="w-screen max-h-screen flex flex-col">
         <SheetHeader>
-          <SheetTitle>{id ? "Edit User" : "Add User"}</SheetTitle>
+          <SheetTitle>{"Add User"}</SheetTitle>
           <SheetDescription>Please fill up the necessary information below.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
