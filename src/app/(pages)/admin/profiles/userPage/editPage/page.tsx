@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation"; 
 
 const FETCH_USER = gql`
   query FetchUser($id: ID!) {
