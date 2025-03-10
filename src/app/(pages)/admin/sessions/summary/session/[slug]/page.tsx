@@ -41,7 +41,10 @@ const Page = () => {
     variables: { id: slug },
     fetchPolicy: "network-only",
   })
-
+  if (data) {
+    console.log("Fetched User Data:", data.fetchSessionSummary)
+  }
+  
   const formatNumberWithCommas = (number: number) => {
     return number.toLocaleString(undefined, {
       minimumFractionDigits: 2,
