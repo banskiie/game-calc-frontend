@@ -16,8 +16,8 @@ import { differenceInMinutes, format } from "date-fns"
 import ShuttleIcon from "@/assets/svg/shuttle.svg"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { saveAs } from 'file-saver'
+// import { useState } from "react"
+// import { saveAs } from 'file-saver'
 import { toast } from "sonner"
 
 const FETCH_SESSION = gql`

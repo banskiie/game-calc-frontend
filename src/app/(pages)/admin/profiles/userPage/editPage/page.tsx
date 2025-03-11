@@ -8,8 +8,22 @@ import { useSession } from "next-auth/react";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation"
 
+declare module "next-auth" {
+  interface User {
+    _id?: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    role?: string;
+    username?: string;
+  }
+
+  interface Session {
+    user?: User;
+  }
+}
 const FETCH_USER = gql`
   query FetchUser($id: ID!) {
     fetchUser(_id: $id) {
@@ -45,7 +59,7 @@ const EditUserPage = ({ params }: { params: { id: string } }) => {
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [role, setRole] = useState("user");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  // const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   const firstLetterName = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "N/A";

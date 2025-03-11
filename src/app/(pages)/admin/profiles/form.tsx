@@ -35,6 +35,7 @@ const FETCH_USER = gql`
       password
       username
       role
+      pin
       active
       createdAt
       updatedAt
@@ -51,6 +52,7 @@ const CREATE_USER = gql`
       password
       username
       role
+      pin
       active
       createdAt
       updatedAt
@@ -67,6 +69,7 @@ const UPDATE_USER = gql`
       password
       username
       role
+      pin
       active
       createdAt
       updatedAt
@@ -80,7 +83,10 @@ export const UserSchema = z.object({
   password: z.string().optional(),
   username: z.string(),
   role: z.enum(["admin", "user"]),
-});
+  pin: z.string().optional().refine((val) => !val || /^\d{4}$/.test(val), {
+    message: "PIN must be exactly 4 digits and contain only numbers.",
+  }),
+})
 
 const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: () => void; open?: boolean; onOpenChange?:(open: boolean) => void }) => {
   // const [open, setOpen] = useState<boolean>(false);
@@ -101,12 +107,13 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
       password: "",
       username: "",
       role: "user",
+      pin: "",
     },
-  });
+  })
 
   useEffect(() => {
     if (data) {
-      const { password, ...userDataWithoutPassword } = data?.fetchUser
+      const { ...userDataWithoutPassword } = data?.fetchUser
       form.reset(userDataWithoutPassword)
     }
   }, [data, form])
@@ -116,7 +123,7 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
       try {
 
         if (id && !values.password){
-          const { password, ...updatedValues } = values
+          const { ...updatedValues } = values
           values = updatedValues
         }
 
@@ -134,11 +141,11 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
             });
 
         if (response) {
-          closeForm();
-          toast.success("User created successfully!");
+          toast.success("User created successfully!")
+          closeForm()
         }
       } catch (err) {
-        toast.error("Failed to submit user. Please try again.");
+        console.error("Failed to submit user. Please try again.", err);
       }
     });
   };
@@ -156,9 +163,9 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
       <SheetTrigger asChild>
         <Button className="w-full">{"Add User"}</Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="w-screen max-h-screen flex flex-col">
+      <SheetContent side="bottom" className=" !max-w-xl mx-auto w-full overflow-auto max-h-screen flex flex-col">
         <SheetHeader>
-          <SheetTitle>{"Add User"}</SheetTitle>
+          <SheetTitle>{id? "Edit User" : "Add User"}</SheetTitle>
           <SheetDescription>Please fill up the necessary information below.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -198,7 +205,30 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
                 )}
               />
             )}
-
+           {/* PIN (4-digit number only) */}
+           {id && (
+            <FormField
+              control={form.control}
+              name="pin"
+              render={({ field }) => (
+                <FormItem className="mt-5">
+                  <FormLabel>PIN</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      maxLength={4}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      disabled={isPending}
+                      className="text-sm"
+                      placeholder="4-digit PIN"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+           )}
             {/* Username */}
             {id && (
               <FormField

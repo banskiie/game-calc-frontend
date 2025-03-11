@@ -129,7 +129,7 @@ export const SponsorSelect = ({
                 onClick={handleCreateNewSponsor}
               >
                 <span className="text-sm text-blue-600">
-                  + Create "{searchQuery}"
+                + Create &quot;{searchQuery}&quot;
                 </span>
               </div>
             )}

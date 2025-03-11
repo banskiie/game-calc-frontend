@@ -1,7 +1,7 @@
 "use client"
 import { createContext, useContext, useEffect, useState } from "react"
 import { gql, useQuery } from "@apollo/client"
-import { useSession } from "next-auth/react"
+// import { useSession } from "next-auth/react"
 
 const FETCH_SESSIONS = gql`
   query FetchSessions($limit: Int!) {

@@ -81,7 +81,7 @@ const SummaryHistoryPage = () => {
         {Object.entries(groupedFiles).map(([date, files]) => (
           <div key={date}>
             <h2 className="text-xl font-bold mb-4">{formatDate(date)}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 gap-6 mb-8">
               {files.map((file, index) => (
                 <Card key={index}>
                   <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">

@@ -149,7 +149,7 @@ const Page = () => {
         return newSponsor._id;
       }
     } catch (error) {
-      toast.error("Failed to create sponsor. Please try again.");
+      console.error("Failed to create sponsor. Please try again.", error);
       return null;
     }
   };
@@ -192,14 +192,29 @@ const Page = () => {
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2">
       <div className="sticky top-0 w-full p-2">
-        <UserForm refetch={refetch} />
+           {selectedUser && selectedUser._id ? (
+        <UserForm
+          id={selectedUser._id}
+          refetch={refetch}
+          open={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen}
+        />
+      ):
+      (
+          <UserForm
+          refetch={refetch}
+          open={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen} 
+          />
+      )}
+
       </div>
 
-      <div className="sticky top-16 w-full p-2 bg-white z-10">
+      <div className="sticky top-11 w-full p-2 bg-white z-10">
         <div className="relative">
           <Input
             placeholder="Search users..."
-            value={searchQuery}
+            value={searchQuery ?? ""}
             onChange={(e: any) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
@@ -213,27 +228,29 @@ const Page = () => {
             <div>
               <CardTitle>{user.name}</CardTitle>
               <CardDescription className="flex flex-col gap-1">
-                <span>
-                  <span className="font-semibold">Contact No: </span>
-                  <span>{user.contact}</span>
-                </span>
-                {user.sponsors?.length > 0 && (
-                  <span>
-                    <span className="font-semibold">Sponsors: </span>
+                  <div className="flex flex-col mt-2">
                     <span>
-                      {user.sponsors.map((sponsor: any) => sponsor.name).join(", ")}
+                      <span className="font-semibold">Contact No: </span>
+                      <span>{user.contact}</span>
                     </span>
-                  </span>
-                )}
-                {user.sponsoredBy?.length > 0 && (
-                  <span>
-                    <span className="font-semibold">Sponsored By: </span>
-                    <span>
-                      {user.sponsoredBy.map((sponsor: any) => sponsor.name).join(", ")}
-                    </span>
-                  </span>
-                )}
-              </CardDescription>
+                    {user.sponsors?.length > 0 && (
+                      <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 text-black font-bold p-2 rounded-lg shadow-lg border border-yellow-400 tracking-wider">
+                        <span className="font-semibold">Sponsors: </span>
+                        <span>
+                          {user.sponsors.map((sponsor: any) => sponsor.name).join(", ")}
+                        </span>
+                      </span>
+                    )}
+                    {user.sponsoredBy?.length > 0 && (
+                      <span className="bg-gradient-to-r from-yellow-200 to-yellow-400 text-black font-semibold p-2 rounded-lg shadow-md tracking-wider">
+                        <span className="font-semibold">Sponsored By: </span>
+                        <span>
+                          {user.sponsoredBy.map((sponsor: any) => sponsor.name).join(", ")}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </CardDescription>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -264,15 +281,7 @@ const Page = () => {
         LOAD MORE?
       </Button>
 
-      {selectedUser && (
-        <UserForm
-          id={selectedUser._id}
-          refetch={refetch}
-          open={isEditFormOpen}
-          onOpenChange={setIsEditFormOpen}
-        />
-      )}
-
+     
       <Dialog open={isSponsorDialogOpen} onOpenChange={setIsSponsorDialogOpen}>
         <DialogContent>
           <DialogHeader>

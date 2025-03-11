@@ -160,7 +160,7 @@
 
 import { Select, SelectTrigger, SelectValue, SelectContent } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, forwardRef, useEffect } from "react";
+import { useState, forwardRef, useEffect, useImperativeHandle  } from "react";
 import { Input } from "../ui/input";
 import { X } from "lucide-react";
 import { useMutation, gql } from "@apollo/client";
@@ -191,6 +191,9 @@ export const PlayerSelect = forwardRef<
   { handleAddPlayer: () => Promise<string | null> },
   PlayerSelectProps
 >(({ players: initialPlayers, selectedPlayers, onSelectPlayer, refetchUsers }, ref) => {
+  useImperativeHandle(ref, () => ({
+    handleAddPlayer: () => handleAddPlayer(),
+  }))
   const [searchQuery, setSearchQuery] = useState("");
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
 

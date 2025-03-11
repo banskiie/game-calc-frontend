@@ -201,6 +201,13 @@ const page = () => {
   const [selectedCourt, setSelectCourt] = useState<string | null>(null);
   const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null)
+  
+
+  const handleCardClick = (sessionId: string) => {
+    setLoadingSessionId(sessionId)
+    router.push("/admin/sessions/" + sessionId)  
+  }
 
   const handleOpenModal = async () => {
     setOpen(true);
@@ -326,9 +333,14 @@ const page = () => {
       {sessions?.map((session: any) => (
         <Card
           key={session._id}
-          onClick={() => router.push("/admin/sessions/" + session._id)}
+          onClick={() => handleCardClick(session._id) }
           className="mx-2"
         >
+          {loadingSessionId === session._id && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+              <Loader2 className="animate-spin" size={40} />
+            </div>
+          )}
           <CardHeader>
             <CardTitle>
               {format(new Date(session.start), "MMMM d, yyyy")}

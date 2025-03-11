@@ -330,8 +330,8 @@ const GameForm = ({
     const selectedPlayers = form.watch('players')
     const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
   
-    const isGroupA = currentIndex < 2
-    const groupStartIndex = isGroupA ? 0 : 2
+    // const isGroupA = currentIndex < 2
+    // const groupStartIndex = isGroupA ? 0 : 2
     // const groupEndIndex = groupStartIndex + 2
   
     return userData?.fetchUsers.filter(
@@ -542,8 +542,9 @@ const GameForm = ({
       <SheetContent
         side="bottom"
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="w-screen max-h-[calc(100vh-100px)] flex flex-col overflow-auto"
+        className=" !max-w-xl mx-auto w-full flex flex-col overflow-auto"
       >
+        <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', padding: '0 16px' }}>
         <SheetHeader>
           <SheetTitle>{id ? 'Update Game' : 'Add Game'}</SheetTitle>
           <SheetDescription>
@@ -551,7 +552,7 @@ const GameForm = ({
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+       
           <form
             className="flex-1 overflow-auto px-1 -mx-1 flex flex-col gap-1"
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -838,8 +839,8 @@ const GameForm = ({
            </Button>
                 </div>
           </form>
-          </div>
         </Form>
+        </div>
       </SheetContent>
     </Sheet>
   );

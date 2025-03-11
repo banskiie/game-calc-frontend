@@ -1,8 +1,8 @@
 "use client"
 import { signOut, useSession } from "next-auth/react"
 import React, { useEffect, useState } from "react"
-import { Users, History, Gamepad2, LogOut, ChevronRight, Pencil, Loader2, ScrollText } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Users, LogOut, ChevronRight, Pencil, Loader2, ScrollText } from "lucide-react"
+// import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { gql, useQuery } from "@apollo/client"
 
@@ -21,7 +21,7 @@ const FETCH_USER = gql`
 
 const Page = () => {
   const { data: session } = useSession()
-  const router = useRouter()
+  // const router = useRouter()
   const [userData, setUserData] = useState<any>(null)
 
   const { data, loading } = useQuery(FETCH_USER, {

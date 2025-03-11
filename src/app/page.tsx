@@ -173,7 +173,7 @@ import ButtonLoader from "@/components/custom/ButtonLoader";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useTransition, useState, useRef, useEffect } from "react";
+import { useTransition, useState, useRef, useEffect, useCallback } from "react";
 import { LoginWithPinSchema } from "@/lib/schemas";
 import { getSession, signIn } from "next-auth/react";
 import Image from "next/image";
@@ -217,7 +217,7 @@ const Home = () => {
   };
 
   // Submit the form
-  const onSubmit = () => {
+  const onSubmit = useCallback(() => {
     const enteredPin = pin.join("");
     form.setValue("pin", enteredPin);
 
@@ -250,14 +250,14 @@ const Home = () => {
         form.setError("pin", { type: "custom", message: "Invalid PIN." });
       }
     });
-  };
+  }, [pin, form, router]);
 
   // Auto-submit when PIN is complete
   useEffect(() => {
     if (pin.every((digit) => digit !== "")) {
       onSubmit();
     }
-  }, [pin]);
+  }, [pin, onSubmit])
 
   return (
     <div className="h-screen w-screen flex justify-center items-center bg-gray-50">
@@ -276,7 +276,7 @@ const Home = () => {
             <FormField
               control={form.control}
               name="pin"
-              render={({ field }) => (
+              render={() => (
                 <FormItem className="relative mb-8">
                   <FormControl>
                     <div className="flex justify-center space-x-4">
