@@ -283,7 +283,14 @@ const Page = () => {
       return newSelection;
     });
   };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch(); // Refetch session data
+      refetchGames(); // Refetch game data
+    }, 60000); // Refetch every 60 seconds (adjust the interval as needed)
 
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, [refetch, refetchGames])
   // const handleAddPlayers = async () => {
   //   if (selectedPlayers.length > 0) {
   //     await addPlayersToSession({

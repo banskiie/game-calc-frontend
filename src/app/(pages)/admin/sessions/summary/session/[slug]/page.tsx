@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import html2canvas from "html2canvas";
 
 const FETCH_SUMMARY = gql`
   query FetchSummary($id: ID!) {
@@ -102,6 +103,62 @@ const Page = () => {
     fetchPolicy: "network-only",
   });
 
+  // Kani mag display sa error na base64 style pero working sya
+  // const handleScreenshot = () => {
+  //   const tableElement = document.getElementById("game-summary-table");
+  //   if (tableElement) {
+  //     html2canvas(tableElement).then((canvas) => {
+  //       const link = document.createElement("a");
+  //       link.download = "game-summary.png";
+  //       link.href = canvas.toDataURL();
+  //       link.click();
+  //     });
+  //   }
+  // }
+
+  const handleScreenshot = () => {
+    const sessionSummaryTime = document.getElementById('session-summary-time')
+    const gameSummaryTable = document.getElementById('game-summary-table')
+  
+    if (sessionSummaryTime && gameSummaryTable) {
+      const tempContainer = document.createElement('div')
+      tempContainer.style.position = 'absolute'
+      tempContainer.style.left = '-9999px'
+      document.body.appendChild(tempContainer)
+  
+      const clonedSessionSummaryTime = sessionSummaryTime.cloneNode(true);
+      const clonedGameSummaryTable = gameSummaryTable.cloneNode(true);
+  
+      tempContainer.appendChild(clonedSessionSummaryTime)
+      tempContainer.appendChild(clonedGameSummaryTable)
+  
+      html2canvas(tempContainer).then((canvas) => {
+        const sessionDate = formatDate(summary?.session?.start).replace(/\//g, '-')
+        const courtDuration = summary?.durationPerCourt
+          .map((court: any) => `${court.court.name} - ${court.totalDuration} mins`)
+          .join(', ');
+        const shuttleDuration = summary?.totalShuttlesUsed
+        const filename = `Game_Summary_${sessionDate}_Court_${courtDuration}_Shuttle_${shuttleDuration}.png`
+  
+        canvas.toBlob((blob: any) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a')
+          link.href = url
+          link.download = filename
+          link.style.display = 'none'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url); 
+        }, 'image/png')
+      }).catch((error) => {
+        console.error('Error capturing screenshot:', error)
+      }).finally(() => {
+        tempContainer.remove()
+      })
+    }
+  }
+  
   if (data) {
     console.log("Fetched User Data:", data.fetchSessionSummary);
   }
@@ -167,7 +224,7 @@ const Page = () => {
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
-      <div className="flex flex-wrap gap-4 justify-between mb-4 mt-4">
+      <div className="flex flex-wrap gap-4 justify-between mb-4 mt-4" id="session-summary-time">
         <Card className="shadow-md border flex-1 min-w-[200px]">
           <CardHeader>
             <CardTitle className="text-center text-lg font-bold">
@@ -209,72 +266,70 @@ const Page = () => {
       <Separator className="bg-slate-400" />
 
       {/* Game Summary Table */}
-      <Table className="border mb-2 mt-2">
-        <TableHeader>
-          <TableRow>
-            <TableHead
-              colSpan={3}
-              className="text-center text-lg font-bold bg-white text-black"
-            >
-              Game Summary
-            </TableHead>
-          </TableRow>
-
-          <TableRow className="bg-gray-100">
-            <TableHead className="border font-bold">Category</TableHead>
-            <TableHead className="border font-bold">Quantity</TableHead>
-            <TableHead className="border font-bold">Total</TableHead>
-          </TableRow>
-        </TableHeader>
-
+      <div id="game-summary-table">
+        <Table className="border mb-2 mt-2">
         <TableBody>
-          {/* Court Total */}
-          <TableRow className="bg-white">
-            <TableCell className="font-semibold border py-2">
-              Court Total
-            </TableCell>
-            <TableCell className="font-bold border"></TableCell>
-            <TableCell className="font-bold border">
-              {formatNumberWithCommas(summary?.courtTotal)}
-            </TableCell>
-          </TableRow>
+  {/* Court Total */}
+  <TableRow className="bg-white">
+    <TableCell className="font-semibold border py-2">
+      Court Total
+    </TableCell>
+    <TableCell className="font-bold border"></TableCell>
+    <TableCell className="font-bold border">
+      {formatNumberWithCommas(summary?.courtTotal)}
+    </TableCell>
+  </TableRow>
 
-          {/* Shuttle Details */}
-          {summary?.shuttleDetails.map((shuttle: any, index: number) => (
-            <TableRow
-              key={index}
-              className={(index + 1) % 2 === 0 ? "bg-gray-50" : "bg-white"}
-            >
-              <TableCell className="font-semibold border">
-                {shuttle.shuttleName}
-              </TableCell>
-              <TableCell className="font-bold border">
-                {shuttle.quantity} pcs
-              </TableCell>
-              <TableCell className="font-bold border">
-                {formatNumberWithCommas(shuttle.totalPrice)}
-              </TableCell>
-            </TableRow>
-          ))}
+  {/* Shuttle Details */}
+  {summary?.shuttleDetails.map((shuttle: any, index: number) => (
+    <TableRow
+      key={index}
+      className={(index + 1) % 2 === 0 ? "bg-gray-50" : "bg-white"}
+    >
+      <TableCell className="font-semibold border">
+        {shuttle.shuttleName}
+      </TableCell>
+      <TableCell className="font-bold border">
+        {shuttle.quantity} pcs
+      </TableCell>
+      <TableCell className="font-bold border">
+        {formatNumberWithCommas(shuttle.totalPrice)}
+      </TableCell>
+    </TableRow>
+  ))}
 
-          {/* Shuttle Total */}
-          <TableRow
-            className={
-              (summary?.shuttleDetails.length + 1) % 2 === 0
-                ? "bg-gray-50"
-                : "bg-white"
-            }
-          >
-            <TableCell className="font-semibold border">
-              Shuttle Total
-            </TableCell>
-            <TableCell className="font-bold border"></TableCell>
-            <TableCell className="font-bold border">
-              {formatNumberWithCommas(summary?.shuttleTotal)}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+  {/* Shuttle Total */}
+  <TableRow
+    className={
+      (summary?.shuttleDetails.length + 1) % 2 === 0
+        ? "bg-gray-50"
+        : "bg-white"
+    }
+  >
+    <TableCell className="font-semibold border">
+      Shuttle Total
+    </TableCell>
+    <TableCell className="font-bold border"></TableCell>
+    <TableCell className="font-bold border">
+      {formatNumberWithCommas(summary?.shuttleTotal)}
+    </TableCell>
+  </TableRow>
+
+  {/* Overall Total */}
+  <TableRow className="bg-gray-100">
+    <TableCell className="font-semibold border">
+      Overall Total
+    </TableCell>
+    <TableCell className="font-bold border"></TableCell>
+    <TableCell className="font-bold border">
+      {formatNumberWithCommas(
+        (summary?.courtTotal || 0) + (summary?.shuttleTotal || 0)
+      )}
+    </TableCell>
+  </TableRow>
+</TableBody>
+        </Table>
+      </div>
       <Separator className="bg-slate-400" />
 
       {/* Player Summary Table */}
@@ -340,6 +395,10 @@ const Page = () => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <button onClick={handleScreenshot} className="mt-4 p-2 bg-blue-500 text-white rounded">
+  Capture Game Summary
+</button>
     </div>
   );
 };

@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/sheet';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect, useState, useTransition } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import React, { useEffect, useRef, useState, useTransition } from 'react';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import ButtonLoader from '@/components/custom/ButtonLoader';
 import { Loader2, Minus, Plus, SquarePen, X } from 'lucide-react';
@@ -283,7 +283,8 @@ const GameForm = ({
   const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS);
   const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS);
   const { data: shuttleData, loading: shuttlesLoading } = useQuery(FETCH_SHUTTLES);
-  const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME);
+  const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME)
+  const prevStartTime = useRef<string | null>(null)
   const form = useForm<z.infer<typeof GameSchema>>({
     resolver: zodResolver(GameSchema),
     values: {
@@ -325,7 +326,25 @@ const GameForm = ({
   //       selectedPlayers[currentIndex] === user._id
   //   ).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
   // }
+  useEffect(() => {
+    if (open) {
+      refetchSession().then(() => {
+        const games = sessionData?.fetchSession?.games || [];
+        const lastGame = games[games.length - 1];
 
+        let newStart = '05:00 PM';
+        if (lastGame?.end) {
+          const lastEnd = new Date(lastGame.end);
+          lastEnd.setMinutes(lastEnd.getMinutes() + 1);
+          newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
+        }
+
+        form.setValue('start', newStart);
+        form.setValue('end', '00:00 PM');
+      });
+    }
+  }, [open, refetchSession, sessionData, form])
+  
   const getAvailablePlayers = (currentIndex: number) => {
     const selectedPlayers = form.watch('players')
     const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
@@ -339,6 +358,25 @@ const GameForm = ({
       (!selectedPlayers.includes(user._id) || selectedPlayers[currentIndex] === user._id)
 ).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
   }
+
+  const startTime = useWatch({ control: form.control, name: 'start' })
+
+  useEffect(() => {
+    if (!startTime || startTime === prevStartTime.current) return;
+    const timeParts = startTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+    if (timeParts) {
+      const hour = timeParts[1]; // Extract hour
+      const ampm = timeParts[3]; // Extract AM/PM
+  
+      // Keep the minutes unchanged, or default to ":00"
+      const endTime = `${hour}:00 ${ampm}`;
+  
+      if (form.getValues('end') !== endTime) {
+        form.setValue('end', endTime, { shouldValidate: true });
+      }
+      prevStartTime.current = startTime;
+    }
+  }, [startTime])
 
   useEffect(() => {
     if (!id && sessionData?.fetchSession?.games) {
