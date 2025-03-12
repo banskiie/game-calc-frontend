@@ -12,9 +12,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { gql, useLazyQuery, useMutation } from "@apollo/client";
 import { differenceInMinutes, format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react"; // Import X icon for the close button
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+
+// Add the REMOVE_SESSION mutation
+const REMOVE_SESSION = gql`
+  mutation RemoveSession($_id: ID!) {
+    removeSession(_id: $_id) {
+      _id
+      start
+      end
+      createdAt
+      updatedAt
+    }
+  }
+`;
 
 const FETCH_SESSIONS = gql`
   query FetchSessions($limit: Int!) {
@@ -142,7 +155,7 @@ const ADD_PLAYERS_TO_SESSION = gql`
       }
     }
   }
-`;
+`
 
 const FETCH_COURTS = gql`
   query FetchCourts {
@@ -169,7 +182,7 @@ const FETCH_USERS = gql`
       name
     }
   }
-`;
+`
 
 const page = () => {
   const [limit, setLimit] = useState<number>(5);
@@ -183,30 +196,35 @@ const page = () => {
   const [fetchUsers, { data: usersData, refetch: refetchUsers }] = useLazyQuery(FETCH_USERS);
   const [startSession, { loading: startLoading }] = useMutation(START_SESSION, {
     onCompleted: () => {
-      refetch();
-      setOpen(false);
-      setSelectCourt(null);
-      setSelectedShuttle(null);
-      setSelectedPlayers([]); // Clear selected players after session creation
+      refetch()
+      setOpen(false)
+      setSelectCourt(null)
+      setSelectedShuttle(null)
+      setSelectedPlayers([])
     },
     onError: (error) => console.log(error),
-  });
+  })
   const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
     onError: (error) => console.log(error),
-  });
-  const router = useRouter();
-  const sessions = data?.fetchSessions;
+  })
+  const [removeSession] = useMutation(REMOVE_SESSION, {
+    onCompleted: () => {
+      refetch()
+    },
+    onError: (error) => console.log(error),
+  })
+  const router = useRouter()
+  const sessions = data?.fetchSessions
 
-  const [open, setOpen] = useState(false);
-  const [selectedCourt, setSelectCourt] = useState<string | null>(null);
-  const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null);
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [open, setOpen] = useState(false)
+  const [selectedCourt, setSelectCourt] = useState<string | null>(null)
+  const [selectedShuttle, setSelectedShuttle] = useState<string | null>(null)
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
   const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null)
-  
 
   const handleCardClick = (sessionId: string) => {
-    setLoadingSessionId(sessionId)
-    router.push("/admin/sessions/" + sessionId)  
+    setLoadingSessionId(sessionId);
+    router.push("/admin/sessions/" + sessionId)
   }
 
   const handleOpenModal = async () => {
@@ -214,24 +232,22 @@ const page = () => {
     await fetchCourts();
     await fetchShuttles();
     await fetchUsers();
-  };
+  }
 
   const handleCreateSession = async () => {
     if (!selectedCourt || !selectedShuttle) {
       return alert("Please select a court and a shuttle.");
     }
 
-    // Step 1: Create the session
     const sessionResponse = await startSession({
       variables: {
         courtId: selectedCourt,
         shuttleId: selectedShuttle,
       },
-    });
+    })
 
     const sessionId = sessionResponse.data.startSession._id;
 
-    // Step 2: Add players to the session
     if (selectedPlayers.length > 0) {
       await addPlayersToSession({
         variables: {
@@ -242,7 +258,15 @@ const page = () => {
     }
 
     localStorage.setItem("availablePlayers", JSON.stringify(selectedPlayers));
-    refetchUsers(); // Refetch users to ensure the list is up-to-date
+    refetchUsers()
+  };
+
+  const handleRemoveSession = async (sessionId: string) => {
+    await removeSession({
+      variables: {
+        _id: sessionId,
+      },
+    });
   };
 
   useEffect(() => {
@@ -255,17 +279,16 @@ const page = () => {
   const handlePlayerSelection = (playerId: string) => {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId) // Deselect player
-        : [...prev, playerId] // Select player
-    );
-  };
-
-  // Clear selected players when the dialog is closed
+        ? prev.filter((id) => id !== playerId) 
+        : [...prev, playerId]
+    )
+  }
+ 
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {
-      setSelectedPlayers([]); // Clear selected players
-      setSelectCourt(null); // Clear selected court
-      setSelectedShuttle(null); // Clear selected shuttle
+      setSelectedPlayers([])
+      setSelectCourt(null)
+      setSelectedShuttle(null)
     }
     setOpen(isOpen);
   };
@@ -321,7 +344,7 @@ const page = () => {
             players={usersData?.fetchUsers || []}
             selectedPlayers={selectedPlayers}
             onSelectPlayer={handlePlayerSelection}
-            refetchUsers={refetchUsers} // Pass refetchUsers to PlayerSelect
+            refetchUsers={refetchUsers} 
           />
 
           <Button className="w-full" onClick={handleCreateSession} disabled={startLoading}>
@@ -333,8 +356,8 @@ const page = () => {
       {sessions?.map((session: any) => (
         <Card
           key={session._id}
-          onClick={() => handleCardClick(session._id) }
-          className="mx-2"
+          onClick={() => handleCardClick(session._id)}
+          className="mx-2 relative"
         >
           {loadingSessionId === session._id && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/70">
@@ -342,6 +365,18 @@ const page = () => {
             </div>
           )}
           <CardHeader>
+            <div className="absolute top-2 right-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRemoveSession(session._id);
+                }}
+              >
+                <X className="!h-6 !w-6 text-red-600" />
+              </Button>
+            </div>
             <CardTitle>
               {format(new Date(session.start), "MMMM d, yyyy")}
             </CardTitle>
@@ -390,7 +425,7 @@ const page = () => {
         LOAD MORE?
       </Button>
     </div>
-  );
-};
+  )
+}
 
 export default page;
