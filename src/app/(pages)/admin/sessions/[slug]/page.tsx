@@ -1,25 +1,26 @@
-"use client";
+"use client"
 
-import { useRouter, useParams } from "next/navigation";
-import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
-import { CircleStop, FileText, Loader2, UserPlus2 } from "lucide-react";
+import { useRouter, useParams } from "next/navigation"
+import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client"
+import { CircleStop, FileText, Loader2, UserPlus2 } from "lucide-react"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Frown } from "lucide-react";
-import GameForm from "../form";
-import { differenceInMinutes, format } from "date-fns";
-import ShuttleIcon from "@/assets/svg/shuttle.svg";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { PlayerSelect } from "@/components/custom/PlayerSelect";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+} from "@/components/ui/card"
+import { Frown } from "lucide-react"
+import GameForm from "../form"
+import { differenceInMinutes, format } from "date-fns"
+import ShuttleIcon from "@/assets/svg/shuttle.svg"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { PlayerSelect } from "@/components/custom/PlayerSelect"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState, useEffect } from "react"
+import { RefreshCcw } from "lucide-react"
 
 const FETCH_SESSION = gql`
   query FetchSession($id: ID!) {
@@ -102,7 +103,7 @@ const FETCH_SESSION = gql`
       }
     }
   }
-`;
+`
 
 const END_GAME = gql`
   mutation UpdateGame(
@@ -219,17 +220,59 @@ const FETCH_USERS = gql`
   }
 `;
 
-const ADD_PLAYERS_TO_SESSION = gql`
-  mutation AddPlayersToSession($sessionId: ID!, $playerIds: [ID!]!) {
-    addPlayersToSession(sessionId: $sessionId, playerIds: $playerIds) {
-      _id
-      players {
-        _id
-        name
-      }
-    }
-  }
-`;
+// const ADD_PLAYERS_TO_SESSION = gql`
+//   mutation AddPlayersToSession($sessionId: ID!, $playerIds: [ID!]!) {
+//     addPlayersToSession(sessionId: $sessionId, playerIds: $playerIds) {
+//       _id
+//       players {
+//         _id
+//         name
+//       }
+//     }
+//   }
+// `
+
+// const GAME_CHANGED_SUBSCRIPTION = gql`
+//   subscription GameChange {
+//     gameChange {
+//       _id
+//       start
+//       end
+//       createdAt
+//       updatedAt
+//       A1 {
+//         _id
+//         name
+//       }
+//       A2 {
+//         _id
+//         name
+//       }
+//       B1 {
+//         _id
+//         name
+//       }
+//       B2 {
+//         _id
+//         name
+//       }
+//       court {
+//         _id
+//         name
+//       }
+//       shuttlesUsed {
+//         shuttle {
+//           _id
+//           name
+//         }
+//         quantity
+//       }
+//       winner
+//       status
+//       active
+//     }
+//   }
+// `
 
 const Page = () => {
   const { slug } = useParams();
@@ -256,16 +299,17 @@ const Page = () => {
     onError: (error) => {
       toast.error(`Failed to end game: ${error.message}`);
     },
-  });
-  const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
-    onCompleted: () => {
-      toast.success("Players added to session successfully!");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(`Failed to add players: ${error.message}`);
-    },
-  });
+  })
+
+  // const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
+  //   onCompleted: () => {
+  //     toast.success("Players added to session successfully!");
+  //     refetch();
+  //   },
+  //   onError: (error) => {
+  //     toast.error(`Failed to add players: ${error.message}`);
+  //   },
+  // });
 
   const router = useRouter();
   const session = data?.fetchSession;
@@ -282,8 +326,15 @@ const Page = () => {
       localStorage.setItem("availablePlayers", JSON.stringify(newSelection));
       return newSelection;
     });
-  };
-  useEffect(() => {
+  }
+
+  const handleRefresh = () => {
+    refetch()
+    refetchGames()
+    toast.success("Data refreshed successfully!")
+    
+  }
+  useEffect(() => { 
     const interval = setInterval(() => {
       refetch(); // Refetch session data
       refetchGames(); // Refetch game data
@@ -291,30 +342,6 @@ const Page = () => {
 
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [refetch, refetchGames])
-  // const handleAddPlayers = async () => {
-  //   if (selectedPlayers.length > 0) {
-  //     await addPlayersToSession({
-  //       variables: {
-  //         sessionId: slug,
-  //         playerIds: selectedPlayers,
-  //       },
-  //     });
-
-  //     // Update localStorage with the new selected players
-  //     const storedPlayers = localStorage.getItem("availablePlayers");
-  //     if (storedPlayers) {
-  //       const updatedPlayers = [...new Set([...JSON.parse(storedPlayers), ...selectedPlayers])];
-  //       localStorage.setItem("availablePlayers", JSON.stringify(updatedPlayers));
-  //     } else {
-  //       localStorage.setItem("availablePlayers", JSON.stringify(selectedPlayers));
-  //     }
-
-  //     setSelectedPlayers([]);
-  //     setIsPlayerSelectModalOpen(false);
-  //   } else {
-  //     toast.warning("No Players Selected. Please select players to add.");
-  //   }
-  // };
 
   const handleAddPlayers = () => {
     if (selectedPlayers.length > 0) {
@@ -401,21 +428,34 @@ const Page = () => {
       </Card>
 
       <div className="flex flex-row justify-center gap-4 mt-4">
-        <GameForm sessionId={slug as string} refetch={refetchGames} 
+        <GameForm sessionId={slug as string} 
+         refetch={() => {
+          refetch()
+          refetchGames()
+        }}
           disabled={isSessionEnded}
+          key={gameData?.fetchGamesBySession.length}
         />
-        <button
-          onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
-          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
-        >
-          View Summary
-        </button>
         <button 
           className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600"
           onClick={() => setIsPlayerSelectModalOpen(true)}
         >
           <UserPlus2 className="!w-6 !h-6" />
         </button>
+        <button 
+          className="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600"
+          onClick={handleRefresh}
+        >
+          <RefreshCcw className="!w-6 !h-6" />
+        </button>
+
+        <button
+          onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
+          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
+        >
+          View Summary
+        </button>
+        
         {!session.end && (
           <button
             onClick={async () => {

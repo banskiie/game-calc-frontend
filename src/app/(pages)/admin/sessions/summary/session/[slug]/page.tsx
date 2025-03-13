@@ -3,7 +3,7 @@ import React from "react";
 import { gql, useQuery } from "@apollo/client";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Instagram, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -395,10 +395,13 @@ const Page = () => {
           </TableRow>
         </TableBody>
       </Table>
-
-      <button onClick={handleScreenshot} className="mt-4 p-2 bg-blue-500 text-white rounded">
-  Capture Game Summary
-</button>
+      <Separator className="bg-slate-400" />
+      <div className="flex flex-row gap-2 justify-center items-center">
+        <span> Click here to Screenshot: </span>
+        <button onClick={handleScreenshot} className="p-2 bg-green-800 text-white rounded">
+          <Instagram />
+        </button>
+      </div>
     </div>
   );
 };

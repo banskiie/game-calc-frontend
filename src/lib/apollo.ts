@@ -11,7 +11,7 @@ export const createApolloClient = (token?: string) => {
   const graphqlUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL;
   const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
 
-  // const cache = new InMemoryCache();
+  const cache = new InMemoryCache();
 
   if (!graphqlUrl) {
     throw new Error("The GraphQL URL is not defined.");
@@ -35,7 +35,6 @@ export const createApolloClient = (token?: string) => {
     };
   });
 
-  // Set up the WebSocket Link
   const wsLink = new GraphQLWsLink(
     createClient({
       url: wsUrl,
@@ -45,6 +44,11 @@ export const createApolloClient = (token?: string) => {
         },
       },
       keepAlive: 10000,
+       on: {
+      connected: () => console.log("WebSocket connected!"),
+      error: (err) => console.error("WebSocket error:", err),
+      closed: () => console.log("WebSocket closed!"),
+    },
     })
   );
 
@@ -64,6 +68,7 @@ export const createApolloClient = (token?: string) => {
   // Return the Apollo Client with the correctly initialized cache
   return new ApolloClient({
     link: splitLink,
-    cache: new InMemoryCache(), 
+    // cache: new InMemoryCache(), 
+    cache
   });
 }

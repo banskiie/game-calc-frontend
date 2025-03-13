@@ -365,7 +365,9 @@ const page = () => {
             </div>
           )}
           <CardHeader>
-            <div className="absolute top-2 right-2">
+            {!session.end && (
+              <div className="absolute top-2 right-2">
+                        
               <Button
                 variant="ghost"
                 size="icon"
@@ -376,7 +378,8 @@ const page = () => {
               >
                 <X className="!h-6 !w-6 text-red-600" />
               </Button>
-            </div>
+              </div>
+            )}
             <CardTitle>
               {format(new Date(session.start), "MMMM d, yyyy")}
             </CardTitle>

@@ -6,6 +6,21 @@ import { Users, LogOut, ChevronRight, Pencil, Loader2, ScrollText } from "lucide
 import Link from "next/link"
 import { gql, useQuery } from "@apollo/client"
 
+declare module "next-auth" {
+  interface User {
+    _id?: string;
+    name?: string;
+    email?: string;
+    image?: string;
+    role?: string;
+    username?: string;
+  }
+
+  interface Session {
+    user?: User;
+  }
+}
+
 const FETCH_USER = gql`
  query FetchUser($id: ID!) {
     fetchUser(_id: $id) {
@@ -46,11 +61,11 @@ const Page = () => {
   return (
     <div className="h-screen w-full bg-gray-100 flex flex-col items-center">
       <div className="w-full h-52 bg-green-600 rounded-b-2xl relative">
-        <Link href="/admin/profiles/userPage/editPage">
+        {/* <Link href="/admin/profiles/userPage/editPage">
         <button className="absolute right-6 bottom-[-20px] bg-white text-gray-700 p-3 rounded-full shadow-md hover:bg-gray-200 transition">
           <Pencil size={22} />
         </button>
-        </Link>
+        </Link> */}
       </div>
 
       <div className="relative -mt-16 w-32 h-32 bg-green-900 text-white flex items-center justify-center rounded-full border-4 border-white shadow-lg">

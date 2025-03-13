@@ -327,7 +327,7 @@ const GameForm = ({
   //   ).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
   // }
   useEffect(() => {
-    if (open) {
+    if (open && refetch) {
       refetchSession().then(() => {
         const games = sessionData?.fetchSession?.games || [];
         const lastGame = games[games.length - 1];
@@ -343,7 +343,7 @@ const GameForm = ({
         form.setValue('end', '00:00 PM');
       });
     }
-  }, [open, refetchSession, sessionData, form])
+  }, [open, refetch, refetchSession, sessionData, form])
   
   const getAvailablePlayers = (currentIndex: number) => {
     const selectedPlayers = form.watch('players')
@@ -365,10 +365,10 @@ const GameForm = ({
     if (!startTime || startTime === prevStartTime.current) return;
     const timeParts = startTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
     if (timeParts) {
-      const hour = timeParts[1]; // Extract hour
-      const ampm = timeParts[3]; // Extract AM/PM
+      const hour = timeParts[1]
+      const ampm = timeParts[3]
   
-      // Keep the minutes unchanged, or default to ":00"
+     
       const endTime = `${hour}:00 ${ampm}`;
   
       if (form.getValues('end') !== endTime) {
@@ -376,7 +376,7 @@ const GameForm = ({
       }
       prevStartTime.current = startTime;
     }
-  }, [startTime])
+  }, [startTime, form])
 
   useEffect(() => {
     if (!id && sessionData?.fetchSession?.games) {
@@ -397,7 +397,7 @@ const GameForm = ({
         form.setValue('end', '00:00 PM');
       }
     }
-  }, [sessionData, id, form, sessionData?.fetchSession?.games?.length]);
+  }, [sessionData, id, form, sessionData?.fetchSession?.games?.length])
 
   useEffect(() => {
     if (data) {
@@ -407,7 +407,7 @@ const GameForm = ({
         if (!time) return null;
         const zonedTime = toZonedTime(time, 'Asia/Manila');
         return format(zonedTime, 'hh:mm a');
-      };
+      }
 
       form.reset({
         session: sessionId,
@@ -433,9 +433,9 @@ const GameForm = ({
         start: ensurePM(game.start) || '05:00 PM',
         end: ensurePM(game.end) || '00:00 PM',
         winner: game.winner || undefined,
-      });
+      })
     }
-  }, [data, form, sessionId]);
+  }, [data, form, sessionId])
 
   useEffect(() => {
     if (
@@ -489,7 +489,11 @@ const GameForm = ({
         });
 
         if (response.data?.createGame || response.data?.updateGame) {
-          await refetchSession(); // Ensure session data is updated
+          await refetchSession()
+
+          if (refetch) {
+            refetch()
+          }
 
           const updatedSession = sessionData?.fetchSession;
           const games = updatedSession?.games || [];
@@ -509,7 +513,7 @@ const GameForm = ({
             start: newStart,
             end: '00:00 PM',
           });
-
+          
           closeForm();
           toast.success(id ? 'Game updated successfully!' : 'Game created successfully!');
         }
@@ -517,8 +521,8 @@ const GameForm = ({
         console.error('Error creating game:', error);
         toast.error('Failed to save game. Please try again.');
       }
-    });
-  };
+    })
+  }
 
   const closeForm = () => {
     setOpen(false);
