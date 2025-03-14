@@ -1,7 +1,7 @@
 "use client"
 import { signOut, useSession } from "next-auth/react"
 import React, { useEffect, useState } from "react"
-import { Users, LogOut, ChevronRight, Pencil, Loader2, ScrollText } from "lucide-react"
+import { Users, LogOut, ChevronRight, Loader2, ScrollText } from "lucide-react"
 // import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { gql, useQuery } from "@apollo/client"

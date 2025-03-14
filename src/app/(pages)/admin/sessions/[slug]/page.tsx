@@ -30,6 +30,10 @@ const FETCH_SESSION = gql`
       end
       createdAt
       updatedAt
+      availablePlayers {
+        _id
+        name
+      }
       games {
         _id
         start
@@ -220,17 +224,17 @@ const FETCH_USERS = gql`
   }
 `;
 
-// const ADD_PLAYERS_TO_SESSION = gql`
-//   mutation AddPlayersToSession($sessionId: ID!, $playerIds: [ID!]!) {
-//     addPlayersToSession(sessionId: $sessionId, playerIds: $playerIds) {
-//       _id
-//       players {
-//         _id
-//         name
-//       }
-//     }
-//   }
-// `
+const ADD_PLAYERS_TO_SESSION = gql`
+  mutation AddPlayersToSession($_id: ID!, $playerIds: [ID!]!) {
+    addPlayersToSession(_id: $_id, playerIds: $playerIds) {
+      _id
+      availablePlayers {
+        _id
+        name
+      }
+    }
+  }
+`
 
 // const GAME_CHANGED_SUBSCRIPTION = gql`
 //   subscription GameChange {
@@ -301,15 +305,34 @@ const Page = () => {
     },
   })
 
-  // const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
-  //   onCompleted: () => {
-  //     toast.success("Players added to session successfully!");
-  //     refetch();
-  //   },
-  //   onError: (error) => {
-  //     toast.error(`Failed to add players: ${error.message}`);
-  //   },
-  // });
+  const [addPlayersToSession] = useMutation(ADD_PLAYERS_TO_SESSION, {
+    onCompleted: () => {
+      toast.success("Players added to session successfully!");
+      refetch(); // Refetch the session data to update the UI
+      setIsPlayerSelectModalOpen(false); // Close the modal
+    },
+    onError: (error) => {
+      toast.error(`Failed to add players: ${error.message}`);
+    },
+  })
+  
+  const handleAddPlayers = async () => {
+    if (selectedPlayers.length > 0) {
+      try {
+        await addPlayersToSession({
+          variables: {
+            _id: slug, // The session ID
+            playerIds: selectedPlayers, // The selected player IDs
+          },
+        })
+      } catch (error) {
+        console.error("Error adding players to session:", error);
+      }
+    } else {
+      toast.warning("No Players Selected. Please select players to add.");
+    }
+  }
+  
 
   const router = useRouter();
   const session = data?.fetchSession;
@@ -318,14 +341,11 @@ const Page = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const handlePlayerSelection = (playerId: string) => {
-    setSelectedPlayers((prev) => {
-      const newSelection = prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId)
-        : [...prev, playerId];
-      console.log("New selection:", newSelection);
-      localStorage.setItem("availablePlayers", JSON.stringify(newSelection));
-      return newSelection;
-    });
+    setSelectedPlayers((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId) // Remove player if already selected
+        : [...prev, playerId] // Add player if not selected
+    )
   }
 
   const handleRefresh = () => {
@@ -343,33 +363,15 @@ const Page = () => {
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [refetch, refetchGames])
 
-  const handleAddPlayers = () => {
-    if (selectedPlayers.length > 0) {
-      const existingPlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]");
-  
-      const updatedPlayers = [...existingPlayers, ...selectedPlayers];
-  
-      localStorage.setItem("availablePlayers", JSON.stringify(updatedPlayers));
-  
-      setSelectedPlayers([]);
-      setIsPlayerSelectModalOpen(false);
-  
-      toast.success("Players added to session successfully!");
-    } else {
-      toast.warning("No Players Selected. Please select players to add.");
-    }
-  }
   
   useEffect(() => {
     if (isPlayerSelectModalOpen) {
-      fetchUsers();
+      fetchUsers()
 
-      const storedPlayers = localStorage.getItem("availablePlayers");
-      if (storedPlayers) {
-        setSelectedPlayers(JSON.parse(storedPlayers));
-      }
+      const availablePlayersIds = session?.availablePlayers?.map((player: any) => player._id) || []
+      setSelectedPlayers(availablePlayersIds)
     }
-  }, [isPlayerSelectModalOpen, fetchUsers]);
+  }, [isPlayerSelectModalOpen, fetchUsers, session]);
 
   if (loading)
     return (
@@ -470,19 +472,19 @@ const Page = () => {
       </div>
 
       <Dialog open={isPlayerSelectModalOpen} onOpenChange={setIsPlayerSelectModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Players to Session</DialogTitle>
-          </DialogHeader>
-          <PlayerSelect
-            players={usersData?.fetchUsers || []}
-            selectedPlayers={selectedPlayers}
-            onSelectPlayer={handlePlayerSelection}
-            refetchUsers={refetchUsers}
-          />
-          <Button onClick={handleAddPlayers}>Add Players</Button>
-        </DialogContent>
-      </Dialog>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Players to Session</DialogTitle>
+              </DialogHeader>
+              <PlayerSelect
+                players={usersData?.fetchUsers || []}
+                selectedPlayers={selectedPlayers} // Pass the selectedPlayers state
+                onSelectPlayer={handlePlayerSelection}
+                refetchUsers={refetchUsers}
+              />
+              <Button onClick={handleAddPlayers}>Add Players</Button>
+            </DialogContent>
+          </Dialog>
 
       <div className="grid grid-cols-1 gap-2">
         {gameData?.fetchGamesBySession.length > 0 ? (

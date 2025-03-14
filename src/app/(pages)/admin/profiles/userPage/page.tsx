@@ -235,7 +235,7 @@ const Page = () => {
                     </span>
                     {user.sponsors?.length > 0 && (
                       <span className="bg-gradient-to-r from-yellow-300 to-yellow-500 text-black font-bold p-2 rounded-lg shadow-lg border border-yellow-400 tracking-wider">
-                        <span className="font-semibold">Sponsors: </span>
+                        <span className="font-semibold">Sponsoring: </span>
                         <span>
                           {user.sponsors.map((sponsor: any) => sponsor.name).join(", ")}
                         </span>
@@ -287,8 +287,7 @@ const Page = () => {
           <DialogHeader>
             {selectedUser && (
               <DialogTitle className="mb-2">
-                Add Sponsors for{" "}
-                <span className="underline">{selectedUser.name}</span>
+              <span className="underline">{selectedUser.name}</span> is Sponsoring for:{" "} 
               </DialogTitle>
             )}
             <DialogDescription>

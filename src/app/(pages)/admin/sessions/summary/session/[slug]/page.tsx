@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import html2canvas from "html2canvas";
+import { differenceInMinutes } from "date-fns"
 
 const FETCH_SUMMARY = gql`
   query FetchSummary($id: ID!) {
@@ -56,6 +57,9 @@ const FETCH_SUMMARY = gql`
         createdAt
         updatedAt
         games {
+          _id
+          start
+          end
           A1 {
             _id
             name
@@ -92,7 +96,7 @@ const FETCH_SUMMARY = gql`
       }
     }
   }
-`;
+`
 
 const Page = () => {
   const { slug } = useParams();
@@ -119,7 +123,7 @@ const Page = () => {
   const handleScreenshot = () => {
     const sessionSummaryTime = document.getElementById('session-summary-time')
     const gameSummaryTable = document.getElementById('game-summary-table')
-  
+
     if (sessionSummaryTime && gameSummaryTable) {
       const tempContainer = document.createElement('div')
       tempContainer.style.position = 'absolute'
@@ -210,17 +214,24 @@ const Page = () => {
     return <div>Error fetching Summary.</div>;
   }
 
-  const summary = data?.fetchSessionSummary;
+  const summary = data?.fetchSessionSummary
   const formatDate = (isoString: string) => {
     if (!isoString) return "N/A";
 
-    const date = new Date(isoString);
+    const date = new Date(isoString)
     return date.toLocaleDateString("en-US", {
+      timeZone: "UTC",
       year: "numeric",
       month: "long",
       day: "2-digit",
     });
-  };
+  }
+
+  const calculateGameDuration = (start: string, end: string) => {
+    return differenceInMinutes(new Date(summary?.session.games[summary.session.games.length - 1].end),
+      new Date(summary?.session.games[0].start))
+      console.log("this is the start and end" , start, end)
+  }
 
   return (
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-2 p-2">
@@ -243,11 +254,15 @@ const Page = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center text-muted-foreground font-semibold">
-            {summary?.durationPerCourt.map((court: any) => (
-              <div key={court.court._id} className="mb-1">
-                {court.court.name} - {court.totalDuration} mins
+          {summary?.session?.games?.length > 0 && (
+              <div>
+                {calculateGameDuration(
+                  summary.session.games[0].start,
+                  summary.session.games[summary.session.games.length - 1].end
+                )}{" "}
+                mins
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 

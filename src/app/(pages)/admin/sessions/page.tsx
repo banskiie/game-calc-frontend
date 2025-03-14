@@ -16,6 +16,23 @@ import { Loader2, X } from "lucide-react"; // Import X icon for the close button
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
+// DEFAULT
+const DEFAULT_COURT_ID = "6791993543683b5ac0a1ccc8" //Wood
+const DEFAULT_SHUTTLE_ID = "6791995a43683b5ac0a1cccc" // XP2 shuttle
+const DEFAULT_PLAYER_IDS = [
+  "67c6a24c0bb4c89568b35dae", // Jordan
+  "67a02c8406a191cd4b0151a6", // Jojo
+  "67a02ca506a191cd4b0151ac", // Gary
+  "67a02c8c06a191cd4b0151a9", // Aying
+  "67a02c5d06a191cd4b01519a", // Atty Leo
+  "67a02c7d06a191cd4b0151a3", // Edward
+  "67a02c6306a191cd4b01519d", // Wagi
+  "67cbe2c9af620805319c9ea7", // Clyde
+  "67cb8df9df6cb1bed2b64557", // Alex
+  "67c6be2d7a3a5a8302cbe5f7", // Cocoi
+]
+
+
 // Add the REMOVE_SESSION mutation
 const REMOVE_SESSION = gql`
   mutation RemoveSession($_id: ID!) {
@@ -126,11 +143,11 @@ const FETCH_SESSIONS = gql`
       }
     }
   }
-`;
+`
 
 const START_SESSION = gql`
-  mutation StartSession($courtId: ID!, $shuttleId: ID!) {
-    startSession(courtId: $courtId, shuttleId: $shuttleId) {
+  mutation StartSession($courtId: ID!, $shuttleId: ID!, $playerIds: [ID!]!) {
+    startSession(courtId: $courtId, shuttleId: $shuttleId, playerIds: $playerIds) {
       _id
       start
       court {
@@ -141,9 +158,13 @@ const START_SESSION = gql`
         _id
         name
       }
+      availablePlayers {
+        _id
+        name
+      }
     }
   }
-`;
+`
 
 const ADD_PLAYERS_TO_SESSION = gql`
   mutation AddPlayersToSession($sessionId: ID!, $playerIds: [ID!]!) {
@@ -228,26 +249,31 @@ const page = () => {
   }
 
   const handleOpenModal = async () => {
-    setOpen(true);
-    await fetchCourts();
-    await fetchShuttles();
-    await fetchUsers();
+    setOpen(true)
+    await fetchCourts()
+    await fetchShuttles()
+    await fetchUsers()
+
+    setSelectCourt(DEFAULT_COURT_ID)
+    setSelectedShuttle(DEFAULT_SHUTTLE_ID)
+    setSelectedPlayers(DEFAULT_PLAYER_IDS)
   }
 
   const handleCreateSession = async () => {
     if (!selectedCourt || !selectedShuttle) {
       return alert("Please select a court and a shuttle.");
     }
-
+  
     const sessionResponse = await startSession({
       variables: {
         courtId: selectedCourt,
         shuttleId: selectedShuttle,
+        playerIds: selectedPlayers,
       },
-    })
-
+    });
+  
     const sessionId = sessionResponse.data.startSession._id;
-
+  
     if (selectedPlayers.length > 0) {
       await addPlayersToSession({
         variables: {
@@ -256,10 +282,9 @@ const page = () => {
         },
       });
     }
-
-    localStorage.setItem("availablePlayers", JSON.stringify(selectedPlayers));
-    refetchUsers()
-  };
+  
+    refetchUsers();
+  }
 
   const handleRemoveSession = async (sessionId: string) => {
     await removeSession({
@@ -314,7 +339,7 @@ const page = () => {
             <DialogTitle>Create a New Session</DialogTitle>
           </DialogHeader>
 
-          <Select onValueChange={(value) => setSelectCourt(value)}>
+          <Select onValueChange={(value) => setSelectCourt(value)} value={selectedCourt || ""}>
             <SelectTrigger>
               <SelectValue placeholder="Select a court" />
             </SelectTrigger>
@@ -327,7 +352,7 @@ const page = () => {
             </SelectContent>
           </Select>
 
-          <Select onValueChange={(value) => setSelectedShuttle(value)}>
+          <Select onValueChange={(value) => setSelectedShuttle(value)} value={selectedShuttle || ""}>
             <SelectTrigger>
               <SelectValue placeholder="Select a shuttle" />
             </SelectTrigger>

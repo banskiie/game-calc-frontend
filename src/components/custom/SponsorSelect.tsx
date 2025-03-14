@@ -88,7 +88,7 @@ export const SponsorSelect = ({
           onBlur={handleInputBlur}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleCreateNewSponsor();
+              handleCreateNewSponsor()
             }
           }}
           className="pr-10"

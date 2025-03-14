@@ -43,9 +43,13 @@ const FETCH_SESSION = gql`
         _id
         name
       }
+      availablePlayers {
+        _id
+        name
+      }
     }
   }
-`;
+`
 
 const FETCH_GAME = gql`
   query FetchGame($id: ID!) {
@@ -280,7 +284,7 @@ const GameForm = ({
     skip: !sessionId,
     fetchPolicy: 'network-only',
   });
-  const { data: userData, loading: usersLoading } = useQuery(FETCH_USERS);
+  const { loading: usersLoading } = useQuery(FETCH_USERS);
   const { data: courtData, loading: courtsLoading } = useQuery(FETCH_COURTS);
   const { data: shuttleData, loading: shuttlesLoading } = useQuery(FETCH_SHUTTLES);
   const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME)
@@ -310,22 +314,8 @@ const GameForm = ({
   } = useFieldArray<any>({
     control: form.control,
     name: 'shuttles',
-  });
+  })
 
-  // const getAvailablePlayers = (currentIndex: number) => {
-  //   const selectedPlayers = form.watch('players')
-  //   // const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
-  
-  //   const isGroupA = currentIndex < 2
-  //   const groupStartIndex = isGroupA ? 0 : 2
-  //   const groupEndIndex = groupStartIndex + 2
-  
-  //   return userData?.fetchUsers.filter(
-  //     (user: any) => 
-  //       !selectedPlayers.slice(groupStartIndex, groupEndIndex).includes(user._id) ||
-  //       selectedPlayers[currentIndex] === user._id
-  //   ).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
-  // }
   useEffect(() => {
     if (open && refetch) {
       refetchSession().then(() => {
@@ -347,16 +337,10 @@ const GameForm = ({
   
   const getAvailablePlayers = (currentIndex: number) => {
     const selectedPlayers = form.watch('players')
-    const availablePlayers = JSON.parse(localStorage.getItem("availablePlayers") || "[]")
-  
-    // const isGroupA = currentIndex < 2
-    // const groupStartIndex = isGroupA ? 0 : 2
-    // const groupEndIndex = groupStartIndex + 2
-  
-    return userData?.fetchUsers.filter(
-      (user: any) => availablePlayers.includes(user._id) && 
-      (!selectedPlayers.includes(user._id) || selectedPlayers[currentIndex] === user._id)
-).sort((a: any, b: any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
+    const availablePlayers= sessionData?.fetchSession?.availablePlayers || []
+
+    return availablePlayers.filter((user:any) => (!selectedPlayers.includes(user._id) || selectedPlayers[currentIndex] === user._id))
+    .sort((a: any, b:any) => a.name.localeCompare(b.name)) //Sort the name to A-Z
   }
 
   const startTime = useWatch({ control: form.control, name: 'start' })
