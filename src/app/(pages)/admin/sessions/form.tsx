@@ -354,8 +354,9 @@ const GameForm = ({
   
      
       const endTime = `${hour}:00 ${ampm}`;
-  
-      if (form.getValues('end') !== endTime) {
+      
+      const currentEndTime = form.getValues('end')
+      if (!currentEndTime || currentEndTime === '00:00 PM') {
         form.setValue('end', endTime, { shouldValidate: true });
       }
       prevStartTime.current = startTime;
