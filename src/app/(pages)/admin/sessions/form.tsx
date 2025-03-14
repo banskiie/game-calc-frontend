@@ -503,7 +503,6 @@ const GameForm = ({
           toast.success(id ? 'Game updated successfully!' : 'Game created successfully!');
         }
       } catch (error) {
-        console.error('Error creating game:', error);
         toast.error('Failed to save game. Please try again.');
       }
     })
