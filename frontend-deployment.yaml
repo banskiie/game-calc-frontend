@@ -13,14 +13,16 @@ spec:
         app: game-calculator-frontend
     spec:
       imagePullSecrets:
-        - name: regcred
+        - name: game-calc-regcred
       containers:
         - name: game-calculator-frontend
-          image: localhost:5000/game-calculator-frontend:latest
+          image: 192.168.6.99:5500/game-calculator-frontend:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
-                name: frontend-env
+                name: game-calculator-frontend-env
+          ports:
+            - containerPort: 3000
 ---
 apiVersion: v1
 kind: Service
@@ -34,4 +36,4 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: 32000
+      nodePort: 32316
