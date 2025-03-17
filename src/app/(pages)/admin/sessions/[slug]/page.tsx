@@ -407,13 +407,13 @@ const Page = () => {
     <div className="h-fit flex-1 overflow-auto w-full flex flex-col gap-4 p-4">
       <Card className="p-5 w-full max-w-xl mx-auto shadow-inner flex items-center justify-center bg-opacity-100 shadow-gray-500/60">
         <CardContent className="flex flex-col items-center text-center pb-2">
-          <span className="block text-muted-foreground font-semibold">
+          <span className="block text-muted-foreground font-semibold text-lg">
             {session.start
               ? format(new Date(session.start), "MMMM dd, YYY")
               : "TBA"}
           </span>
           {session.games.length > 0 && (
-            <span className="block text-muted-foreground font-semibold">
+            <span className="block text-muted-foreground font-semibold text-lg">
               {format(new Date(session.games[0].start), "hh:mm a")} to{" "}
               {session.games[session.games.length - 1].end
                 ? format(
@@ -423,7 +423,7 @@ const Page = () => {
                 : "TBA"}{" "}
             </span>
           )}
-          <span className="block text-muted-foreground font-semibold">
+          <span className="block text-muted-foreground font-semibold text-lg">
             Total Shuttles Used: {totalShuttlesUsed || 0}
           </span>
         </CardContent>
@@ -455,7 +455,7 @@ const Page = () => {
           onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
           className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
         >
-          View Summary
+         View Summary
         </button>
         
         {!session.end && (
@@ -486,23 +486,23 @@ const Page = () => {
             </DialogContent>
           </Dialog>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2 text-base">
         {gameData?.fetchGamesBySession.length > 0 ? (
           gameData?.fetchGamesBySession.map((game: any) => (
             <div key={game._id} className="relative w-full max-w-xl mx-auto flex">
-              <Card className="p-1 w-full shadow-inner bg-opacity-100 shadow-gray-500/60 flex flex-col !rounded-l-xl !rounded-br-xl !rounded-tr-none">
+              <Card className="p-1 w-full shadow-inner bg-opacity-100 shadow-gray-500/60 flex flex-col !rounded-l-xl !rounded-br-xl !rounded-tr-none text-lg">
                 <span className="text-center">
                   <CardHeader className="mb-3 mt-[-0.45rem]">
                     <CardDescription>
                       <div className="flex items-start justify-center gap-52">
                         <div className="flex flex-col items-center">
-                          <CardTitle className="text-center font-bold text-black text-md">{game.court.name}</CardTitle>
+                          <CardTitle className="text-center font-bold text-black text-lg">{game.court.name}</CardTitle>
                           <div className="flex flex-col items-center">
-                            <span className="font-bold text-xs">
+                            <span className="font-bold text-md">
                               {format(new Date(game.start), "hh:mm a")} - {game?.end ? format(new Date(game.end), "hh:mm a") : "TBA"}
                             </span>
                             {game?.end && (
-                              <span className="text-xs font-semibold font-muted-foreground">
+                              <span className="text-md font-semibold font-muted-foreground">
                                 ({differenceInMinutes(new Date(game?.end), new Date(game.start)) + " mins"})
                               </span>
                             )}
@@ -510,19 +510,19 @@ const Page = () => {
                         </div>
 
                         <div className="flex flex-col items-center">
-                          <span className="font-bold text-md text-black block text-center">Shuttles</span>
+                          <span className="font-bold text-lg text-black block text-center">Shuttles</span>
                           <div className="flex flex-col gap-2">
                             {game.shuttlesUsed.map((shuttle: any) =>
                               shuttle.quantity > 0 ? (
                                 <div key={shuttle.shuttle._id} className="flex items-center gap-2">
-                                  <span className="font-bold text-xs">{shuttle.shuttle.name}</span> ({shuttle.quantity}) -
+                                  <span className="font-bold text-md">{shuttle.shuttle.name}</span> <span className="text-md">({shuttle.quantity}) </span>-
                                   <div className="flex items-center justify-center">
                                     {Array.from({ length: shuttle.quantity }).map((_, idx) => (
                                       <Image
                                         key={`${shuttle.shuttle._id}-${idx}`}
                                         src={ShuttleIcon}
                                         alt="Shuttle Icon"
-                                        className="h-3.5 w-3.5"
+                                        className="h-4 w-4"
                                       />
                                     ))}
                                   </div>
@@ -540,16 +540,16 @@ const Page = () => {
                   <Card className="shadow-inner shadow-gray-400/50 p-2 mb-[-0.95rem] mt-[-2rem]">
                     <div className="grid grid-cols-3 items-center">
                       <div className="text-center">
-                        <span className="font-semibold text-sm text-gray-500">Team A</span>
+                        <span className="font-semibold text-base text-gray-500">Team A</span>
                         <div className="space-y-1">
-                          <span className="font-semibold text-sm">{game.A1.name}</span> & <span className="font-semibold text-sm">{game.A2?.name}</span>
+                          <span className="font-semibold text-base">{game.A1.name}</span> & <span className="font-semibold text-base">{game.A2?.name}</span>
                         </div>
                       </div>
                       <div className="text-center font-bold text-xl">vs</div>
                       <div className="text-center">
-                        <span className="font-semibold text-sm text-gray-500">Team B</span>
+                        <span className="font-semibold text-base text-gray-500">Team B</span>
                         <div className="space-y-1">
-                          <span className="font-semibold text-sm">{game.B1.name}</span> & <span className="font-semibold text-sm">{game.B2?.name}</span>
+                          <span className="font-semibold text-base">{game.B1.name}</span> & <span className="font-semibold text-base">{game.B2?.name}</span>
                         </div>
                       </div>
                     </div>
@@ -564,17 +564,17 @@ const Page = () => {
                 {game?.end ? (
                   <Button
                     onClick={() => router.push("/admin/sessions/summary/game/" + game._id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center h- w-9 rounded-full"
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center h-10 w-10 rounded-full"
                   >
-                    <FileText className="!h-5 !w-5" />
+                    <FileText className="!h-6 !w-6" />
                   </Button>
                 ) : (
                   <Button
                     variant="destructive"
                     onClick={() => handleEndGame(game._id)}
-                    className="flex items-center justify-center h-9 w-9 rounded-full"
+                    className="flex items-center justify-center h-10 w-10 rounded-full"
                   >
-                    <CircleStop className="!h-5 !w-5" />
+                    <CircleStop className="!h-6 !w-6" />
                   </Button>
                 )}
               </div>

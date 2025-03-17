@@ -132,7 +132,7 @@ const ShuttleForm = ({
       >
         <SheetHeader>
           <SheetTitle>{id ? "Edit Shuttle" : "Add Shuttle"}</SheetTitle>
-          <SheetDescription>
+          <SheetDescription className='text-base'>
             Please fill up the necessary information below.
           </SheetDescription>
         </SheetHeader>

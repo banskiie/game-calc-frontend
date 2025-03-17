@@ -166,7 +166,7 @@ const UserForm = ({ id, refetch, open, onOpenChange }: { id?: string; refetch?: 
       <SheetContent side="bottom" className=" !max-w-xl mx-auto w-full overflow-auto max-h-screen flex flex-col">
         <SheetHeader>
           <SheetTitle>{id? "Edit User" : "Add User"}</SheetTitle>
-          <SheetDescription>Please fill up the necessary information below.</SheetDescription>
+          <SheetDescription className='text-base mb-2'>Please fill up the necessary information below.</SheetDescription>
         </SheetHeader>
         <Form {...form}>
           <form className="flex-1 overflow-auto px-1 -mx-1" onSubmit={form.handleSubmit(onSubmit)}>

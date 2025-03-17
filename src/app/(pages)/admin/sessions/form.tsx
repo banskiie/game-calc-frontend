@@ -557,12 +557,12 @@ const GameForm = ({
         <Button
           className={`${
             id
-              ? 'bg-green-600 hover:bg-green-700 text-white h-9 w-9 rounded-full flex items-center justify-center'
+              ? 'bg-green-600 hover:bg-green-700 text-white h-10 w-10 rounded-full flex items-center justify-center'
               : 'bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center'
           }`}
           disabled={disabled}
         >
-          {id ? <SquarePen className="!w-5 !h-5" /> : <Plus className="!w-6 !h-6" />}
+          {id ? <SquarePen className="!w-6 !h-6" /> : <Plus className="!w-6 !h-6" />}
         </Button>
       </SheetTrigger>
       <SheetContent
@@ -573,7 +573,7 @@ const GameForm = ({
         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', padding: '0 16px' }}>
         <SheetHeader>
           <SheetTitle>{id ? 'Update Game' : 'Add Game'}</SheetTitle>
-          <SheetDescription>
+          <SheetDescription className='text-base'>
             Please fill up the necessary information below.
           </SheetDescription>
         </SheetHeader>
@@ -584,7 +584,7 @@ const GameForm = ({
             onSubmit={form.handleSubmit(handleSubmit)}
           >
             {/* Player Selection Section */}
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row gap-2 mt-2">
                 <div className="flex flex-col gap-4 flex-1">
                     {['Player A1', 'Player A2'].map((label, index) => (
                     <FormField
@@ -593,12 +593,12 @@ const GameForm = ({
                         name={`players.${index}`}
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>{label}</FormLabel>
+                            <FormLabel className="text-base">{label}</FormLabel>
                             <FormControl>
                             <select
                                 {...field}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                className="text-sm w-full border border-gray-300 rounded p-3"
+                                className="text-base w-full border border-gray-300 rounded p-3"
                                 disabled={isPending}
                             >
                                 <option value="">Select Player</option>
@@ -625,7 +625,7 @@ const GameForm = ({
                         name={`players.${index + 2}`}
                         render={({ field }) => (
                         <FormItem className="w-full text-left">
-                            <FormLabel>{label}</FormLabel>
+                            <FormLabel className="text-base">{label}</FormLabel>
                             <FormControl>
                             <select
                                 {...field}
@@ -656,13 +656,14 @@ const GameForm = ({
                 name="start"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Time</FormLabel>
+                    <FormLabel className='text-base'>Start Time</FormLabel>
                     <FormControl>
                       <TimePicker
                         initialTime={field.value || '05:00 PM'}
                         onChange={(newTime) => {
                           field.onChange(newTime);
                         }}
+                        
                       />
                     </FormControl>
                     <FormMessage />
@@ -675,7 +676,7 @@ const GameForm = ({
                 name="end"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Time</FormLabel>
+                    <FormLabel className='text-base'>End Time</FormLabel>
                     <FormControl>
                       <TimePicker
                         initialTime={field.value || '00:00 PM'}
@@ -695,11 +696,11 @@ const GameForm = ({
               name="court"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Court</FormLabel>
+                  <FormLabel className='text-base'>Court</FormLabel>
                   <FormControl>
                     <select
                       {...field}
-                      className="text-sm w-full border border-gray-300 rounded p-2"
+                      className="text-base w-full border border-gray-300 rounded p-2"
                       disabled={isPending}
                     >
                       <option value="">Select Court</option>
@@ -727,11 +728,11 @@ const GameForm = ({
                     name={`shuttles.${index}.shuttle`}
                     render={({ field }) => (
                       <FormItem className="col-span-8">
-                        <FormLabel>Shuttle</FormLabel>
+                        <FormLabel className='text-base'>Shuttle</FormLabel>
                         <FormControl>
                           <select
                             {...field}
-                            className="text-sm w-full border border-gray-300 rounded p-2"
+                            className="text-base w-full border border-gray-300 rounded p-2"
                             disabled={isPending}
                           >
                             <option value="">Select Shuttle</option>
@@ -751,7 +752,7 @@ const GameForm = ({
                     name={`shuttles.${index}.quantity`}
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Quantity</FormLabel>
+                        <FormLabel className='text-base'>Quantity</FormLabel>
                         <FormControl>
                           <div className="flex gap-2">
                             <Button
@@ -763,11 +764,11 @@ const GameForm = ({
                                 field.onChange(+field.value - 1);
                               }}
                             >
-                              <Minus size={16} />
+                              <Minus size={18} />
                             </Button>
                             <input
                               {...field}
-                              className="text-sm w-full border border-gray-300 rounded p-2"
+                              className="text-base w-full border border-gray-300 rounded p-2"
                               disabled={isPending}
                               type="number"
                               min={0}
@@ -787,7 +788,7 @@ const GameForm = ({
                                 field.onChange(+field.value + 1);
                               }}
                             >
-                              <Plus size={16} />
+                              <Plus size={18} />
                             </Button>
                           </div>
                         </FormControl>
@@ -809,7 +810,7 @@ const GameForm = ({
                     size="icon"
                     className="flex items-center justify-center w-full"
                   >
-                    <X className="text-destructive" />
+                    <X className="text-destructive !w-7 !h-7" />
                   </Button>
                 </div>
               );
@@ -821,11 +822,11 @@ const GameForm = ({
                 name="winner"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Winner</FormLabel>
+                    <FormLabel className='text-base'>Winner</FormLabel>
                     <FormControl>
                       <select
                         {...field}
-                        className="text-sm w-full border border-gray-300 rounded p-2"
+                        className="text-base w-full border border-gray-300 rounded p-2"
                         disabled={isPending}
                       >
                         <option value="">Select Winner</option>
@@ -842,7 +843,7 @@ const GameForm = ({
             <Button
               type="button"
               variant="outline"
-              className="w-full border-green-800 text-green-800 mt-4"
+              className="w-full border-green-800 text-green-800 mt-4 text-base"
               onClick={() =>
                 addShuttle({
                   quantity: 0,
@@ -855,13 +856,13 @@ const GameForm = ({
                 <div className='flex flex-row mt-2 gap-4'>
                 <Button
               type="submit"
-              className="w-full !bg-green-800 !hover:bg-green-900"
+              className="w-full !bg-green-800 !hover:bg-green-900 text-base"
               disabled={isPending}
             >
               {isPending ? <ButtonLoader /> : 'Save Game'}
             </Button>
             <Button className="w-full font-bold bg-red-600 hover:bg-red-700" onClick={() => closeForm()} variant="ghost">
-             <span className='text-white '> Close </span>      
+             <span className='text-white text-base'> Close </span>      
            </Button>
                 </div>
           </form>

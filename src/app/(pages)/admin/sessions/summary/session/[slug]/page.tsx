@@ -171,8 +171,8 @@ const Page = () => {
     return number.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-  };
+    })
+  }
 
   const groupPlayersBySponsor = () => {
     const players = data?.fetchSessionSummary?.playerSummaryRates || [];

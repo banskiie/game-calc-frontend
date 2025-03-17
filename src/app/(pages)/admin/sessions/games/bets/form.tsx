@@ -580,7 +580,7 @@ const BetsForm = ({
             >
                 <SheetHeader>
                     <SheetTitle>{id ? 'Update Bet' : 'Create Bet'}</SheetTitle>
-                    <SheetDescription>
+                    <SheetDescription className='text-base'>
                         Please fill up the necessary information below.
                     </SheetDescription>
                     <Form {...form}>

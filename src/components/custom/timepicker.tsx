@@ -61,12 +61,12 @@ const TimePicker: React.FC<TimePickerProps> = ({
 
   return (
     <div className="relative w-full" ref={pickerRef}>
-      <div
-        className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-sm cursor-pointer flex items-center justify-between"
+     <div
+        className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
         onClick={() => setIsPickerOpen(!isPickerOpen)}
       >
-        {`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`}
         <Clock className="h-5 w-5 text-muted-foreground" />
+        {`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`}
       </div>
 
       {isPickerOpen && (
@@ -77,7 +77,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
                 <div
                   key={h}
                   ref={h + 1 === hour ? hourRef : null}
-                  className={`p-2 text-center cursor-pointer rounded ${h + 1 === hour ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
+                  className={`p-2 text-base text-center cursor-pointer rounded ${h + 1 === hour ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
                   onClick={() => setHour(h + 1)}
                 >
                   {(h + 1).toString().padStart(2, '0')}
@@ -92,7 +92,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
                 <div
                   key={m}
                   ref={m === minute ? minuteRef : null}
-                  className={`p-2 text-center cursor-pointer rounded ${m === minute ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
+                  className={`p-2 text-base text-center cursor-pointer rounded ${m === minute ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
                   onClick={() => setMinute(m)}
                 >
                   {m.toString().padStart(2, '0')}
@@ -105,7 +105,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
                 <div
                   key={period}
                   ref={period === ampm ? ampmRef : null}
-                  className={`p-2 text-center cursor-pointer rounded ${period === ampm ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
+                  className={`p-2 text-base text-center cursor-pointer rounded ${period === ampm ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
                   onClick={() => setAmpm(period)}
                 >
                   {period}

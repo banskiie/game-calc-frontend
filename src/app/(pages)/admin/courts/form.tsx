@@ -124,7 +124,7 @@ const CourtForm = ({ id, refetch }: { id?: string; refetch?: () => void }) => {
       >
         <SheetHeader>
           <SheetTitle>{id ? "Edit Court" : "Add Court"}</SheetTitle>
-          <SheetDescription>
+          <SheetDescription className='text-base'>
             Please fill up the necessary information below.
           </SheetDescription>
         </SheetHeader>
