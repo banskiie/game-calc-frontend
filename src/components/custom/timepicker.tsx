@@ -47,9 +47,11 @@ const TimePicker: React.FC<TimePickerProps> = ({
 
   useEffect(() => {
     if (isPickerOpen) {
-      if (hourRef.current) hourRef.current.parentElement!.scrollTop = hourRef.current.offsetTop - 48;
-      if (minuteRef.current) minuteRef.current.parentElement!.scrollTop = minuteRef.current.offsetTop - 48;
-      if (ampmRef.current) ampmRef.current.parentElement!.scrollTop = ampmRef.current.offsetTop - 24;
+      setTimeout(() => {
+        if (hourRef.current) hourRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
+        if (minuteRef.current) minuteRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
+        if (ampmRef.current) ampmRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }, 0);
     }
   }, [isPickerOpen]);
 
@@ -61,7 +63,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
 
   return (
     <div className="relative w-full" ref={pickerRef}>
-     <div
+      <div
         className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
         onClick={() => setIsPickerOpen(!isPickerOpen)}
       >
