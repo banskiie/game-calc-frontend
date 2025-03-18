@@ -345,9 +345,9 @@ const Page = () => {
       prev.includes(playerId)
         ? prev.filter((id) => id !== playerId) // Remove player if already selected
         : [...prev, playerId] // Add player if not selected
-    )
+    );
   }
-
+  
   const handleRefresh = () => {
     refetch()
     refetchGames()

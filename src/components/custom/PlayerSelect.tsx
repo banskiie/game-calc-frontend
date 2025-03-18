@@ -1,6 +1,5 @@
-import { Select, SelectTrigger, SelectValue, SelectContent } from "@/components/ui/select";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, forwardRef, useEffect, useImperativeHandle } from "react";
 import { Input } from "../ui/input";
 import { X } from "lucide-react";
 import { useMutation, gql } from "@apollo/client";
@@ -16,6 +15,7 @@ interface PlayerSelectProps {
   selectedPlayers: string[];
   onSelectPlayer: (playerId: string) => void;
   refetchUsers: () => void;
+  onCreatePlayer?: (name: string) => Promise<string | null>;
 }
 
 const CREATE_USER = gql`
@@ -30,18 +30,20 @@ const CREATE_USER = gql`
 export const PlayerSelect = forwardRef<
   { handleAddPlayer: () => Promise<string | null> },
   PlayerSelectProps
->(({ players: initialPlayers, selectedPlayers, onSelectPlayer, refetchUsers }, ref) => {
+>(({ players: initialPlayers, selectedPlayers, onSelectPlayer, refetchUsers, onCreatePlayer }, ref) => {
   useImperativeHandle(ref, () => ({
     handleAddPlayer: () => handleAddPlayer(),
   }));
-  const [searchQuery, setSearchQuery] = useState("");
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
-  // Update players state when initialPlayers prop changes
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setPlayers(initialPlayers);
   }, [initialPlayers]);
 
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [createUser] = useMutation(CREATE_USER, {
     onCompleted: (data) => {
       const newUser = data.createUser;
@@ -60,15 +62,12 @@ export const PlayerSelect = forwardRef<
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+    setSearchQuery(e.target.value);
   };
 
   const handleAddPlayer = async (): Promise<string | null> => {
     const newPlayerName = searchQuery.trim();
-    if (!newPlayerName) {
-      return null;
-    }
+    if (!newPlayerName) return null;
 
     const existingPlayer = players.find(
       (player) => player.name.toLowerCase() === newPlayerName.toLowerCase()
@@ -79,15 +78,15 @@ export const PlayerSelect = forwardRef<
       return existingPlayer._id;
     } else {
       try {
-        const response = await createUser({
-          variables: {
-            input: {
-              name: newPlayerName,
-              role: "user",
-            },
-          },
-        });
-        return response.data.createUser._id;
+        if (onCreatePlayer) {
+          const newPlayerId = await onCreatePlayer(newPlayerName);
+          return newPlayerId;
+        } else {
+          const response = await createUser({
+            variables: { input: { name: newPlayerName, role: "user" } },
+          });
+          return response.data.createUser._id;
+        }
       } catch (error) {
         console.error("Failed to create user:", error);
         return null;
@@ -99,9 +98,7 @@ export const PlayerSelect = forwardRef<
     if (e.key === "Enter") {
       e.preventDefault();
       const playerId = await handleAddPlayer();
-      if (playerId) {
-        setSearchQuery("");
-      }
+      if (playerId) setSearchQuery("");
     }
   };
 
@@ -109,41 +106,42 @@ export const PlayerSelect = forwardRef<
     setSearchQuery("");
   };
 
-  // Get the names of the selected players
-  const selectedPlayerNames = selectedPlayers
-    .map((id) => players.find((p) => p._id === id)?.name)
-    .filter(Boolean) // Remove undefined values
-    .join(", ")
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsInputFocused(false);
+      }
+    };
 
-    const truncatedNames = selectedPlayerNames.length > 60
-    ? `${selectedPlayerNames.slice(0, 60)}...`
-    : selectedPlayerNames;
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <Select>
-      <SelectTrigger>
-        {/* Dynamically set the placeholder text */}
-        <SelectValue placeholder={truncatedNames || "Select players"} />
-      </SelectTrigger>
-      <SelectContent className="p-2">
-        <div className="relative">
-          <Input
-            placeholder="Search players..."
-            value={searchQuery}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            className="pr-10"
-          />
-          {searchQuery && (
-            <button
-              onClick={handleClearInput}
-              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+    <div className="relative" ref={dropdownRef}>
+      <div className="relative">
+        <Input
+          placeholder={
+            selectedPlayers
+              .map((id) => players.find((p) => p._id === id)?.name)
+              .filter(Boolean)
+              .join(", ") || "Search Players..."
+          }
+          value={searchQuery}
+          onChange={handleInputChange}
+          onFocus={() => setIsInputFocused(true)}
+          onKeyDown={handleKeyDown}
+          className="pr-10"
+        />
+        {searchQuery && (
+          <button onClick={handleClearInput} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+            <X size={16} />
+          </button>
+        )}
+      </div>
 
-        <div className="mt-2 max-h-60 overflow-y-auto">
+      {(isInputFocused || searchQuery) && (
+        <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg">
           {filteredPlayers.map((player) => (
             <div key={player._id} className="flex items-center gap-2 p-2 hover:bg-gray-100">
               <Checkbox
@@ -156,9 +154,14 @@ export const PlayerSelect = forwardRef<
               </label>
             </div>
           ))}
+          {searchQuery && !filteredPlayers.some((player) => player.name.toLowerCase() === searchQuery.toLowerCase()) && (
+            <div className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleAddPlayer}>
+              <span className="text-sm text-blue-600">+ Create &quot;{searchQuery}&quot;</span>
+            </div>
+          )}
         </div>
-      </SelectContent>
-    </Select>
+      )}
+    </div>
   );
 });
 

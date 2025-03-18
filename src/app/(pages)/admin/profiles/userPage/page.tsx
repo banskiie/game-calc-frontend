@@ -139,7 +139,7 @@ const Page = () => {
             role: "user",
           },
         },
-      });
+      })
 
       if (response.data?.createUser) {
         const newSponsor = response.data.createUser;
