@@ -286,6 +286,8 @@ const page = () => {
     refetchUsers();
   }
   // TIME AND DATE
+  // Manila (PHT) is UTC+8
+// So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
   const formatDate = (isoString: string) => {
     if (!isoString) return "N/A";
 
@@ -298,16 +300,41 @@ const page = () => {
     });
   }
 
+// SERVER IF DILI SIYA MA FIX IF ANG TIME IS LIKE 9:00:00 UTC and NOT UTC-8 PH TIME
+  // const formatDate = (isoString: string) => {
+  //   if (!isoString) return "N/A";
+
+  //   const date = new Date(isoString)
+  //   return date.toLocaleDateString("en-US", {
+  //     timeZone: "UTC",
+  //     year: "numeric",
+  //     month: "long",
+  //     day: "2-digit",
+  //   });
+  // }
   const formatTimeUTC = (isoString: string) => {
     if (!isoString) return "N/A";
-  
     return new Date(isoString).toLocaleTimeString("en-US", {
-      timeZone: "Asia/Manila",
+      timeZone: "Asia/Manila", 
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    })
-  }
+    });
+  };
+
+   // Manila (PHT) is UTC+8
+// So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
+// SERVER IF DILI SIYA MA FIX
+  // const formatTimeUTC = (isoString: string) => {
+  //   if (!isoString) return "N/A";
+  
+  //   return new Date(isoString).toLocaleTimeString("en-US", {
+  //     timeZone: "Asia/Manila",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //   })
+  // }
  // --TIME AND DATE--
 
   const handleRemoveSession = async (sessionId: string) => {

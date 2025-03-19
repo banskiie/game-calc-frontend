@@ -321,16 +321,25 @@ const GameForm = ({
       refetchSession().then(() => {
         const games = sessionData?.fetchSession?.games || [];
         const lastGame = games[games.length - 1];
-
+  
         let newStart = '05:00 PM';
         if (lastGame?.end) {
           const lastEnd = new Date(lastGame.end);
           lastEnd.setMinutes(lastEnd.getMinutes() + 1);
           newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
         }
-
+  
+        // Set the start time
         form.setValue('start', newStart);
-        form.setValue('end', '00:00 PM');
+  
+        // Set the end time based on the start time
+        const timeParts = newStart.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+        if (timeParts) {
+          const hour = timeParts[1];
+          const ampm = timeParts[3];
+          const endTime = `${hour}:00 ${ampm}`;
+          form.setValue('end', endTime, { shouldValidate: true });
+        }
       });
     }
   }, [open, refetch, refetchSession, sessionData, form])
@@ -344,83 +353,84 @@ const GameForm = ({
   }
 
   const startTime = useWatch({ control: form.control, name: 'start' })
-
   useEffect(() => {
-    if (!startTime || startTime === prevStartTime.current) return;
-    const timeParts = startTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
-    if (timeParts) {
-      const hour = timeParts[1]
-      const ampm = timeParts[3]
+    // Only apply this logic for new games (when `id` is not present)
+    if (!id && startTime) {
+      const timeParts = startTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+      if (timeParts) {
+        const hour = timeParts[1];
+        const ampm = timeParts[3];
   
-     
-      const endTime = `${hour}:00 ${ampm}`;
-      
-      const currentEndTime = form.getValues('end')
-      if (!currentEndTime || currentEndTime === '00:00 PM') {
+        // Set the end time to match the hour of the start time with "00" and the same AM/PM
+        const endTime = `${hour}:00 ${ampm}`;
         form.setValue('end', endTime, { shouldValidate: true });
       }
-      prevStartTime.current = startTime;
     }
-  }, [startTime, form])
+  }, [startTime, form, id])
 
   useEffect(() => {
     if (!id && sessionData?.fetchSession?.games) {
       const games = sessionData.fetchSession.games;
       const lastGame = games[games.length - 1];
-
+  
       let newStart = '05:00 PM';
       if (lastGame?.end) {
         const lastEnd = new Date(lastGame.end);
         lastEnd.setMinutes(lastEnd.getMinutes() + 1);
         newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
       }
-
-      if (form.getValues('start') !== newStart) {
-        form.setValue('start', newStart);
-      }
-      if (form.getValues('end') !== '00:00 PM') {
-        form.setValue('end', '00:00 PM');
+  
+      // Set the start time
+      form.setValue('start', newStart);
+  
+      // Set the end time based on the start time
+      const timeParts = newStart.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+      if (timeParts) {
+        const hour = timeParts[1];
+        const ampm = timeParts[3];
+        const endTime = `${hour}:00 ${ampm}`;
+        form.setValue('end', endTime, { shouldValidate: true });
       }
     }
   }, [sessionData, id, form, sessionData?.fetchSession?.games?.length])
 
-  useEffect(() => {
-    if (data) {
-      const game = data.fetchGame;
+useEffect(() => {
+  if (data) {
+    const game = data.fetchGame;
 
-      const ensurePM = (time: Date | null) => {
-        if (!time) return null;
-        const zonedTime = toZonedTime(time, 'Asia/Manila');
-        return format(zonedTime, 'hh:mm a');
-      }
+    const ensurePM = (time: Date | null) => {
+      if (!time) return null;
+      const zonedTime = toZonedTime(time, 'Asia/Manila');
+      return format(zonedTime, 'hh:mm a');
+    };
 
-      form.reset({
-        session: sessionId,
-        court: game.court._id,
-        players: [
-          game.A1._id,
-          game.A2?._id ?? '',
-          game.B1._id,
-          game.B2?._id ?? '',
-        ],
-        shuttles:
-          !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
-            ? game.shuttlesUsed.map((shuttle: any) => ({
-                quantity: shuttle.quantity,
-                shuttle: shuttle.shuttle._id,
-              }))
-            : [
-                {
-                  quantity: 1,
-                  shuttle: '',
-                },
-              ],
-        start: ensurePM(game.start) || '05:00 PM',
-        end: ensurePM(game.end) || '00:00 PM',
-        winner: game.winner || undefined,
-      })
-    }
-  }, [data, form, sessionId])
+    form.reset({
+      session: sessionId,
+      court: game.court._id,
+      players: [
+        game.A1._id,
+        game.A2?._id ?? '',
+        game.B1._id,
+        game.B2?._id ?? '',
+      ],
+      shuttles:
+        !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
+          ? game.shuttlesUsed.map((shuttle: any) => ({
+              quantity: shuttle.quantity,
+              shuttle: shuttle.shuttle._id,
+            }))
+          : [
+              {
+                quantity: 1,
+                shuttle: '',
+              },
+            ],
+      start: ensurePM(game.start) || '05:00 PM',
+      end: ensurePM(game.end) || '00:00 PM', // Preserve the end time from the fetched game
+      winner: game.winner || undefined,
+    });
+  }
+}, [data, form, sessionId])
 
   useEffect(() => {
     if (
