@@ -285,6 +285,17 @@ const page = () => {
   
     refetchUsers();
   }
+  const formatDate = (isoString: string) => {
+    if (!isoString) return "N/A";
+
+    const date = new Date(isoString)
+    return date.toLocaleDateString("en-US", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
+  }
 
   const handleRemoveSession = async (sessionId: string) => {
     await removeSession({
@@ -406,7 +417,7 @@ const page = () => {
               </div>
             )}
             <CardTitle>
-              {format(new Date(session.start), "MMMM d, yyyy")}
+              {formatDate(session.start)}
             </CardTitle>
             <CardDescription className="flex flex-col gap-1">
               <span className="block">
