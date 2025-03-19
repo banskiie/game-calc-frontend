@@ -285,17 +285,30 @@ const page = () => {
   
     refetchUsers();
   }
+  // TIME AND DATE
   const formatDate = (isoString: string) => {
     if (!isoString) return "N/A";
 
     const date = new Date(isoString)
     return date.toLocaleDateString("en-US", {
-      timeZone: "UTC",
+      timeZone: "Asia/Manila",
       year: "numeric",
       month: "long",
       day: "2-digit",
     });
   }
+
+  const formatTimeUTC = (isoString: string) => {
+    if (!isoString) return "N/A";
+  
+    return new Date(isoString).toLocaleTimeString("en-US", {
+      timeZone: "Asia/Manila",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+  }
+ // --TIME AND DATE--
 
   const handleRemoveSession = async (sessionId: string) => {
     await removeSession({
@@ -436,8 +449,10 @@ const page = () => {
                 )}
               </span>
               <span>
-                {format(new Date(session.start), "h:mm a")} to{" "}
-                {session.end ? format(new Date(session.end), "h:mm a") : "TBA"}
+                {/* {format(new Date(session.start), "h:mm a")} to{" "}
+                {session.end ? format(new Date(session.end), "h:mm a") : "TBA"} */}
+              {formatTimeUTC(session.start)} to{" "}
+                {session.end ? formatTimeUTC(session.end) : "TBA"}
               </span>
 
               <span className="font-bold"> Court: {session.court?.name || "Unknown"} </span>
