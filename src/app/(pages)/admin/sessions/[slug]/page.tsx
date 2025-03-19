@@ -472,8 +472,8 @@ const Page = () => {
       </div>
 
       <Dialog open={isPlayerSelectModalOpen} onOpenChange={setIsPlayerSelectModalOpen}>
-            <DialogContent>
-              <DialogHeader>
+            <DialogContent >
+              <DialogHeader className="!mb-1">
                 <DialogTitle>Add Players to Session</DialogTitle>
               </DialogHeader>
               <PlayerSelect
@@ -481,8 +481,9 @@ const Page = () => {
                 selectedPlayers={selectedPlayers} // Pass the selectedPlayers state
                 onSelectPlayer={handlePlayerSelection}
                 refetchUsers={refetchUsers}
+                
               />
-              <Button onClick={handleAddPlayers}>Add Players</Button>
+              <Button className="!h-10 !px-6 !py-4" onClick={handleAddPlayers}>Add Players</Button>
             </DialogContent>
           </Dialog>
 

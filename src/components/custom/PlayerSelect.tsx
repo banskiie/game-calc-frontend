@@ -38,12 +38,13 @@ export const PlayerSelect = forwardRef<
   const [searchQuery, setSearchQuery] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
   useEffect(() => {
     setPlayers(initialPlayers);
   }, [initialPlayers]);
 
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [createUser] = useMutation(CREATE_USER, {
     onCompleted: (data) => {
       const newUser = data.createUser;
@@ -60,6 +61,16 @@ export const PlayerSelect = forwardRef<
   const filteredPlayers = players.filter((player) =>
     player.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const selectedPlayersNames = selectedPlayers
+    .map((id) => players.find((p) => p._id === id)?.name)
+    .filter(Boolean);
+  
+  const truncatedPlaceholder = selectedPlayersNames.length > 0
+    ? selectedPlayersNames.join(", ").length > 60
+      ? selectedPlayersNames.join(", ").substring(0, 60) + "..."
+      : selectedPlayersNames.join(", ")
+    : "Search Players...";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -106,6 +117,10 @@ export const PlayerSelect = forwardRef<
     setSearchQuery("");
   };
 
+  const handleRowClick = (playerId: string) => {
+    onSelectPlayer(playerId);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -121,12 +136,8 @@ export const PlayerSelect = forwardRef<
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
         <Input
-          placeholder={
-            selectedPlayers
-              .map((id) => players.find((p) => p._id === id)?.name)
-              .filter(Boolean)
-              .join(", ") || "Search Players..."
-          }
+          ref={inputRef}
+          placeholder={truncatedPlaceholder}
           value={searchQuery}
           onChange={handleInputChange}
           onFocus={() => setIsInputFocused(true)}
@@ -134,27 +145,32 @@ export const PlayerSelect = forwardRef<
           className="pr-10"
         />
         {searchQuery && (
-          <button onClick={handleClearInput} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
-            <X size={16} />
+          <button onClick={handleClearInput} className="absolute right-2 top-0 p-2 text-gray-500 hover:text-gray-700">
+            <X size={24} />
           </button>
         )}
       </div>
 
-      {(isInputFocused || searchQuery) && (
-        <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-          {filteredPlayers.map((player) => (
-            <div key={player._id} className="flex items-center gap-2 p-2 hover:bg-gray-100">
-              <Checkbox
-                id={player._id}
-                checked={selectedPlayers.includes(player._id)}
-                onCheckedChange={() => onSelectPlayer(player._id)}
-              />
-              <label htmlFor={player._id} className="text-sm">
-                {player.name}
-              </label>
-            </div>
-          ))}
-          {searchQuery && !filteredPlayers.some((player) => player.name.toLowerCase() === searchQuery.toLowerCase()) && (
+      {searchQuery && (
+        <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg" style={{ bottom: "80%", marginBottom: "8px" }}>
+          {filteredPlayers.length > 0 ? (
+            filteredPlayers.map((player) => (
+              <div
+                key={player._id}
+                className="flex items-center gap-2 p-4 hover:bg-gray-100 cursor-pointer"
+                onClick={() => handleRowClick(player._id)}
+              >
+                <Checkbox
+                  id={player._id}
+                  checked={selectedPlayers.includes(player._id)}
+                  onCheckedChange={() => onSelectPlayer(player._id)}
+                />
+                <label htmlFor={player._id} className="text-sm flex-1 cursor-pointer">
+                  {player.name}
+                </label>
+              </div>
+            ))
+          ) : (
             <div className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer" onClick={handleAddPlayer}>
               <span className="text-sm text-blue-600">+ Create &quot;{searchQuery}&quot;</span>
             </div>
