@@ -16,7 +16,7 @@ spec:
         - name: game-calc-regcred
       containers:
         - name: game-calculator-frontend
-          image: 192.168.6.99:5500/game-calculator-frontend:latest
+          image: 192.168.6.64:5500/game-calculator-frontend:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
