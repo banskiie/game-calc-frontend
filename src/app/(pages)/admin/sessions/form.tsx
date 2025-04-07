@@ -394,43 +394,44 @@ const GameForm = ({
     }
   }, [sessionData, id, form, sessionData?.fetchSession?.games?.length])
 
-useEffect(() => {
-  if (data) {
-    const game = data.fetchGame;
-
-    const ensurePM = (time: Date | null) => {
-      if (!time) return null;
-      const zonedTime = toZonedTime(time, 'Asia/Manila');
-      return format(zonedTime, 'hh:mm a');
-    };
-
-    form.reset({
-      session: sessionId,
-      court: game.court._id,
-      players: [
-        game.A1._id,
-        game.A2?._id ?? '',
-        game.B1._id,
-        game.B2?._id ?? '',
-      ],
-      shuttles:
-        !!game.shuttlesUsed && game.shuttlesUsed?.length > 0
-          ? game.shuttlesUsed.map((shuttle: any) => ({
-              quantity: shuttle.quantity,
-              shuttle: shuttle.shuttle._id,
-            }))
-          : [
-              {
-                quantity: 1,
-                shuttle: '',
-              },
-            ],
-      start: ensurePM(game.start) || '05:00 PM',
-      end: ensurePM(game.end) || '00:00 PM', // Preserve the end time from the fetched game
-      winner: game.winner || undefined,
-    });
-  }
-}, [data, form, sessionId])
+  useEffect(() => {
+    if (data && open) {
+      const game = data.fetchGame;
+  
+      const ensurePM = (time: Date | null) => {
+        if (!time) return null;
+        const zonedTime = toZonedTime(time, 'Asia/Manila');
+        return format(zonedTime, 'hh:mm a');
+      };
+  
+      form.reset({
+        session: sessionId,
+        court: game.court._id,
+        players: [
+          game.A1._id,
+          game.A2?._id ?? '',
+          game.B1._id,
+          game.B2?._id ?? '',
+        ],
+        shuttles:
+          game.shuttlesUsed?.length > 0
+            ? game.shuttlesUsed.map((shuttle: any) => ({
+                quantity: shuttle.quantity,
+                shuttle: shuttle.shuttle._id,
+              }))
+            : [
+                {
+                  quantity: 1,
+                  shuttle: game.shuttlesUsed?.[0]?.shuttle._id || '',
+                },
+              ],
+        start: ensurePM(game.start) || '05:00 PM',
+        end: ensurePM(game.end) || '00:00 PM',
+        winner: game.winner || undefined,
+      });
+    }
+  }, [data, form, sessionId, open])
+  
 
   useEffect(() => {
     if (
@@ -459,7 +460,7 @@ useEffect(() => {
     if (disabled) return;
     startTransition(async () => {
       const { players, court, shuttles, start, end } = data;
-
+  
       try {
         const gameInput = {
           start: start ? parse(start, 'hh:mm a', new Date()) : null,
@@ -476,75 +477,71 @@ useEffect(() => {
               : shuttles,
           winner: data.winner || null,
         };
-
+  
         const response = await submitForm({
           variables: id
             ? { id, ...gameInput }
             : { ...gameInput, status: 'ongoing' },
         });
-
+  
         if (response.data?.createGame || response.data?.updateGame) {
-          await refetchSession()
-
-          if (refetch) {
-            refetch()
+          // Only refetch if we're not in edit mode
+          if (!id) {
+            await refetchSession();
           }
-
-          const updatedSession = sessionData?.fetchSession;
-          const games = updatedSession?.games || [];
-          const lastGame = games[games.length - 1];
-
-          let newStart = '05:00 PM';
-          if (lastGame?.end) {
-            const lastEnd = new Date(lastGame.end);
-            lastEnd.setMinutes(lastEnd.getMinutes() + 1);
-            newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
-          }
-
-          form.reset({
-            players: ['', '', '', ''],
-            court: updatedSession?.court?._id || '',
-            shuttles: [{ quantity: 1, shuttle: updatedSession?.shuttle?._id || '' }],
-            start: newStart,
-            end: '00:00 PM',
-          });
           
-          closeForm();
+          if (refetch) {
+            await refetch();
+          }
+  
           toast.success(id ? 'Game updated successfully!' : 'Game created successfully!');
+          
+          // Don't reset the form if we're in edit mode
+          if (!id) {
+            const updatedSession = sessionData?.fetchSession;
+            const games = updatedSession?.games || [];
+            const lastGame = games[games.length - 1];
+  
+            let newStart = '05:00 PM';
+            if (lastGame?.end) {
+              const lastEnd = new Date(lastGame.end);
+              lastEnd.setMinutes(lastEnd.getMinutes() + 1);
+              newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
+            }
+  
+            form.reset({
+              players: ['', '', '', ''],
+              court: updatedSession?.court?._id || '',
+              shuttles: [{ quantity: 1, shuttle: updatedSession?.shuttle?._id || '' }],
+              start: newStart,
+              end: '00:00 PM',
+            });
+          }
+          
+            closeForm()
         }
       } catch (error) {
         toast.error('Failed to save game. Please try again.');
       }
     })
   }
-
   const closeForm = () => {
     setOpen(false);
     form.clearErrors();
-
-    if (id) {
-      form.reset({
-        players: ['', '', '', ''],
-        court: '',
-        shuttles: [{ quantity: 1, shuttle: '' }],
-        session: sessionId || '',
-        start: null,
-        end: null,
-        winner: undefined,
-      });
-    } else {
+  
+    if (!id) {
       const defaultCourt = sessionData?.fetchSession?.court?._id || '';
       const defaultShuttle = sessionData?.fetchSession?.shuttle?._id || '';
       const games = sessionData?.fetchSession?.games || [];
       const lastGame = games[games.length - 1];
-
+  
       let newStart = '05:00 PM';
       if (lastGame?.end) {
         const lastEnd = new Date(lastGame.end);
         lastEnd.setMinutes(lastEnd.getMinutes() + 1);
         newStart = format(toZonedTime(lastEnd, 'Asia/Manila'), 'hh:mm a');
       }
-
+  
       form.reset({
         players: ['', '', '', ''],
         court: defaultCourt,
@@ -555,8 +552,6 @@ useEffect(() => {
         winner: undefined,
       });
     }
-
-    if (refetch) refetch();
   };
 
   if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />;

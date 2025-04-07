@@ -1,124 +1,315 @@
-import { useState, useRef, useEffect } from 'react';
-import { Clock } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
+import { useState, useRef, useEffect } from 'react'
+import { Clock } from 'lucide-react'
 
 interface TimePickerProps {
-  initialTime?: string;
-  onChange?: (time: string) => void;
-  syncHour?: boolean;
-  onHourChange?: (hour: number) => void;
+    initialTime?: string
+    onChange?: (time: string) => void
+    syncHour?: boolean
+    onHourChange?: (hour: number) => void
 }
 
 const TimePicker: React.FC<TimePickerProps> = ({
-  initialTime = '05:00 PM',
-  onChange,
-  syncHour = false,
-  onHourChange,
+    initialTime = '05:00 PM',
+    onChange,
+    syncHour = false,
+    onHourChange,
 }) => {
-  const timeParts = initialTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
-  const parsedHour = timeParts ? parseInt(timeParts[1]) : 5;
-  const parsedMinute = timeParts ? parseInt(timeParts[2]) : 0;
-  const parsedAmPm = timeParts ? timeParts[3] : 'PM';
+    // Parse the initial time only once when the component mounts
+    const parseInitialTime = () => {
+        const timeParts = initialTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i)
+        if (!timeParts) return { hour: 5, minute: 0, ampm: 'PM' }
 
-  const [hour, setHour] = useState<number>(parsedHour);
-  const [minute, setMinute] = useState<number>(parsedMinute);
-  const [ampm, setAmpm] = useState<string>(parsedAmPm);
-  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
-
-  const hourRef = useRef<HTMLDivElement | null>(null);
-  const minuteRef = useRef<HTMLDivElement | null>(null);
-  const ampmRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
-        setIsPickerOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const newTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-    onChange?.(newTime);
-  }, [hour, minute, ampm, onChange]);
-
-  useEffect(() => {
-    if (isPickerOpen) {
-      setTimeout(() => {
-        if (hourRef.current) hourRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
-        if (minuteRef.current) minuteRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
-        if (ampmRef.current) ampmRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
-      }, 0);
+        return {
+            hour: parseInt(timeParts[1]),
+            minute: parseInt(timeParts[2]),
+            ampm: timeParts[3].toUpperCase(),
+        }
     }
-  }, [isPickerOpen]);
 
-  useEffect(() => {
-    if (syncHour && onHourChange) {
-      onHourChange(hour); // Notify parent component of hour change
+    const [hour, setHour] = useState<number>(parseInitialTime().hour)
+    const [minute, setMinute] = useState<number>(parseInitialTime().minute)
+    const [ampm, setAmpm] = useState<string>(parseInitialTime().ampm)
+    const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false)
+    const pickerRef = useRef<HTMLDivElement>(null)
+
+    const hoursContainerRef = useRef<HTMLDivElement>(null)
+    const minutesContainerRef = useRef<HTMLDivElement>(null)
+    const ampmContainerRef = useRef<HTMLDivElement>(null)
+    // Generate data arrays
+    const hours = Array.from({ length: 12 }, (_, i) => i + 1)
+    const minutes = Array.from({ length: 60 }, (_, i) => i)
+    const amPmOptions = ['AM', 'PM']
+
+    // Track scrolling state
+    const isScrolling = useRef(false)
+    const scrollTimeout = useRef<NodeJS.Timeout | null>(null)
+
+    // Get the centered value from scroll position
+    const getCenteredValue = (container: HTMLDivElement, items: any[]) => {
+        const containerRect = container.getBoundingClientRect()
+        const highlightCenter = containerRect.top + containerRect.height / 2
+
+        // Find which item is at the exact center of the highlight
+        const itemsElements = container.querySelectorAll(
+            'div[class*="snap-center"]'
+        )
+        let closestItem = null
+        let smallestDistance = Infinity
+
+        itemsElements.forEach((item) => {
+            const itemRect = item.getBoundingClientRect()
+            const itemCenter = itemRect.top + itemRect.height / 2
+            const distance = Math.abs(itemCenter - highlightCenter)
+
+            if (distance < smallestDistance) {
+                smallestDistance = distance
+                closestItem = item
+            }
+        })
+
+        if (!closestItem) return items[0]
+
+        const itemIndex = parseInt(
+            (closestItem as HTMLElement).getAttribute('data-index') || '0'
+        )
+        return items[itemIndex % items.length]
     }
-  }, [hour, syncHour, onHourChange]);
 
-  return (
-    <div className="relative w-full" ref={pickerRef}>
-      <div
-        className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
-        onClick={() => setIsPickerOpen(!isPickerOpen)}
-      >
-        <Clock className="h-5 w-5 text-muted-foreground" />
-        {`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`}
-      </div>
+    // Scroll to center the selected item
+    const scrollToCenter = (
+        container: HTMLDivElement | null,
+        items: any[],
+        selected: any
+    ) => {
+        if (!container) return
 
-      {isPickerOpen && (
-        <div className="absolute left-0 right-0 bg-white rounded-lg border shadow-lg flex items-center justify-center p-4">
-          <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
-            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
-              {[...Array(12).keys()].map((h) => (
-                <div
-                  key={h}
-                  ref={h + 1 === hour ? hourRef : null}
-                  className={`p-2 text-base text-center cursor-pointer rounded ${h + 1 === hour ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
-                  onClick={() => setHour(h + 1)}
-                >
-                  {(h + 1).toString().padStart(2, '0')}
+        isScrolling.current = true
+
+        const selectedIndex = items.indexOf(selected)
+        const itemsElements = container.querySelectorAll(
+            'div[class*="snap-center"]'
+        )
+        const targetElement = itemsElements[items.length + selectedIndex] // Middle section
+
+        if (targetElement) {
+            const containerRect = container.getBoundingClientRect()
+            const targetRect = targetElement.getBoundingClientRect()
+            const highlightCenter = containerRect.top + containerRect.height / 2
+            const scrollPosition =
+                container.scrollTop +
+                (targetRect.top - highlightCenter) +
+                targetRect.height / 2
+
+            container.scrollTo({
+                top: scrollPosition,
+                behavior: 'auto',
+            })
+        }
+
+        setTimeout(() => (isScrolling.current = false), 300)
+    }
+
+    // Handle scroll events
+    const handleScroll = (type: 'hour' | 'minute' | 'ampm') => {
+        return () => {
+            if (isScrolling.current) return
+
+            clearTimeout(scrollTimeout.current as NodeJS.Timeout)
+
+            scrollTimeout.current = setTimeout(() => {
+                const container =
+                    type === 'hour'
+                        ? hoursContainerRef.current
+                        : type === 'minute'
+                        ? minutesContainerRef.current
+                        : ampmContainerRef.current
+
+                const items =
+                    type === 'hour'
+                        ? hours
+                        : type === 'minute'
+                        ? minutes
+                        : amPmOptions
+
+                if (!container) return
+
+                const centeredValue = getCenteredValue(container, items)
+
+                if (type === 'hour' && centeredValue !== hour)
+                    setHour(centeredValue)
+                if (type === 'minute' && centeredValue !== minute)
+                    setMinute(centeredValue)
+                if (type === 'ampm' && centeredValue !== ampm)
+                    setAmpm(centeredValue)
+            }, 100)
+        }
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                pickerRef.current &&
+                !pickerRef.current.contains(event.target as Node)
+            ) {
+                setIsPickerOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    useEffect(() => {
+        const newTime = `${hour.toString().padStart(2, '0')}:${minute
+            .toString()
+            .padStart(2, '0')} ${ampm}`
+        onChange?.(newTime)
+    }, [hour, minute, ampm, onChange])
+
+    useEffect(() => {
+        if (syncHour && onHourChange) {
+            onHourChange(hour)
+        }
+    }, [hour, syncHour, onHourChange])
+
+    // Scroll to selected item when picker opens
+    useEffect(() => {
+        if (!isPickerOpen) return
+
+        setTimeout(() => {
+            scrollToCenter(hoursContainerRef.current, hours, hour)
+            scrollToCenter(minutesContainerRef.current, minutes, minute)
+            scrollToCenter(ampmContainerRef.current, amPmOptions, ampm)
+        }, 0)
+    }, [isPickerOpen, hour, minute, ampm])
+
+    // Render item
+    const renderItem = (
+        value: number | string,
+        selectedValue: number | string
+    ) => {
+        const isSelected = value === selectedValue
+        const displayValue =
+            typeof value === 'number'
+                ? value.toString().padStart(2, '0')
+                : value
+
+        return (
+            <div
+                className={`
+          h-10 flex items-center justify-center
+          ${
+              isSelected
+                  ? 'text-primary font-bold text-lg'
+                  : 'text-muted-foreground'
+          }
+          transition-all duration-200
+        `}
+            >
+                {displayValue}
+            </div>
+        )
+    }
+
+    return (
+        <div className="relative w-full" ref={pickerRef}>
+            <div
+                className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
+                onClick={() => setIsPickerOpen(!isPickerOpen)}
+            >
+                <Clock className="h-5 w-5 text-muted-foreground" />
+                {`${hour.toString().padStart(2, '0')}:${minute
+                    .toString()
+                    .padStart(2, '0')} ${ampm}`}
+            </div>
+
+            {isPickerOpen && (
+                <div className="absolute z-50 mt-1 left-0 right-0 bg-white rounded-lg border shadow-lg p-4">
+                    <div className="flex items-center justify-center gap-2">
+                        {/* Hours */}
+                        <div
+                            ref={hoursContainerRef}
+                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                            onScroll={handleScroll('hour')}
+                        >
+                            <div className="py-20">
+                                {[...hours, ...hours, ...hours].map(
+                                    (h, index) => (
+                                        <div
+                                            key={`hour-${index}`}
+                                            className="snap-center h-10"
+                                            data-index={index % hours.length}
+                                        >
+                                            {renderItem(h, hour)}
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </div>
+
+                        <span className="text-lg font-bold">:</span>
+
+                        {/* Minutes */}
+                        <div
+                            ref={minutesContainerRef}
+                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                            onScroll={handleScroll('minute')}
+                        >
+                            <div className="py-20">
+                                {[...minutes, ...minutes, ...minutes].map(
+                                    (m, index) => (
+                                        <div
+                                            key={`minute-${index}`}
+                                            className="snap-center h-10"
+                                            data-index={index % minutes.length}
+                                        >
+                                            {renderItem(m, minute)}
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </div>
+
+                        {/* AM/PM */}
+                        <div
+                            ref={ampmContainerRef}
+                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                            onScroll={handleScroll('ampm')}
+                        >
+                            <div className="py-20">
+                                {/* Single instance of each option */}
+                                <div
+                                    className="snap-center h-10"
+                                    data-index={1}
+                                >
+                                    {renderItem('PM', ampm)}
+                                </div>
+                                <div
+                                    className="snap-center h-10"
+                                    data-index={0}
+                                >
+                                    {renderItem('AM', ampm)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Center highlight */}
+                    <div className="absolute inset-x-0 top-1/2 transform -translate-y-1/2 h-10 bg-gray-100 bg-opacity-50 border-y border-gray-200 pointer-events-none"></div>
                 </div>
-              ))}
-            </ScrollArea>
+            )}
 
-            <span className="text-lg">:</span>
-
-            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
-              {[...Array(60).keys()].map((m) => (
-                <div
-                  key={m}
-                  ref={m === minute ? minuteRef : null}
-                  className={`p-2 text-base text-center cursor-pointer rounded ${m === minute ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
-                  onClick={() => setMinute(m)}
-                >
-                  {m.toString().padStart(2, '0')}
-                </div>
-              ))}
-            </ScrollArea>
-
-            <ScrollArea className="h-32 w-16 overflow-y-auto flex flex-col items-center bg-white rounded-md">
-              {['AM', 'PM'].map((period) => (
-                <div
-                  key={period}
-                  ref={period === ampm ? ampmRef : null}
-                  className={`p-2 text-base text-center cursor-pointer rounded ${period === ampm ? 'bg-primary text-white' : 'hover:bg-gray-200'}`}
-                  onClick={() => setAmpm(period)}
-                >
-                  {period}
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
+            <style jsx>{`
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .hide-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            `}</style>
         </div>
-      )}
-    </div>
-  );
-};
+    )
+}
 
-export default TimePicker;
+export default TimePicker
