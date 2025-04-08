@@ -200,7 +200,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           h-10 flex items-center justify-center
           ${
               isSelected
-                  ? 'text-primary font-bold text-lg'
+                  ? 'text-primary font-bold text-xl'
                   : 'text-muted-foreground'
           }
           transition-all duration-200
@@ -213,103 +213,102 @@ const TimePicker: React.FC<TimePickerProps> = ({
 
     return (
         <div className="relative w-full" ref={pickerRef}>
-            <div
-                className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
-                onClick={() => setIsPickerOpen(!isPickerOpen)}
-            >
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                {`${hour.toString().padStart(2, '0')}:${minute
-                    .toString()
-                    .padStart(2, '0')} ${ampm}`}
-            </div>
-
-            {isPickerOpen && (
-                <div className="absolute z-50 mt-1 left-0 right-0 bg-white rounded-lg border shadow-lg p-4">
-                    <div className="flex items-center justify-center gap-2">
-                        {/* Hours */}
+          {/* Time display button */}
+          {/* <div
+            className="w-full pl-3 pr-10 py-2 border rounded-md bg-background text-base cursor-pointer flex items-center gap-2"
+            onClick={() => setIsPickerOpen(!isPickerOpen)}
+          > */}
+            {/* <Clock className="h-5 w-5 text-muted-foreground" />
+            {`${hour.toString().padStart(2, '0')}:${minute
+              .toString()
+              .padStart(2, '0')} ${ampm}`} */}
+          {/* </div> */}
+    
+          {/* Time picker dropdown */}
+          {/* {isPickerOpen && ( */}
+            <div className=" z-50 mt-1 left-0 right-0 bg-white rounded-lg border shadow-lg ">
+              <div className="flex items-center justify-center gap-6">
+                {/* <span>hour</span> -- Add here the Hour sa taas apila ang Minute like same sa timer sa android jud*/}
+                {/* Hours */}
+                <div
+                  ref={hoursContainerRef}
+                  className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                  onScroll={handleScroll('hour')}
+                >
+                    
+                  <div className="py-20 text-xl">
+                    {[...hours, ...hours, ...hours].map(
+                      (h, index) => (
                         <div
-                            ref={hoursContainerRef}
-                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
-                            onScroll={handleScroll('hour')}
+                          key={`hour-${index}`}
+                          className="snap-center h-10"
+                          data-index={index % hours.length}
                         >
-                            <div className="py-20">
-                                {[...hours, ...hours, ...hours].map(
-                                    (h, index) => (
-                                        <div
-                                            key={`hour-${index}`}
-                                            className="snap-center h-10"
-                                            data-index={index % hours.length}
-                                        >
-                                            {renderItem(h, hour)}
-                                        </div>
-                                    )
-                                )}
-                            </div>
+                      
+
+                          {renderItem(h, hour)}
                         </div>
-
-                        <span className="text-lg font-bold">:</span>
-
-                        {/* Minutes */}
-                        <div
-                            ref={minutesContainerRef}
-                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
-                            onScroll={handleScroll('minute')}
-                        >
-                            <div className="py-20">
-                                {[...minutes, ...minutes, ...minutes].map(
-                                    (m, index) => (
-                                        <div
-                                            key={`minute-${index}`}
-                                            className="snap-center h-10"
-                                            data-index={index % minutes.length}
-                                        >
-                                            {renderItem(m, minute)}
-                                        </div>
-                                    )
-                                )}
-                            </div>
-                        </div>
-
-                        {/* AM/PM */}
-                        <div
-                            ref={ampmContainerRef}
-                            className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
-                            onScroll={handleScroll('ampm')}
-                        >
-                            <div className="py-20">
-                                {/* Single instance of each option */}
-                                <div
-                                    className="snap-center h-10"
-                                    data-index={1}
-                                >
-                                    {renderItem('PM', ampm)}
-                                </div>
-                                <div
-                                    className="snap-center h-10"
-                                    data-index={0}
-                                >
-                                    {renderItem('AM', ampm)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Center highlight */}
-                    <div className="absolute inset-x-0 top-1/2 transform -translate-y-1/2 h-10 bg-gray-100 bg-opacity-50 border-y border-gray-200 pointer-events-none"></div>
+                      )
+                    )}
+                  </div>
                 </div>
-            )}
-
-            <style jsx>{`
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .hide-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}</style>
+    
+                <span className="text-lg font-bold">:</span>
+    
+                {/* Minutes */}
+                <div
+                  ref={minutesContainerRef}
+                  className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                  onScroll={handleScroll('minute')}
+                >
+                  <div className="py-20 text-xl">
+                    {[...minutes, ...minutes, ...minutes].map(
+                      (m, index) => (
+                        <div
+                          key={`minute-${index}`}
+                          className="snap-center h-10"
+                          data-index={index % minutes.length}
+                        >
+                          {renderItem(m, minute)}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+    
+                {/* AM/PM */}
+                <div
+                  ref={ampmContainerRef}
+                  className="h-40 overflow-y-auto snap-y snap-mandatory scroll-smooth hide-scrollbar"
+                  onScroll={handleScroll('ampm')}
+                >
+                  <div className="py-20 text-xl">
+                    <div className="snap-center h-10" data-index={1}>
+                      {renderItem('PM', ampm)}
+                    </div>
+                    <div className="snap-center h-10" data-index={0}>
+                      {renderItem('AM', ampm)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              {/* Center highlight */}
+              <div className="absolute inset-x-0 top-1/2 transform -translate-y-1/2 h-10 bg-gray-100 bg-opacity-50 border-y border-gray-200 pointer-events-none"></div>
+            </div>
+          {/* )} */}
+    
+          <style jsx>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+            .hide-scrollbar {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+          `}</style>
         </div>
-    )
-}
-
-export default TimePicker
+      )
+    }
+    
+    export default TimePicker

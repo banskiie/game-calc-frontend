@@ -3,7 +3,7 @@ import React from 'react'
 import { gql, useQuery } from '@apollo/client'
 import { useParams } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
-import { Instagram, Loader2 } from 'lucide-react'
+import { Frown, Instagram, Loader2 } from 'lucide-react'
 import {
     Table,
     TableBody,
@@ -221,8 +221,15 @@ const Page = () => {
             </div>
         )
     if (error) {
-        console.error('GraphQL Error:', error)
-        return <div>Error fetching Summary.</div>
+        return (
+            <div className="flex-1 h-fit flex flex-col items-center justify-center">
+                <Frown className="w-16 h-16 text-gray-500 mb-4" />
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                    Error fetching summary data
+                </h2>
+                <p className="text-sm text-gray-600"> No summary is available because no game has been created in this session. Please create a game(s) first before accessing this page.</p>
+            </div>
+        )
     }
 
     const summary = data?.fetchSessionSummary
@@ -358,16 +365,18 @@ const Page = () => {
                             </TableCell>
                         </TableRow>
 
-                         {/* Add this new row for Other Income */}
-                    <TableRow className="bg-white">
-                        <TableCell className="font-semibold border">
-                            Other Income (Rounded to Nearest 5)
-                        </TableCell>
-                        <TableCell className="font-bold border"></TableCell>
-                        <TableCell className="font-bold border">
-                            {formatNumberWithCommas(summary?.otherIncome || 0)}
-                        </TableCell>
-                    </TableRow>
+                        {/* Add this new row for Other Income */}
+                        <TableRow className="bg-white">
+                            <TableCell className="font-semibold border">
+                                Other Income (Rounded to Nearest 5)
+                            </TableCell>
+                            <TableCell className="font-bold border"></TableCell>
+                            <TableCell className="font-bold border">
+                                {formatNumberWithCommas(
+                                    summary?.otherIncome || 0
+                                )}
+                            </TableCell>
+                        </TableRow>
 
                         {/* Overall Total */}
                         <TableRow className="bg-gray-100">
@@ -378,8 +387,8 @@ const Page = () => {
                             <TableCell className="font-bold border">
                                 {formatNumberWithCommas(
                                     (summary?.courtTotal || 0) +
-                                        (summary?.shuttleTotal || 0)
-                                        + (summary?.otherIncome || 0)
+                                        (summary?.shuttleTotal || 0) +
+                                        (summary?.otherIncome || 0)
                                 )}
                             </TableCell>
                         </TableRow>
