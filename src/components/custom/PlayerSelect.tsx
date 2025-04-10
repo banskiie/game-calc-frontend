@@ -36,7 +36,7 @@ export const PlayerSelect = forwardRef<
   }));
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [_isInputFocused, setIsInputFocused] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);

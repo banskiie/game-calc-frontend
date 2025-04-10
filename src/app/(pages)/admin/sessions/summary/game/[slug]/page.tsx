@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { differenceInMinutes } from "date-fns"
-import html2canvas from "html2canvas"
 
 const FETCH_SUMMARY = gql`
   query FetchGameSummary($id: ID!) {
@@ -73,16 +72,16 @@ const formatNumberWithCommas = (number: number) => {
   })
 }
 
-const formatDate = (isoString: string) => {
-  if (!isoString) return 'N/A'
-  const date = new Date(isoString)
-  return date.toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit',
-  })
-}
+// const formatDate = (isoString: string) => {
+//   if (!isoString) return 'N/A'
+//   const date = new Date(isoString)
+//   return date.toLocaleDateString('en-US', {
+//     timeZone: 'UTC',
+//     year: 'numeric',
+//     month: 'long',
+//     day: '2-digit',
+//   })
+// }
 
 const Page = () => {
   const { slug } = useParams()
@@ -94,17 +93,17 @@ const Page = () => {
     onCompleted: (data) => console.log(data),
   })
 
-  const handleScreenshot = () => {
-    const gameSummaryContainer = document.getElementById('game-summary-container')
-    if (gameSummaryContainer) {
-      html2canvas(gameSummaryContainer).then((canvas) => {
-        const link = document.createElement('a')
-        link.download = `game-summary-${slug}.png`
-        link.href = canvas.toDataURL()
-        link.click()
-      })
-    }
-  }
+  // const handleScreenshot = () => {
+  //   const gameSummaryContainer = document.getElementById('game-summary-container')
+  //   if (gameSummaryContainer) {
+  //     html2canvas(gameSummaryContainer).then((canvas) => {
+  //       const link = document.createElement('a')
+  //       link.download = `game-summary-${slug}.png`
+  //       link.href = canvas.toDataURL()
+  //       link.click()
+  //     })
+  //   }
+  // }
 
   if (loading) return (
     <div className="flex-1 h-fit flex items-center justify-center">
@@ -119,7 +118,7 @@ const Page = () => {
 
   const summary = data?.fetchGameSummary
   const gameDuration = differenceInMinutes(new Date(summary?.game.end), new Date(summary?.game.start))
-  const totalShuttlesUsed = summary?.game.shuttlesUsed.reduce((acc: number, shuttle: any) => acc + shuttle.quantity, 0) || 0
+  // const totalShuttlesUsed = summary?.game.shuttlesUsed.reduce((acc: number, shuttle: any) => acc + shuttle.quantity, 0) || 0
   const shuttleNames = summary?.game.shuttlesUsed
   ?.map((item: any) => `${item.shuttle.name} (${item.quantity})`)
   .join(', ') || 'N/A'
