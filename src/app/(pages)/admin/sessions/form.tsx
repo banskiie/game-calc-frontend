@@ -17,11 +17,11 @@ import {
 } from '@/components/ui/sheet'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import React, { useEffect, useRef, useState, useTransition } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import ButtonLoader from '@/components/custom/ButtonLoader'
-import { Loader2, Minus, Plus, SquarePen, X } from 'lucide-react'
+import { Clock, Loader2, Minus, Plus, SquarePen, X } from 'lucide-react'
 import { format, toZonedTime } from 'date-fns-tz'
 import { parse } from 'date-fns'
 import TimePicker from '@/components/custom/timepicker'
@@ -292,7 +292,8 @@ const GameForm = ({
     const { data: shuttleData, loading: shuttlesLoading } =
         useQuery(FETCH_SHUTTLES)
     const [submitForm] = useMutation(id ? UPDATE_GAME : CREATE_GAME)
-    const prevStartTime = useRef<string | null>(null)
+    const [_isClosing, setIsClosing] = useState(false)
+    // const prevStartTime = useRef<string | null>(null)
     const form = useForm<z.infer<typeof GameSchema>>({
         resolver: zodResolver(GameSchema),
         values: {
@@ -545,17 +546,18 @@ const GameForm = ({
                             end: '00:00 PM',
                         })
                     }
-
                     closeForm()
                 }
             } catch (error) {
                 toast.error('Failed to save game. Please try again.')
+                console.log(error)
             }
         })
     }
+
     const closeForm = () => {
-        setOpen(false)
-        form.clearErrors()
+        setIsClosing(true)
+      
 
         if (!id) {
             const defaultCourt = sessionData?.fetchSession?.court?._id || ''
@@ -583,12 +585,17 @@ const GameForm = ({
                 winner: undefined,
             })
         }
+        setOpen(false)
+        setTimeout(() => setIsClosing(false), 500)
     }
 
     if (usersLoading || courtsLoading || shuttlesLoading) return <Loader2 />
 
     return (
-        <Sheet open={open} onOpenChange={setOpen} modal>
+        <Sheet open={open} onOpenChange={(open) => {
+            if(!open) closeForm()
+                else setOpen(true)
+        }} modal>
             <SheetTrigger asChild>
                 <Button
                     className={`${
@@ -759,9 +766,12 @@ const GameForm = ({
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="text-base block mb-1">
-                                        Start Time
-                                    </label>
+                                    <div className="flex flex-row items-center gap-2">
+                                        <Clock className="h-5 w-5 text-muted-foreground" />
+                                        <label className="text-base">
+                                            Start Time
+                                        </label>
+                                    </div>
                                     <TimePicker
                                         initialTime={
                                             form.getValues('start') ||
@@ -774,9 +784,13 @@ const GameForm = ({
                                 </div>
 
                                 <div>
-                                    <label className="text-base block mb-1">
-                                        End Time
-                                    </label>
+                                    <div className="flex flex-row items-center gap-2">
+                                        <Clock className="h-5 w-5 text-muted-foreground" />{' '}
+                                        <label className="text-base block mb-1">
+                                            End Time
+                                        </label>
+                                    </div>
+
                                     <TimePicker
                                         initialTime={
                                             form.getValues('end') || '00:00 PM'

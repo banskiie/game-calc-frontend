@@ -11,7 +11,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { gql, useLazyQuery, useMutation } from "@apollo/client";
-import { differenceInMinutes, format } from "date-fns";
+import { differenceInMinutes } from "date-fns";
 import { Loader2, X } from "lucide-react"; // Import X icon for the close button
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
