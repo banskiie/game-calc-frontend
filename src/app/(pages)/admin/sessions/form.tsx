@@ -503,7 +503,7 @@ const GameForm = ({
                     A2: players[1] || null,
                     B1: players[2],
                     B2: players[3] || null,
-                    court,
+                    court: form.getValues('court'),
                     shuttlesUsed:
                         shuttles?.length === 1 && !shuttles[0].shuttle
                             ? []

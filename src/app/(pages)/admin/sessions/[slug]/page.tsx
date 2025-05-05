@@ -436,7 +436,7 @@ const Page = () => {
   }
 
   useEffect(() => {
-    if (data?.fetchSession?.court?.length > 0) {
+    if (data?.fetchSession?.court?.length > 0 && activeTab === "all") {
       console.log("Available courts:", data.fetchSession.court)
       
       const woodCourt = data.fetchSession.court.find((c: any) => 
@@ -452,8 +452,11 @@ const Page = () => {
       setActiveTab(defaultTab)
       console.log("Setting default tab to:", defaultTab)
     }
-  }, [data])
-
+  }, [data?.fetchSession?.court])
+  const handleGameCreated = () => {
+    refetch();
+    refetchGames();
+  }
   useEffect(() => { 
     const interval = setInterval(() => {
       refetch()
@@ -649,10 +652,7 @@ const Page = () => {
 
       <div className="flex flex-row justify-center gap-4 mt-4">
         <GameForm sessionId={slug as string} 
-          refetch={() => {
-            refetch()
-            refetchGames()
-          }}
+          refetch={handleGameCreated}
           disabled={isSessionEnded}
           key={allGames.games.length}
           activeCourtTab={activeTab === "all" ? null : activeTab}
