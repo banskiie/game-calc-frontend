@@ -255,9 +255,28 @@ const page = () => {
     await fetchShuttles()
     await fetchUsers()
 
+    const { data: latestSessionData } = await fetchMore();
+    const latestSession = latestSessionData?.fetchSessions?.[0];
+  
+    let defaultPlayerIds = DEFAULT_PLAYER_IDS;
+  
+    if (latestSession) {
+      const playerIdsFromSession = new Set<string>();
+      
+      latestSession.games.forEach((game: any) => {
+        if (game.A1?._id) playerIdsFromSession.add(game.A1._id);
+        if (game.A2?._id) playerIdsFromSession.add(game.A2._id);
+        if (game.B1?._id) playerIdsFromSession.add(game.B1._id);
+        if (game.B2?._id) playerIdsFromSession.add(game.B2._id);
+      });
+  
+      if (playerIdsFromSession.size > 0) {
+        defaultPlayerIds = Array.from(playerIdsFromSession);
+      }
+    }
     setSelectCourts(DEFAULT_COURT_ID)
     setSelectedShuttle(DEFAULT_SHUTTLE_ID)
-    setSelectedPlayers(DEFAULT_PLAYER_IDS)
+    setSelectedPlayers(defaultPlayerIds)
   }
 
   const handleCreateSession = async () => {

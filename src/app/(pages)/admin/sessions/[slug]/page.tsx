@@ -423,6 +423,8 @@ const Page = () => {
             playerIds: playerIds,
           },
         })
+        setSelectedPlayers(prev => prev.filter(id => !playerIds.includes(id)))
+        setTempSelectedPlayers(prev => prev.filter(id => !playerIds.includes(id)))  
       } catch (error) {
         console.error("Error Removing Players from Session:", error)
       }
@@ -767,7 +769,9 @@ const Page = () => {
           tempSelectedPlayers={tempSelectedPlayers}
           onSelectPlayer={handlePlayerSelection}
           onToggleTempSelection={handleToggleTempSelection}
-          onRemovePlayer={(playerId) => handleRemovePlayers([playerId])}
+          onRemovePlayer={(playerId) => {
+            handleRemovePlayers([playerId])
+          }}
           refetchUsers={refetchUsers}
         />
         <div className="flex gap-2 mt-4">

@@ -11,7 +11,7 @@ const SummaryHistoryPage = () => {
   useEffect(() => {
     const fetchCsvFiles = async () => {
       try {
-        const response = await fetch('https://192.168.6.64:10000/api/csv-files'); // this is the url of the backend
+        const response = await fetch('https://192.168.6.99:10000/api/csv-files'); // this is the url of the backend
         console.log('Response:', response); 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -92,7 +92,7 @@ const SummaryHistoryPage = () => {
                       </span>
                     </div>
                     <a
-                      href={`https://192.168.6.64:10000/api/csv-files/download?file=${file.fileName}`}
+                      href={`https://192.168.6.99:10000/api/csv-files/download?file=${file.fileName}`}
                       download
                       className="inline-flex justify-center items-center px-4 py-2 w-full sm:w-auto text-sm text-white bg-green-600 hover:bg-green-700 transition-all duration-300 rounded-lg shadow-md text-center"
                     >
