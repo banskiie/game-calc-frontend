@@ -637,13 +637,18 @@ const Page = () => {
           </span>
           {allGames.games.length > 0 && (
             <span className="block text-muted-foreground font-semibold text-lg">
-              {format(new Date(allGames.games[0].start), "hh:mm a")} to{" "}
-              {allGames.games[allGames.games.length - 1].end
-                ? format(
-                    new Date(allGames.games[allGames.games.length - 1].end),
-                    "hh:mm a"
-                  )
-                : "TBA"}{" "}
+              {format(new Date(session.start), "hh:mm a")} to{" "}
+              {
+                (() => {
+                  const endedGames = allGames.games.filter((game: any) => game.end)
+                  if (endedGames.length === 0) return "Ongoing"
+
+                  const latestEnd = endedGames.reduce((latest: any, game: any) => 
+                  new Date(game.end) > new Date(latest) ? game.end : latest,
+                endedGames[0].end)
+                
+                return format(new Date(latestEnd), "hh:mm a")
+              })()}
             </span>
           )}
           <span className="block text-muted-foreground font-semibold text-lg">

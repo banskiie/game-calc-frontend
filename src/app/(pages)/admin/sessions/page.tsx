@@ -516,7 +516,7 @@ const page = () => {
                       {session.games.length}{" "}
                       {session.games.length > 1 ? "games" : "game"} (
                       {differenceInMinutes(
-                        new Date(session.games[session.games.length - 1].end),
+                        new Date(session.games[session.games.length - 1].end || new Date()),
                         new Date(session.games[0].start)
                       )}{" "}
                       mins total)
@@ -524,12 +524,28 @@ const page = () => {
                   </>
                 )}
               </span>
-              <span>
-                {/* {format(new Date(session.start), "h:mm a")} to{" "}
-                {session.end ? format(new Date(session.end), "h:mm a") : "TBA"} */}
-              {formatTimeUTC(session.start)} to{" "}
-                {session.end ? formatTimeUTC(session.end) : "TBA"}
-              </span>
+              <span> 
+             {session.games.length > 0 ? (
+              <>
+                {
+                  formatTimeUTC(session.games[0].start)
+                } to {" "}
+              {(() => {
+                const endedGames = session.games.filter((game: any) => game.end)
+
+                if(endedGames.length === 0) return "Ongoing"
+                
+                const latestEnd = endedGames.reduce((latest: string, game: any) => 
+                  new Date(game.end) > new Date(latest) ? game.end : latest,
+                  endedGames[0].end
+                )
+                return formatTimeUTC(latestEnd)
+              })()}
+              </>
+             ): (
+              "No games yet"
+             )}
+          </span>
 
               <span className="font-bold"> Court: {session.court?.map((c: any) => c.name).join(", ") || "Unknown"} </span>
               <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>

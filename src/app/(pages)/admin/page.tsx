@@ -505,22 +505,38 @@ const page = () => {
                   </>
                 )}
               </span>
-              <span>
-                {/* {format(new Date(session.start), "h:mm a")} to{" "}
-                {session.end ? format(new Date(session.end), "h:mm a") : "TBA"} */}
-              {formatTimeUTC(session.start)} to{" "}
-                {session.end ? formatTimeUTC(session.end) : "TBA"}
-              </span>
+              <span> 
+             {session.games.length > 0 ? (
+              <>
+                {
+                  formatTimeUTC(session.games[0].start)
+                } to {" "}
+              {(() => {
+                const endedGames = session.games.filter((game: any) => game.end)
 
-              <span className="font-bold"> Court: {session.court?.map((c: any) => c.name).join(", ") || "Unknown"} </span>
-              <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
-              <Badge
-                className={`${
-                  session?.end ? "bg-green-900/80" : "bg-blue-600/80"
-                } w-fit`}
-              >
-                {session?.end ? "Finished" : "Ongoing"}
-              </Badge>
+                if(endedGames.length === 0) return "Ongoing"
+                
+                const latestEnd = endedGames.reduce((latest: string, game: any) => 
+                  new Date(game.end) > new Date(latest) ? game.end : latest,
+                  endedGames[0].end
+                )
+                return formatTimeUTC(latestEnd)
+              })()}
+              </>
+             ): (
+              "No games yet"
+             )}
+          </span>
+
+        <span className="font-bold"> Court: {session.court?.map((c: any) => c.name).join(", ") || "Unknown"} </span>
+        <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
+        <Badge
+          className={`${
+            session?.end ? "bg-green-900/80" : "bg-blue-600/80"
+          } w-fit`}
+        >
+          {session?.end ? "Finished" : "Ongoing"}
+        </Badge>
             </CardDescription>
           </CardHeader>
         </Card>
