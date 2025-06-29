@@ -13,7 +13,7 @@ echo Git pull completed!
 
 :docker_build_frontend
 echo Building Docker image for frontend...
-docker build -t 192.168.6.64:5500/game-calculator-frontend:latest .
+docker build -t 192.168.6.99:5500/game-calculator-frontend:latest .
 if %errorlevel% neq 0 (
     echo Docker build failed. Exiting...
     exit /b 1

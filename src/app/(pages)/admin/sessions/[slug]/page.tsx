@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation"
 import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client"
-import { CircleStop, FileText, Loader2, Play, SettingsIcon, UserPlus2 } from "lucide-react"
+import { CircleStop, FileText, Loader2, Play, SettingsIcon, Trash2, UserPlus2 } from "lucide-react"
 import TennisCourtIcon from '../../../../../../public/tennis-court.png'
 import {
   Card,
@@ -136,6 +136,12 @@ const END_GAME = gql`
       end
       status
     }
+  }
+`
+
+const DELETE_GAME = gql`
+  mutation DeleteGame($id: ID!) {
+    deleteGame(_id: $id)
   }
 `
 
@@ -319,6 +325,16 @@ const Page = () => {
     },
     onError: (error) => {
       toast.error(`Failed to end game: ${error.message}`)
+    },
+  })
+
+   const [deleteGame] = useMutation(DELETE_GAME, {
+    onCompleted: () => {
+      toast.success("Game deleted successfully!")
+      refetchGames();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete game: ${error.message}`)
     },
   })
 
@@ -605,6 +621,16 @@ const Page = () => {
             <CircleStop className="!h-6 !w-6" />
           </Button>
         )}
+        <Button
+        variant="destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+            deleteGame({ variables: { id: game._id } });
+        }}
+        className="flex items-center justify-center h-10 w-10 rounded-full"
+      >
+        <Trash2 className="!h-6 !w-6" />
+      </Button>
       </div>
     </div>
   )
