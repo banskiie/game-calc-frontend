@@ -11,7 +11,7 @@ export const CourtMultiSelect = ({
   }) => {
     return (
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Select Courts:</label>
+        <label className="block text-lg font-semibold">Select Courts:</label>
         <div className="flex flex-wrap gap-2">
           {courts?.map((court) => (
             <div
