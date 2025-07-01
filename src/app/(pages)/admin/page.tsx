@@ -11,10 +11,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { gql, useLazyQuery, useMutation } from "@apollo/client";
 import { differenceInMinutes } from "date-fns";
-import { Divide, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -264,7 +263,7 @@ const page = () => {
     if (selectedCourts.length === 0 || !selectedShuttle) {
       return alert("Please select a court and a shuttle.");
     }
-  
+
     const sessionResponse = await startSession({
       variables: {
         courtId: selectedCourts,
@@ -272,9 +271,9 @@ const page = () => {
         playerIds: selectedPlayers,
       },
     });
-  
+
     const sessionId = sessionResponse.data.startSession._id;
-  
+
     if (selectedPlayers.length > 0) {
       await addPlayersToSession({
         variables: {
@@ -283,12 +282,12 @@ const page = () => {
         },
       });
     }
-  
+
     refetchUsers();
   }
   // TIME AND DATE
   // Manila (PHT) is UTC+8
-// So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
+  // So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
   const formatDate = (isoString: string) => {
     if (!isoString) return "N/A";
 
@@ -301,7 +300,7 @@ const page = () => {
     });
   }
 
-// SERVER IF DILI SIYA MA FIX IF ANG TIME IS LIKE 9:00:00 UTC and NOT UTC-8 PH TIME
+  // SERVER IF DILI SIYA MA FIX IF ANG TIME IS LIKE 9:00:00 UTC and NOT UTC-8 PH TIME
   // const formatDate = (isoString: string) => {
   //   if (!isoString) return "N/A";
 
@@ -316,19 +315,19 @@ const page = () => {
   const formatTimeUTC = (isoString: string) => {
     if (!isoString) return "N/A";
     return new Date(isoString).toLocaleTimeString("en-US", {
-      timeZone: "Asia/Manila", 
+      timeZone: "Asia/Manila",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   };
 
-   // Manila (PHT) is UTC+8
-// So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
-// SERVER IF DILI SIYA MA FIX
+  // Manila (PHT) is UTC+8
+  // So 2025-03-19T23:01:01.542Z + 8 hours = 2025-03-20T07:01:01 in PHT → 7:01 AM
+  // SERVER IF DILI SIYA MA FIX
   // const formatTimeUTC = (isoString: string) => {
   //   if (!isoString) return "N/A";
-  
+
   //   return new Date(isoString).toLocaleTimeString("en-US", {
   //     timeZone: "Asia/Manila",
   //     hour: "2-digit",
@@ -336,7 +335,7 @@ const page = () => {
   //     hour12: true,
   //   })
   // }
- // --TIME AND DATE--
+  // --TIME AND DATE--
 
   const handleRemoveSession = async (sessionId: string) => {
     await removeSession({
@@ -360,7 +359,7 @@ const page = () => {
         : [...prev, playerId]
     )
   }
- 
+
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {
       setSelectedPlayers([])
@@ -386,8 +385,8 @@ const page = () => {
       </div>
 
       <Dialog open={open} onOpenChange={handleDialogClose}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Create a New Session</DialogTitle>
           </DialogHeader>
 
@@ -403,14 +402,15 @@ const page = () => {
               ))}
             </SelectContent>
           </Select> */}
-        
 
-          {courtsData?.fetchCourts && (
+
+          <div className="overflow-y-auto flex-1 py-4">
+            {courtsData?.fetchCourts && (
               <CourtMultiSelect
                 courts={courtsData.fetchCourts}
                 selectedCourts={selectedCourts}
                 onSelectCourt={(courtId) => {
-                  setSelectCourts(prev => 
+                  setSelectCourts(prev =>
                     prev.includes(courtId)
                       ? prev.filter(id => id !== courtId)
                       : [...prev, courtId]
@@ -418,44 +418,43 @@ const page = () => {
                 }}
               />
             )}
-          <div className="border-t border-gray-200" />
-          {/* <Select onValueChange={(value) => setSelectedShuttle(value)} value={selectedShuttle || ""}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a shuttle" />
-            </SelectTrigger>
-            <SelectContent>
-              {shuttlesData?.fetchShuttles.map((shuttle: any) => (
-                <SelectItem key={shuttle._id} value={shuttle._id}>
-                  {shuttle.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select> */}
-          {shuttlesData?.fetchShuttles && (
-            <ShuttleSingleSelect
-            shuttles={shuttlesData.fetchShuttles}
-            selectedShuttle={selectedShuttle}
-            onSelectShuttle={(shuttleId) => (
-              setSelectedShuttle(shuttleId)
-            )} 
-            />
-          )}
-         <div className="border-t border-gray-200" />
-          <PlayerSelect
-            players={usersData?.fetchUsers || []}
-            selectedPlayers={selectedPlayers}
-            tempSelectedPlayers={selectedPlayers}
-            onSelectPlayer={handlePlayerSelection}
-            onToggleTempSelection={handlePlayerSelection}
-            onRemovePlayer={(playerId) => {
-              setSelectedPlayers(prev => prev.filter(id => id !== playerId));
-            }}
-            refetchUsers={refetchUsers}
-          />
+            <div className="border-t border-gray-200 my-4" />
 
-          <Button className="w-full" onClick={handleCreateSession} disabled={startLoading || selectedCourts.length === 0} >
-            {startLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Create Session"}
-          </Button>
+            {shuttlesData?.fetchShuttles && (
+              <ShuttleSingleSelect
+                shuttles={shuttlesData.fetchShuttles}
+                selectedShuttle={selectedShuttle}
+                onSelectShuttle={setSelectedShuttle}
+              />
+            )}
+            <div className="border-t border-gray-200 my-4" />
+
+            <PlayerSelect
+              players={usersData?.fetchUsers || []}
+              selectedPlayers={selectedPlayers}
+              tempSelectedPlayers={selectedPlayers}
+              onSelectPlayer={handlePlayerSelection}
+              onToggleTempSelection={handlePlayerSelection}
+              onRemovePlayer={(playerId) => {
+                setSelectedPlayers(prev => prev.filter(id => id !== playerId));
+              }}
+              refetchUsers={refetchUsers}
+              defaultActiveTab="selected"
+            />
+          </div>
+
+          {/* Fixed footer */}
+          <div className="flex-shrink-0 pt-4 border-t border-gray-200">
+            <Button
+              className="w-full"
+              onClick={handleCreateSession}
+              disabled={startLoading || selectedCourts.length === 0}
+            >
+              {startLoading ? (
+                <Loader2 className="animate-spin mr-2" size={16} />
+              ) : "Create Session"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -473,17 +472,17 @@ const page = () => {
           <CardHeader>
             {!session.end && (
               <div className="absolute top-2 right-2">
-                        
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemoveSession(session._id);
-                }}
-              >
-                <X className="!h-6 !w-6 text-red-600" />
-              </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemoveSession(session._id);
+                  }}
+                >
+                  <X className="!h-6 !w-6 text-red-600" />
+                </Button>
               </div>
             )}
             <CardTitle>
@@ -505,38 +504,37 @@ const page = () => {
                   </>
                 )}
               </span>
-              <span> 
-             {session.games.length > 0 ? (
-              <>
-                {
-                  formatTimeUTC(session.games[0].start)
-                } to {" "}
-              {(() => {
-                const endedGames = session.games.filter((game: any) => game.end)
+              <span>
+                {session.games.length > 0 ? (
+                  <>
+                    {
+                      formatTimeUTC(session.games[0].start)
+                    } to {" "}
+                    {(() => {
+                      const endedGames = session.games.filter((game: any) => game.end)
 
-                if(endedGames.length === 0) return "Ongoing"
-                
-                const latestEnd = endedGames.reduce((latest: string, game: any) => 
-                  new Date(game.end) > new Date(latest) ? game.end : latest,
-                  endedGames[0].end
-                )
-                return formatTimeUTC(latestEnd)
-              })()}
-              </>
-             ): (
-              "No games yet"
-             )}
-          </span>
+                      if (endedGames.length === 0) return "Ongoing"
 
-        <span className="font-bold"> Court: {session.court?.map((c: any) => c.name).join(", ") || "Unknown"} </span>
-        <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
-        <Badge
-          className={`${
-            session?.end ? "bg-green-900/80" : "bg-blue-600/80"
-          } w-fit`}
-        >
-          {session?.end ? "Finished" : "Ongoing"}
-        </Badge>
+                      const latestEnd = endedGames.reduce((latest: string, game: any) =>
+                        new Date(game.end) > new Date(latest) ? game.end : latest,
+                        endedGames[0].end
+                      )
+                      return formatTimeUTC(latestEnd)
+                    })()}
+                  </>
+                ) : (
+                  "No games yet"
+                )}
+              </span>
+
+              <span className="font-bold"> Court: {session.court?.map((c: any) => c.name).join(", ") || "Unknown"} </span>
+              <span className="font-bold">Shuttle: {session.shuttle?.name || "Unknown"}</span>
+              <Badge
+                className={`${session?.end ? "bg-green-900/80" : "bg-blue-600/80"
+                  } w-fit`}
+              >
+                {session?.end ? "Finished" : "Ongoing"}
+              </Badge>
             </CardDescription>
           </CardHeader>
         </Card>

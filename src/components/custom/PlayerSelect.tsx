@@ -263,7 +263,7 @@
 
 import {
   useState,
-  useRef,
+  // useRef,
   useEffect,
   forwardRef,
   useImperativeHandle,
@@ -291,6 +291,7 @@ interface PlayerSelectProps {
   onRemovePlayer?: (playerId: string) => void;
   refetchUsers: () => void;
   onCreatePlayer?: (name: string) => Promise<string | null>;
+  defaultActiveTab?: "players" | "selected";
 }
 
 const CREATE_USER = gql`
@@ -316,6 +317,7 @@ export const PlayerSelect = forwardRef<
       onRemovePlayer,
       refetchUsers,
       onCreatePlayer,
+      defaultActiveTab = "players",
     },
     ref
   ) => {
@@ -368,14 +370,14 @@ export const PlayerSelect = forwardRef<
     );
 
     // Split into columns with max 10 players per column
-    const columnCount = 3;
-    const maxPlayersPerColumn = 10;
-    const playerColumns = Array.from({ length: columnCount }, (_, i) =>
-      filteredPlayers.slice(
-        i * maxPlayersPerColumn,
-        (i + 1) * maxPlayersPerColumn
-      )
-    );
+    // const columnCount = 3;
+    // const maxPlayersPerColumn = 10;
+    // const playerColumns = Array.from({ length: columnCount }, (_, i) =>
+    //   filteredPlayers.slice(
+    //     i * maxPlayersPerColumn,
+    //     (i + 1) * maxPlayersPerColumn
+    //   )
+    // );
 
     const handleAddPlayer = useCallback(async (): Promise<string | null> => {
       const nameToAdd = newPlayerName.trim();
@@ -439,16 +441,38 @@ export const PlayerSelect = forwardRef<
     );
 
     const handleClearSearch = useCallback(() => setSearchQuery(""), []);
-    const handlePlayerToggle = useCallback(
+    // const handlePlayerToggle = useCallback(
+    //   (playerId: string) => {
+    //     if (selectedPlayers.includes(playerId)) {
+    //       onRemovePlayer?.(playerId);
+    //     } else if (tempSelectedPlayers?.includes(playerId)) {
+    //       onToggleTempSelection?.(playerId);
+    //     } else {
+    //       onToggleTempSelection
+    //         ? onToggleTempSelection(playerId)
+    //         : onSelectPlayer(playerId);
+    //     }
+    //   },
+    //   [
+    //     selectedPlayers,
+    //     tempSelectedPlayers,
+    //     onRemovePlayer,
+    //     onToggleTempSelection,
+    //     onSelectPlayer,
+    //   ]
+    // );
+const handlePlayerToggle = useCallback(
       (playerId: string) => {
         if (selectedPlayers.includes(playerId)) {
           onRemovePlayer?.(playerId);
         } else if (tempSelectedPlayers?.includes(playerId)) {
           onToggleTempSelection?.(playerId);
         } else {
-          onToggleTempSelection
-            ? onToggleTempSelection(playerId)
-            : onSelectPlayer(playerId);
+          if (onToggleTempSelection) {
+            onToggleTempSelection(playerId);
+          } else {
+            onSelectPlayer(playerId);
+          }
         }
       },
       [
@@ -459,10 +483,9 @@ export const PlayerSelect = forwardRef<
         onSelectPlayer,
       ]
     );
-
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Session Settings</h2>
+        <h2 className="text-base font-semibold">Session Settings</h2>
 
         {/* Search filter (positioned outside tabs to maintain consistency) */}
         {/* Search and Add Player Section */}
@@ -501,10 +524,10 @@ export const PlayerSelect = forwardRef<
           </div>
         </div>
 
-        <Tabs defaultValue="players" className="w-full">
+        <Tabs defaultValue={defaultActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="players">Players</TabsTrigger>
-            <TabsTrigger value="selected">
+            <TabsTrigger value="players" className="text-base">Players</TabsTrigger>
+            <TabsTrigger value="selected" className="text-base">
               Selected Players ({allSelectedPlayerIds.length})
             </TabsTrigger>
           </TabsList>
@@ -514,7 +537,7 @@ export const PlayerSelect = forwardRef<
             <TabsContent value="players" className="mt-0">
               {/* Players Tab Content */}
               {filteredPlayers.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2">
                   {filteredPlayers.map((player) => (
                     <div
                       key={player._id}
@@ -547,7 +570,7 @@ export const PlayerSelect = forwardRef<
             <TabsContent value="selected" className="mt-0">
               {/* Selected Players Tab Content */}
               {allSelectedPlayerIds.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2">
                   {allSelectedPlayerIds.map((playerId) => {
                     const player = players.find((p) => p._id === playerId);
                     return player ? (
@@ -580,7 +603,6 @@ export const PlayerSelect = forwardRef<
           </div>
         </Tabs>
 
-        {/* Add New Player (positioned outside tabs) */}
       </div>
     );
   }

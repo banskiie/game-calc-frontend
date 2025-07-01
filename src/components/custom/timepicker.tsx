@@ -78,28 +78,28 @@ const TimePicker = forwardRef<TimePickerRef, TimePickerProps>(({
 
   const handleScroll = (type: 'hour' | 'minute' | 'ampm') => {
     let scrollTimeout: NodeJS.Timeout;
-  
+
     return () => {
       const container =
         type === 'hour'
           ? hoursContainerRef.current
           : type === 'minute'
-          ? minutesContainerRef.current
-          : ampmContainerRef.current;
-  
+            ? minutesContainerRef.current
+            : ampmContainerRef.current;
+
       const list = type === 'hour' ? hours : type === 'minute' ? minutes : amPmOptions;
       if (!container) return;
-  
+
       clearTimeout(scrollTimeout);
-  
+
       scrollTimeout = setTimeout(() => {
         const value = getScrollValue(container, list);
         const parsedValue = typeof list[0] === 'number' ? parseInt(value as string) : value;
-  
+
         if (type === 'hour') setHour(parsedValue);
         if (type === 'minute') setMinute(parsedValue);
         if (type === 'ampm') setAmpm(parsedValue);
-  
+
         // recenter on selected value
         centerScroll(container, parsedValue, list);
       }, 150);
@@ -113,7 +113,7 @@ const TimePicker = forwardRef<TimePickerRef, TimePickerProps>(({
         setHour(parseInt(match[1]));
         setMinute(parseInt(match[2]));
         setAmpm(match[3].toUpperCase());
-  
+
         setTimeout(() => {
           centerScroll(hoursContainerRef.current, parseInt(match[1]), hours);
           centerScroll(minutesContainerRef.current, parseInt(match[2]), minutes);
@@ -133,7 +133,7 @@ const TimePicker = forwardRef<TimePickerRef, TimePickerProps>(({
       };
       setTimeout(init, 50);
     }
-  }, [isInitialized]);
+  }, [isInitialized, hour, hours, minute, minutes, ampm, amPmOptions]);
 
   useEffect(() => {
     onChange?.(
@@ -152,9 +152,8 @@ const TimePicker = forwardRef<TimePickerRef, TimePickerProps>(({
       <div
         key={`${item}-${i}`}
         data-value={item}
-        className={`snap-center h-10 flex items-center justify-center ${
-          selected === item ? 'text-black font-bold text-lg' : 'text-gray-500 text-lg'
-        }`}
+        className={`snap-center h-10 flex items-center justify-center ${selected === item ? 'text-black font-bold text-lg' : 'text-gray-500 text-lg'
+          }`}
       >
         {typeof item === 'number' ? item.toString().padStart(2, '0') : item}
       </div>
@@ -205,9 +204,8 @@ const TimePicker = forwardRef<TimePickerRef, TimePickerProps>(({
                 <div
                   key={item}
                   data-value={item}
-                  className={`snap-center h-10 flex items-center justify-center ${
-                    ampm === item ? 'text-black font-bold text-lg' : 'text-gray-500 text-lg'
-                  }`}
+                  className={`snap-center h-10 flex items-center justify-center ${ampm === item ? 'text-black font-bold text-lg' : 'text-gray-500 text-lg'
+                    }`}
                 >
                   {item}
                 </div>

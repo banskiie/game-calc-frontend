@@ -227,7 +227,6 @@ const GameForm = ({
     refetch,
     disabled,
     activeCourtTab,
-    forceKey,
 }: {
     sessionId: string
     id?: string
@@ -419,16 +418,16 @@ const GameForm = ({
                 shuttles:
                     game.shuttlesUsed?.length > 0
                         ? game.shuttlesUsed.map((shuttle: any) => ({
-                              quantity: shuttle.quantity,
-                              shuttle: shuttle.shuttle._id,
-                          }))
+                            quantity: shuttle.quantity,
+                            shuttle: shuttle.shuttle._id,
+                        }))
                         : [
-                              {
-                                  quantity: 1,
-                                  shuttle:
-                                      game.shuttlesUsed?.[0]?.shuttle._id || '',
-                              },
-                          ],
+                            {
+                                quantity: 1,
+                                shuttle:
+                                    game.shuttlesUsed?.[0]?.shuttle._id || '',
+                            },
+                        ],
                 start: ensurePM(game.start) || '05:00 PM',
                 end: ensurePM(game.end) || '00:00 PM',
                 winner: game.winner || undefined,
@@ -492,7 +491,7 @@ const GameForm = ({
     const handleSubmit = async (data: z.infer<typeof GameSchema>) => {
         if (disabled) return
         startTransition(async () => {
-            const { players, court, shuttles, start, end } = data
+            const { players, shuttles, start, end } = data
 
             try {
                 const gameInput = {
@@ -643,11 +642,10 @@ const GameForm = ({
         >
             <SheetTrigger asChild>
                 <Button
-                    className={`${
-                        id
+                    className={`${id
                             ? 'bg-green-600 hover:bg-green-700 text-white h-10 w-10 rounded-full flex items-center justify-center'
-                            : 'bg-green-500 hover:bg-green-600 text-white rounded-l-3xl h-10 w-20 flex justify-center align-center'
-                    }`}
+                            : "bg-green-500 hover:bg-green-600 h-12"
+                        }`}
                     disabled={disabled}
                 >
                     {id ? (
@@ -980,7 +978,7 @@ const GameForm = ({
                                                                         return
                                                                     field.onChange(
                                                                         +field.value -
-                                                                            1
+                                                                        1
                                                                     )
                                                                 }}
                                                             >
@@ -1005,8 +1003,8 @@ const GameForm = ({
                                                                             ''
                                                                             ? ''
                                                                             : +e
-                                                                                  .target
-                                                                                  .value
+                                                                                .target
+                                                                                .value
                                                                     )
                                                                 }
                                                             />
@@ -1017,7 +1015,7 @@ const GameForm = ({
                                                                 onClick={() => {
                                                                     field.onChange(
                                                                         +field.value +
-                                                                            1
+                                                                        1
                                                                     )
                                                                 }}
                                                             >

@@ -260,7 +260,7 @@ const Home = () => {
   }, [pin, onSubmit])
 
   return (
-    <div className="h-screen w-screen flex justify-center items-center bg-gray-50">
+    <div className="h-screen w-screen flex justify-center items-center bg-gray-50 -mt-18">
       <div className="max-w-[30rem] w-full bg-white p-10 rounded-lg shadow-md">
         <div className="flex flex-row items-center justify-center mb-14">
           <Image src={favicon} alt="Game Calculator Icon" width={48} height={48} className="mr-2" />

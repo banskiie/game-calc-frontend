@@ -11,13 +11,9 @@ import {
   Trash2,
   UserPlus2,
 } from "lucide-react";
-import TennisCourtIcon from "../../../../../../public/tennis-court.png";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Frown } from "lucide-react";
 import GameForm from "../form";
@@ -153,13 +149,13 @@ const DELETE_GAME = gql`
   }
 `;
 
-const END_SESSION = gql`
-  mutation EndSession($id: ID!) {
-    endSession(_id: $id) {
-      _id
-    }
-  }
-`;
+// const END_SESSION = gql`
+//   mutation EndSession($id: ID!) {
+//     endSession(_id: $id) {
+//       _id
+//     }
+//   }
+// `;
 const TOGGLE_SESSION = gql`
   mutation ToggleSession($id: ID!, $end: DateTime) {
     toggleSession(_id: $id, end: $end) {
@@ -375,7 +371,7 @@ const Page = () => {
   const [isPlayerSelectModalOpen, setIsPlayerSelectModalOpen] = useState(false);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [tempSelectedPlayers, setTempSelectedPlayers] = useState<string[]>([]);
-  const [isAddCourtModalOpen, setIsAddCourtModalOpen] = useState(false);
+  const [_isAddCourtModalOpen, setIsAddCourtModalOpen] = useState(false);
   const [availableCourts, setAvailableCourts] = useState<any[]>([]);
   const [selectedCourtToAdd, setSelectedCourtToAdd] = useState<string | null>(
     null
@@ -489,7 +485,7 @@ const Page = () => {
       setActiveTab(defaultTab);
       console.log("Setting default tab to:", defaultTab);
     }
-  }, [data?.fetchSession?.court]);
+  }, [data?.fetchSession?.court, activeTab]);
   const handleGameCreated = () => {
     refetch();
     refetchGames();
@@ -569,15 +565,14 @@ const Page = () => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-4">
             <Badge
-              className={`text-white text-lg px-3 py-1 ${
-                game.court.name.includes("Concrete")
-                  ? "bg-orange-500 border-orange-400"
-                  : game.court.name.includes("Wood")
+              className={`text-white text-lg px-3 py-1 ${game.court.name.includes("Concrete")
+                ? "bg-orange-500 border-orange-400"
+                : game.court.name.includes("Wood")
                   ? "bg-green-500 border-green-400"
                   : game.court.name.includes("SM Court")
-                  ? "bg-blue-500 border-blue-400"
-                  : "bg-gray-500 border-gray-400"
-              }`}
+                    ? "bg-blue-500 border-blue-400"
+                    : "bg-gray-500 border-gray-400"
+                }`}
             >
               {game.court.name}
             </Badge>
@@ -785,7 +780,7 @@ const Page = () => {
            <img src="/tennis-court.png" alt="Tennis Court" className="!w-6 !h-6"/>
           </button> */}
         <button
-          className="px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-600"
+          className="px-4 py-2 bg-indigo-500 h-12 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-600"
           onClick={() => {
             setIsSessionSettingsModalOpen(true);
             fetchUsers();
@@ -799,7 +794,7 @@ const Page = () => {
           <SettingsIcon className="!w-6 !h-6" />
         </button>
         <button
-          className="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600"
+          className="px-4 py-2 h-12 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600"
           onClick={handleRefresh}
         >
           <RefreshCcw className="!w-6 !h-6" />
@@ -807,9 +802,9 @@ const Page = () => {
 
         <button
           onClick={() => router.push(`/admin/sessions/summary/session/${slug}`)}
-          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
+          className="px-4 h-12 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700"
         >
-          View Summary
+          <span className="text-xs">View Summary</span>
         </button>
 
         {!session.end ? (
@@ -823,7 +818,7 @@ const Page = () => {
               });
               await refetch();
             }}
-            className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 rounded-r-3xl h-10 w-20 flex justify-center align-center"
+            className="px-4 py-3 h-12 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 flex justify-center align-center"
           >
             <CircleStop className="!w-6 !w-6" />
           </button>
@@ -849,37 +844,36 @@ const Page = () => {
         open={isSessionSettingsModalOpen}
         onOpenChange={setIsSessionSettingsModalOpen}
       >
-        <DialogContent className="max-w-2xl h-[80vh] flex flex-col ">
-          {" "}
-          {/* Set fixed height and flex column */}
-          <DialogHeader>
+        <DialogContent className="max-w-2xl h-[84vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6">
             <DialogTitle>Session Settings</DialogTitle>
           </DialogHeader>
+
           <Tabs
             value={activeSettingsTab}
             onValueChange={setActiveSettingsTab}
-            className="w-full flex-1 flex flex-col"
+            className="flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 px-6">
               <TabsTrigger value="players">
                 <UserPlus2 className="w-4 h-4 mr-2" />
                 Players
               </TabsTrigger>
               <TabsTrigger value="courts">
-                <img
+                <Image
                   src="/tennis-court.png"
                   alt="Tennis Court"
+                  width={16}
+                  height={16}
                   className="w-4 h-4 mr-2"
                 />
                 Courts
               </TabsTrigger>
             </TabsList>
 
-            {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
-              {" "}
-              {/* This will scroll */}
-              <TabsContent value="players" className="h-full">
+            {/* Scrollable content area with reduced padding */}
+            <div className="flex-1 overflow-y-auto px-6 py-2 scrollbar-hide">
+              <TabsContent value="players" className="h-full pb-1">  {/* Reduced pb-2 to pb-1 */}
                 <PlayerSelect
                   players={usersData?.fetchUsers || []}
                   selectedPlayers={selectedPlayers}
@@ -890,9 +884,10 @@ const Page = () => {
                     handleRemovePlayers([playerId]);
                   }}
                   refetchUsers={refetchUsers}
+                  defaultActiveTab="players"
                 />
               </TabsContent>
-              <TabsContent value="courts" className="h-full">
+              <TabsContent value="courts" className="h-full pb-1">  {/* Reduced pb-2 to pb-1 */}
                 <CourtMultiSelect
                   courts={availableCourts}
                   selectedCourts={
@@ -907,18 +902,15 @@ const Page = () => {
               </TabsContent>
             </div>
 
-            {/* Fixed button area at bottom */}
-            <div className="mt-auto pt-4">
-              {" "}
-              {/* This stays fixed at bottom */}
+            {/* Fixed button area - now closer to content */}
+            <div className="sticky bottom-0 bg-background border-t px-6 py-2">  {/* Reduced py-3 to py-2 */}
               {activeSettingsTab === "players" ? (
                 <Button
                   className="w-full"
                   onClick={handleAddPlayers}
                   disabled={newPlayersCount === 0}
                 >
-                  Add Selected Players (
-                  {newPlayersCount > 0 ? newPlayersCount : 0})
+                  Add Selected Players ({newPlayersCount > 0 ? newPlayersCount : 0})
                 </Button>
               ) : (
                 <Button
@@ -967,12 +959,12 @@ const Page = () => {
             <div className="grid grid-cols-1 gap-2 text-base">
               {gamesByCourt[court._id]?.games.length > 0
                 ? [...gamesByCourt[court._id].games]
-                    .sort(
-                      (a: any, b: any) =>
-                        new Date(b.start).getTime() -
-                        new Date(a.start).getTime()
-                    )
-                    .map(renderGameCard)
+                  .sort(
+                    (a: any, b: any) =>
+                      new Date(b.start).getTime() -
+                      new Date(a.start).getTime()
+                  )
+                  .map(renderGameCard)
                 : renderEmptyState()}
             </div>
           </TabsContent>
@@ -982,11 +974,11 @@ const Page = () => {
           <div className="grid grid-cols-1 gap-2 text-base">
             {allGames.games.length > 0
               ? [...allGames.games]
-                  .sort(
-                    (a: any, b: any) =>
-                      new Date(b.start).getTime() - new Date(a.start).getTime()
-                  )
-                  .map(renderGameCard)
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b.start).getTime() - new Date(a.start).getTime()
+                )
+                .map(renderGameCard)
               : renderEmptyState()}
           </div>
         </TabsContent>
